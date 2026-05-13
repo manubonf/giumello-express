@@ -67,7 +67,7 @@ supabase --version
 
 ```bash
 # 1. Crea il progetto
-npx create-next-app@latest hello-world-app
+npx create-next-app@latest giumello-express
 
 # Rispondi così al wizard interattivo:
 # ✔ Would you like to use TypeScript?              → Yes
@@ -78,7 +78,7 @@ npx create-next-app@latest hello-world-app
 # ✔ Would you like to customize the import alias?  → No
 
 # 2. Entra nella cartella
-cd hello-world-app
+cd giumello-express
 
 # 3. Installa il client Supabase
 npm install @supabase/supabase-js
@@ -356,11 +356,11 @@ git add .
 git commit -m "feat: initial Hello World app — Next.js + Supabase migrations"
 
 # 2. Crea un repo vuoto su https://github.com/new
-#    Chiamalo "hello-world-app"
+#    Chiamalo "giumello-express"
 #    Lascia VUOTO: niente README, .gitignore o licenza
 
 # 3. Collega e pusha su main
-git remote add origin https://github.com/TUO_USERNAME/hello-world-app.git
+git remote add origin https://github.com/TUO_USERNAME/giumello-express.git
 git branch -M main
 git push -u origin main
 
@@ -447,7 +447,7 @@ git push origin develop
 1. Vai su https://vercel.com/new
 2. Clicca **"Import Git Repository"**
 3. Autorizza GitHub se richiesto
-4. Seleziona `hello-world-app` e clicca **"Import"**
+4. Seleziona `giumello-express` e clicca **"Import"**
 
 ### 12.2 — Configura le variabili d'ambiente di PRODUCTION
 
@@ -493,7 +493,7 @@ Quindi: `develop` → Preview deploy con Supabase DEV, `main` → Production con
 │              VERCEL PREVIEW + SUPABASE DEV               │
 │  GitHub Actions → supabase db push → DB DEV aggiornato  │
 │  Vercel → preview deploy automatico                      │
-│  URL: hello-world-app-git-develop-xxx.vercel.app         │
+│  URL: giumello-express-git-develop-xxx.vercel.app         │
 └───────────────────────┬─────────────────────────────────┘
                         │ Pull Request develop → main
                         │ (code review, approvazione)
@@ -502,7 +502,7 @@ Quindi: `develop` → Preview deploy con Supabase DEV, `main` → Production con
 │            VERCEL PRODUCTION + SUPABASE PROD             │
 │  GitHub Actions → supabase db push → DB PROD aggiornato │
 │  Vercel → deploy production automatico                   │
-│  URL: hello-world-app.vercel.app                         │
+│  URL: giumello-express.vercel.app                         │
 └─────────────────────────────────────────────────────────┘
 ```
 
@@ -601,7 +601,7 @@ git push origin develop
 ## Struttura finale del repository
 
 ```
-hello-world-app/
+giumello-express/
 ├── .github/
 │   └── workflows/
 │       └── supabase-migrations.yml   ← CI automatico per le migrations
