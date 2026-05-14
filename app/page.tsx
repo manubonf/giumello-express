@@ -1,60 +1,107 @@
-// import { supabase } from '@/lib/supabase'
-import { fetchMessages } from "@/lib/data"
+import { NavetteLogo } from '@/components/ui/navettelogo'
+import { getCurrentUser } from '@/lib/auth'
+import { logout } from '@/app/login/actions'
 
-export default async function Home() {
-  // const { data: messages, error } = await supabase
-  //   .from('messages')
-  //   .select('*')
-  //   .order('created_at', { ascending: false })
+const NAV_ITEMS = [
+  { href: '/navette',      icon: '🚐', title: 'Navette',            desc: 'Navette disponibili e prenotazioni' },
+  { href: '/proposte',     icon: '💡', title: 'Proposte',           desc: 'Proponi o unisciti a una navetta'   },
+  { href: '/prenotazioni', icon: '📋', title: 'Le mie prenotazioni', desc: 'Attive e storico'                  },
+]
 
-  const messages = await fetchMessages();
-
-  const env = process.env.NODE_ENV
+export default async function HomePage() {
+  const { profile } = await getCurrentUser()
+  const isMaster = profile?.role === 'master'
 
   return (
-    <main className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-8">
-      <div className="max-w-2xl w-full bg-white rounded-2xl shadow-lg p-10">
+    <div
+      className="min-h-screen"
+      style={{
+        backgroundImage: `
+          linear-gradient(var(--red-muted) 1px, transparent 1px),
+          linear-gradient(90deg, var(--red-muted) 1px, transparent 1px)
+        `,
+        backgroundSize: '32px 32px',
+      }}
+    >
+      <div className="max-w-xl mx-auto px-4 py-6 pb-12">
 
         {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">
-            👋 Hello World!
-          </h1>
-          <p className="text-gray-500 text-sm">
-            Ambiente:{' '}
-            <span className={`font-semibold ${env === 'production' ? 'text-green-600' : 'text-blue-600'}`}>
-              {env === 'production' ? '🟢 Production' : '🔵 Development'}
+        <header className="flex items-center justify-between pb-6 mb-10"
+          style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+          <NavetteLogo size={28} />
+          <div className="flex items-center gap-4">
+            <span className="flex items-center gap-1.5 font-mono text-xs"
+              style={{ color: 'var(--text-muted)' }}>
+              <span
+                className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+                style={{ background: isMaster ? 'var(--red)' : '#444' }}
+              />
+              {profile?.username ?? '—'}
             </span>
-          </p>
-        </div>
+            <form action={logout}>
+              <button
+                type="submit"
+                className="rounded-sm border px-2 py-1 font-mono text-[10px] uppercase tracking-wide transition-colors hover:border-[--red] hover:text-[--red]"
+                style={{ background: 'none', borderColor: 'var(--border-muted)', color: 'var(--text-dim)' }}
+              >
+                Esci
+              </button>
+            </form>
+          </div>
+        </header>
 
-        {/* Contenuto */}
-        {<div>
-          <h2 className="text-lg font-semibold text-gray-700 mb-4">
-            📨 Messaggi dal database:
-          </h2>
-          {messages && messages.length > 0 ? (
-            <ul className="space-y-3">
-              {messages.map((msg) => (
-                <li key={msg.id} className="bg-blue-50 border border-blue-100 rounded-lg p-4">
-                  <p className="text-gray-800">{msg.text}</p>
-                  <p className="text-xs text-gray-400 mt-1">
-                    {new Date(msg.created_at).toLocaleString('it-IT')}
-                  </p>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-gray-400 italic">Nessun messaggio trovato.</p>
+        {/* Greeting */}
+        <section className="flex items-baseline gap-3 mb-8">
+          <h1 className="text-2xl font-semibold">
+            Ciao, <span style={{ color: 'var(--red)' }}>{profile?.username}</span>
+          </h1>
+          {isMaster && (
+            <span
+              className="font-mono text-[10px] uppercase tracking-widest whitespace-nowrap rounded-sm border px-1.5 py-0.5"
+              style={{ color: 'var(--red)', borderColor: 'var(--red-border)' }}
+            >
+              Master
+            </span>
           )}
-        </div>
-        }
+        </section>
 
-        {/* Footer */}
-        <div className="mt-8 pt-6 border-t border-gray-100 text-center text-xs text-gray-400">
-          Next.js + Supabase + Vercel — Stack completo ✅
-        </div>
+        {/* Nav */}
+        <nav className="flex flex-col gap-3">
+          {NAV_ITEMS.map(item => (
+            <a
+              key={item.href}
+              href={item.href}
+              className="flex items-center gap-4 rounded-sm border px-5 py-4 no-underline transition-colors group"
+              style={{ background: 'var(--bg-panel)', borderColor: 'var(--border)', color: 'inherit' }}
+            >
+              <span className="text-xl w-8 text-center flex-shrink-0">{item.icon}</span>
+              <span className="flex-1">
+                <span className="block font-medium text-sm" style={{ color: '#e8e8e8' }}>{item.title}</span>
+                <span className="block text-xs mt-0.5" style={{ color: 'var(--text-dim)' }}>{item.desc}</span>
+              </span>
+              <span className="font-mono text-sm transition-transform group-hover:translate-x-0.5"
+                style={{ color: 'var(--border)' }}>→</span>
+            </a>
+          ))}
+
+          {isMaster && (
+            <a
+              href="/master"
+              className="flex items-center gap-4 rounded-sm border px-5 py-4 no-underline transition-colors group"
+              style={{ background: 'var(--bg-panel)', borderColor: 'var(--red-border)', color: 'inherit' }}
+            >
+              <span className="text-xl w-8 text-center flex-shrink-0">⚙️</span>
+              <span className="flex-1">
+                <span className="block font-medium text-sm" style={{ color: '#e8e8e8' }}>Pannello master</span>
+                <span className="block text-xs mt-0.5" style={{ color: 'var(--text-dim)' }}>Gestione navette, utenti, impostazioni</span>
+              </span>
+              <span className="font-mono text-sm transition-transform group-hover:translate-x-0.5"
+                style={{ color: 'var(--border)' }}>→</span>
+            </a>
+          )}
+        </nav>
+
       </div>
-    </main>
+    </div>
   )
 }
