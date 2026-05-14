@@ -1,6 +1,7 @@
 import { NavetteLogo } from '@/components/ui/navettelogo'
 import { getCurrentUser } from '@/lib/auth'
 import { logout } from '@/app/login/actions'
+import { PushSubscribe } from '@/components/push-subscribe'
 
 const NAV_ITEMS = [
   { href: '/navette',      icon: '🚐', title: 'Navette',            desc: 'Navette disponibili e prenotazioni' },
@@ -38,6 +39,7 @@ export default async function HomePage() {
               />
               {profile?.username ?? '—'}
             </span>
+            <PushSubscribe />
             <form action={logout}>
               <button
                 type="submit"

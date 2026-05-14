@@ -2,13 +2,29 @@
 
 import { getCurrentUser } from '@/lib/auth'
 import { supabaseAdmin } from '@/lib/supabase'
+import { sendPush } from '@/lib/push'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
+
+function formatDate(iso: string) {
+  return new Intl.DateTimeFormat('it-IT', {
+    weekday: 'short', day: 'numeric', month: 'short',
+    hour: '2-digit', minute: '2-digit',
+  }).format(new Date(iso))
+}
 
 async function getMasterUser() {
   const { user, profile } = await getCurrentUser()
   if (profile?.role !== 'master') redirect('/')
   return user
+}
+
+async function getShuttleBookerIds(shuttleId: string): Promise<string[]> {
+  const { data } = await supabaseAdmin
+    .from('bookings')
+    .select('booker_id')
+    .eq('shuttle_id', shuttleId)
+  return (data ?? []).map((b) => b.booker_id)
 }
 
 export async function createShuttle(formData: FormData) {
@@ -58,11 +74,28 @@ export async function confirmShuttle(formData: FormData) {
   await getMasterUser()
   const id = formData.get('id') as string
 
+  const { data: shuttle } = await supabaseAdmin
+    .from('shuttles')
+    .select('departure_time')
+    .eq('id', id)
+    .single()
+
   await supabaseAdmin
     .from('shuttles')
     .update({ status: 'confirmed' })
     .eq('id', id)
     .eq('status', 'draft')
+
+  if (shuttle) {
+    const bookerIds = await getShuttleBookerIds(id)
+    if (bookerIds.length) {
+      await sendPush(bookerIds, {
+        title: 'Navetta confermata',
+        body: `La navetta del ${formatDate(shuttle.departure_time)} è confermata!`,
+        url: `/navette/${id}`,
+      })
+    }
+  }
 
   revalidatePath('/master/navette')
   revalidatePath(`/master/navette/${id}`)
@@ -88,11 +121,28 @@ export async function cancelShuttle(formData: FormData) {
   await getMasterUser()
   const id = formData.get('id') as string
 
+  const { data: shuttle } = await supabaseAdmin
+    .from('shuttles')
+    .select('departure_time')
+    .eq('id', id)
+    .single()
+
   await supabaseAdmin
     .from('shuttles')
     .update({ status: 'cancelled' })
     .eq('id', id)
     .neq('status', 'done')
+
+  if (shuttle) {
+    const bookerIds = await getShuttleBookerIds(id)
+    if (bookerIds.length) {
+      await sendPush(bookerIds, {
+        title: 'Navetta annullata',
+        body: `La navetta del ${formatDate(shuttle.departure_time)} è stata annullata.`,
+        url: '/navette',
+      })
+    }
+  }
 
   revalidatePath('/master/navette')
   revalidatePath(`/master/navette/${id}`)

@@ -2,8 +2,16 @@
 
 import { getCurrentUser } from '@/lib/auth'
 import { supabaseAdmin } from '@/lib/supabase'
+import { sendPush } from '@/lib/push'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
+
+function formatDate(iso: string) {
+  return new Intl.DateTimeFormat('it-IT', {
+    weekday: 'short', day: 'numeric', month: 'short',
+    hour: '2-digit', minute: '2-digit',
+  }).format(new Date(iso))
+}
 
 async function getMasterUser() {
   const { user, profile } = await getCurrentUser()
@@ -37,10 +45,9 @@ export async function acceptProposal(formData: FormData) {
     minSeats = settings?.min_interest_threshold ?? 5
   }
 
-  // Verifica che la proposta esista ed sia pending
   const { data: proposal } = await supabaseAdmin
     .from('proposals')
-    .select('id, status')
+    .select('id, status, proposer_id')
     .eq('id', proposalId)
     .eq('status', 'pending')
     .single()
@@ -49,7 +56,6 @@ export async function acceptProposal(formData: FormData) {
     redirect('/master/proposte?error=proposta-non-trovata')
   }
 
-  // Crea la navetta in bozza collegata alla proposta
   const { error: shuttleError } = await supabaseAdmin.from('shuttles').insert({
     departure_time: departureTime,
     max_seats: maxSeats,
@@ -65,11 +71,16 @@ export async function acceptProposal(formData: FormData) {
     redirect(`/master/proposte/${proposalId}?error=errore-creazione`)
   }
 
-  // Segna la proposta come accettata
   await supabaseAdmin
     .from('proposals')
     .update({ status: 'accepted' })
     .eq('id', proposalId)
+
+  await sendPush([proposal.proposer_id], {
+    title: 'Proposta accettata',
+    body: `La tua proposta per ${formatDate(departureTime)} è stata accettata!`,
+    url: '/navette',
+  })
 
   revalidatePath('/master/proposte')
   revalidatePath('/proposte')
@@ -83,11 +94,26 @@ export async function rejectProposal(formData: FormData) {
 
   const proposalId = formData.get('proposal_id') as string
 
+  const { data: proposal } = await supabaseAdmin
+    .from('proposals')
+    .select('proposer_id, departure_time')
+    .eq('id', proposalId)
+    .eq('status', 'pending')
+    .single()
+
   await supabaseAdmin
     .from('proposals')
     .update({ status: 'rejected' })
     .eq('id', proposalId)
     .eq('status', 'pending')
+
+  if (proposal) {
+    await sendPush([proposal.proposer_id], {
+      title: 'Proposta non accettata',
+      body: `La proposta per ${formatDate(proposal.departure_time)} non è stata accettata.`,
+      url: '/proposte',
+    })
+  }
 
   revalidatePath('/master/proposte')
   revalidatePath('/proposte')

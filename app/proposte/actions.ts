@@ -2,8 +2,17 @@
 
 import { getCurrentUser } from '@/lib/auth'
 import { createSupabaseServerClient } from '@/lib/supabase-server'
+import { supabaseAdmin } from '@/lib/supabase'
+import { sendPush } from '@/lib/push'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
+
+function formatDate(iso: string) {
+  return new Intl.DateTimeFormat('it-IT', {
+    weekday: 'short', day: 'numeric', month: 'short',
+    hour: '2-digit', minute: '2-digit',
+  }).format(new Date(iso))
+}
 
 export async function createProposal(formData: FormData) {
   const { user } = await getCurrentUser()
@@ -15,7 +24,6 @@ export async function createProposal(formData: FormData) {
     redirect('/proposte/nuova?error=dati-non-validi')
   }
 
-  // Usa il client utente per rispettare la RLS (proposer_id = auth.uid())
   const supabase = await createSupabaseServerClient()
   const { error } = await supabase.from('proposals').insert({
     proposer_id: user.id,
@@ -26,6 +34,22 @@ export async function createProposal(formData: FormData) {
   if (error) {
     console.error('[createProposal] error:', error)
     redirect('/proposte/nuova?error=errore-creazione')
+  }
+
+  const { data: masters } = await supabaseAdmin
+    .from('profiles')
+    .select('id')
+    .eq('role', 'master')
+
+  if (masters?.length) {
+    await sendPush(
+      masters.map((m) => m.id),
+      {
+        title: 'Nuova proposta',
+        body: `Proposta per ${formatDate(departureTime)}`,
+        url: '/master/proposte',
+      },
+    )
   }
 
   revalidatePath('/proposte')
