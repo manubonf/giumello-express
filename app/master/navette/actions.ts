@@ -52,18 +52,34 @@ export async function createShuttle(formData: FormData) {
     minSeats = settings?.min_interest_threshold ?? 5
   }
 
-  const { error } = await supabaseAdmin.from('shuttles').insert({
+  const { data: shuttle, error } = await supabaseAdmin.from('shuttles').insert({
     departure_time: departureTime,
     max_seats: maxSeats,
     available_seats: maxSeats,
     min_seats: minSeats,
     created_by: user.id,
     status: 'draft',
-  })
+  }).select('id').single()
 
-  if (error) {
+  if (error || !shuttle) {
     console.error('[createShuttle] Supabase error:', error)
     redirect('/master/navette/nuova?error=errore-creazione')
+  }
+
+  const { data: participants } = await supabaseAdmin
+    .from('profiles')
+    .select('id')
+    .eq('role', 'base')
+
+  if (participants?.length) {
+    await sendPush(
+      participants.map((p) => p.id),
+      {
+        title: 'Nuova navetta disponibile',
+        body: `È disponibile una navetta per il ${formatDate(departureTime)}`,
+        url: `/navette/${shuttle.id}`,
+      },
+    )
   }
 
   revalidatePath('/master/navette')
