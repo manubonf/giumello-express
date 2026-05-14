@@ -24,7 +24,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
         className="w-full max-w-sm rounded-sm border p-10"
         style={{ background: 'var(--bg-panel)', borderColor: 'var(--border-muted)' }}
       >
-        <NavetteLogo size={36} />
+        <NavetteLogo height={36} />
 
         <p className="font-mono text-[10px] uppercase tracking-widest mt-1 mb-10"
           style={{ color: 'var(--text-muted)', paddingLeft: '2px' }}>

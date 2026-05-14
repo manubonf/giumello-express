@@ -28,7 +28,7 @@ export default async function HomePage() {
         {/* Header */}
         <header className="flex items-center justify-between pb-6 mb-10"
           style={{ borderBottom: '1px solid var(--border-subtle)' }}>
-          <NavetteLogo size={28} />
+          <NavetteLogo height={28} />
           <div className="flex items-center gap-4">
             <span className="flex items-center gap-1.5 font-mono text-xs"
               style={{ color: 'var(--text-muted)' }}>
