@@ -47,7 +47,7 @@ export default async function NuovaNavettePage({
             name="max_seats"
             min={1}
             required
-            placeholder="es. 20"
+            placeholder="es. 10"
             className="w-full rounded-sm border px-3 py-2.5 font-mono text-sm"
             style={{
               background: 'var(--bg-panel)',

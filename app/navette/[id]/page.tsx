@@ -1,4 +1,3 @@
-import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { PageLayout } from '@/components/ui/page-layout'
 import { PageHeader } from '@/components/ui/page-header'
@@ -10,6 +9,14 @@ import { createSupabaseServerClient } from '@/lib/supabase-server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { createBooking, cancelBooking } from '@/app/navette/actions'
 import { formatFull } from '@/lib/date'
+
+type Participant = {
+  id: string
+  booking_id: string
+  is_guest: boolean
+  guest_label: string | null
+  profiles: { username: string } | null
+}
 
 const ERROR_MSG: Record<string, string> = {
   'posti-insufficienti':      'Posti insufficienti per il numero di partecipanti selezionati.',
@@ -46,14 +53,32 @@ export default async function NavettaDetailPage({
     .eq('booker_id', user.id)
     .maybeSingle()
 
-  let myParticipants: { id: string; is_guest: boolean; guest_label: string | null; profiles: { username: string } | null }[] = []
-  if (myBooking) {
-    const { data } = await supabaseAdmin
-      .from('booking_participants')
-      .select('id, is_guest, guest_label, profiles(username)')
-      .eq('booking_id', myBooking.id)
-    myParticipants = (data ?? []) as unknown as typeof myParticipants
-  }
+  // Tutte le prenotazioni per questa navetta, in ordine di arrivo
+  const { data: allBookings } = await supabaseAdmin
+    .from('bookings')
+    .select('id, booker_id, created_at')
+    .eq('shuttle_id', id)
+    .order('created_at', { ascending: true })
+
+  const bookerIds = [...new Set(allBookings?.map(b => b.booker_id) ?? [])]
+  const { data: bookerProfiles } = bookerIds.length
+    ? await supabaseAdmin.from('profiles').select('id, username').in('id', bookerIds)
+    : { data: [] as { id: string; username: string }[] }
+  const profileById = Object.fromEntries((bookerProfiles ?? []).map(p => [p.id, p]))
+
+  const bookingIds = allBookings?.map(b => b.id) ?? []
+  const { data: allParticipants } = bookingIds.length
+    ? await supabaseAdmin
+        .from('booking_participants')
+        .select('id, booking_id, is_guest, guest_label, profiles(username)')
+        .in('booking_id', bookingIds)
+    : { data: [] }
+
+  const participantsByBooking = (allParticipants ?? []).reduce<Record<string, Participant[]>>((acc, p) => {
+    if (!acc[p.booking_id]) acc[p.booking_id] = []
+    acc[p.booking_id].push(p as unknown as Participant)
+    return acc
+  }, {})
 
   const { data: otherProfiles } = await supabaseAdmin
     .from('profiles')
@@ -96,32 +121,67 @@ export default async function NavettaDetailPage({
       {ok === '1' && <SuccessAlert message="Prenotazione confermata." />}
       {error && <ErrorAlert message={ERROR_MSG[error] ?? 'Errore sconosciuto.'} />}
 
-      {myBooking && (
-        <div className="rounded-sm border px-4 py-4 mb-6" style={{ borderColor: 'var(--border)', background: 'var(--bg-panel)' }}>
+      {/* Prenotazioni esistenti */}
+      {allBookings && allBookings.length > 0 && (
+        <div className="mb-8">
           <p className="font-mono text-[10px] uppercase tracking-widest mb-3"
             style={{ color: 'var(--text-muted)' }}>
-            La tua prenotazione
+            Chi si è prenotato ({shuttle.max_seats - shuttle.available_seats})
           </p>
-          <div className="flex flex-col gap-1.5">
-            {myParticipants.map(p => (
-              <span key={p.id} className="font-mono text-sm" style={{ color: '#e8e8e8' }}>
-                {p.is_guest ? `${p.guest_label} (ospite)` : (p.profiles?.username ?? '—')}
-              </span>
-            ))}
+          <div className="flex flex-col gap-2">
+            {allBookings.map((b, i) => {
+              const isMe = b.booker_id === user.id
+              const bookerUsername = profileById[b.booker_id]?.username ?? '—'
+              const participants = participantsByBooking[b.id] ?? []
+              return (
+                <div
+                  key={b.id}
+                  className="rounded-sm border px-4 py-3"
+                  style={{
+                    borderColor: isMe ? 'var(--border)' : 'var(--border-subtle)',
+                    background: isMe ? 'var(--bg-panel)' : 'transparent',
+                  }}
+                >
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="font-mono text-[10px] w-4 text-right flex-shrink-0"
+                      style={{ color: 'var(--text-dim)' }}>
+                      {i + 1}.
+                    </span>
+                    <span className="font-mono text-xs font-medium" style={{ color: isMe ? '#e8e8e8' : 'var(--text-muted)' }}>
+                      {bookerUsername}
+                      {isMe && <span className="ml-1.5" style={{ color: 'var(--text-dim)' }}>(tu)</span>}
+                    </span>
+                  </div>
+                  {participants.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 pl-6">
+                      {participants.map(p => (
+                        <span key={p.id}
+                          className="font-mono text-xs rounded-sm border px-1.5 py-0.5"
+                          style={{ borderColor: 'var(--border-muted)', color: 'var(--text-dim)' }}>
+                          {p.is_guest ? `${p.guest_label} (ospite)` : (p.profiles?.username ?? '—')}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )
+            })}
           </div>
-          {canCancel && (
-            <form action={cancelBooking} className="mt-4">
-              <input type="hidden" name="booking_id" value={myBooking.id} />
-              <input type="hidden" name="shuttle_id" value={shuttle.id} />
-              <SubmitButton
-                className="rounded-sm border px-3 py-1.5 font-mono text-xs uppercase tracking-wide transition-colors hover:border-[--red] hover:text-[--red]"
-                style={{ background: 'none', borderColor: 'var(--border-muted)', color: 'var(--text-dim)' }}
-              >
-                Cancella prenotazione
-              </SubmitButton>
-            </form>
-          )}
         </div>
+      )}
+
+      {/* Cancella prenotazione */}
+      {myBooking && canCancel && (
+        <form action={cancelBooking} className="mb-8">
+          <input type="hidden" name="booking_id" value={myBooking.id} />
+          <input type="hidden" name="shuttle_id" value={shuttle.id} />
+          <SubmitButton
+            className="rounded-sm border px-3 py-1.5 font-mono text-xs uppercase tracking-wide transition-colors hover:border-[--red] hover:text-[--red]"
+            style={{ background: 'none', borderColor: 'var(--border-muted)', color: 'var(--text-dim)' }}
+          >
+            Cancella prenotazione
+          </SubmitButton>
+        </form>
       )}
 
       {canBook && (
@@ -200,17 +260,6 @@ export default async function NavettaDetailPage({
         </form>
       )}
 
-      {profile?.role === 'master' && (
-        <div className="mt-8 pt-6" style={{ borderTop: '1px solid var(--border-subtle)' }}>
-          <Link
-            href={`/master/navette/${shuttle.id}/passeggeri`}
-            className="font-mono text-xs no-underline hover:underline"
-            style={{ color: 'var(--text-muted)' }}
-          >
-            Lista passeggeri →
-          </Link>
-        </div>
-      )}
     </PageLayout>
   )
 }

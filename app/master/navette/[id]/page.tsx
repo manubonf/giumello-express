@@ -8,6 +8,14 @@ import { supabaseAdmin } from '@/lib/supabase'
 import { confirmShuttle, markShuttleDone, cancelShuttle } from '@/app/master/navette/actions'
 import { formatFull, formatMediumTime } from '@/lib/date'
 
+type Participant = {
+  id: string
+  booking_id: string
+  is_guest: boolean
+  guest_label: string | null
+  profiles: { username: string } | null
+}
+
 export default async function NavettaDetailPage({
   params,
 }: {
@@ -22,6 +30,32 @@ export default async function NavettaDetailPage({
     .single()
 
   if (!shuttle) notFound()
+
+  const { data: bookings } = await supabaseAdmin
+    .from('bookings')
+    .select('id, booker_id, created_at')
+    .eq('shuttle_id', id)
+    .order('created_at', { ascending: true })
+
+  const bookerIds = [...new Set(bookings?.map(b => b.booker_id) ?? [])]
+  const { data: bookerProfiles } = bookerIds.length
+    ? await supabaseAdmin.from('profiles').select('id, username').in('id', bookerIds)
+    : { data: [] as { id: string; username: string }[] }
+  const profileById = Object.fromEntries((bookerProfiles ?? []).map(p => [p.id, p]))
+
+  const bookingIds = bookings?.map(b => b.id) ?? []
+  const { data: allParticipants } = bookingIds.length
+    ? await supabaseAdmin
+        .from('booking_participants')
+        .select('id, booking_id, is_guest, guest_label, profiles(username)')
+        .in('booking_id', bookingIds)
+    : { data: [] }
+
+  const participantsByBooking = (allParticipants ?? []).reduce<Record<string, Participant[]>>((acc, p) => {
+    if (!acc[p.booking_id]) acc[p.booking_id] = []
+    acc[p.booking_id].push(p as unknown as Participant)
+    return acc
+  }, {})
 
   const canConfirm = shuttle.status === 'draft'
   const canMarkDone = shuttle.status === 'confirmed' || shuttle.status === 'full'
@@ -45,6 +79,51 @@ export default async function NavettaDetailPage({
           <DetailRow label="Soglia conferma" value={`${shuttle.min_seats} prenotazioni`} />
           <DetailRow label="Creata il" value={formatMediumTime(shuttle.created_at)} />
         </div>
+      </div>
+
+      {/* Lista prenotazioni */}
+      <div className="mb-8">
+        <p className="font-mono text-[10px] uppercase tracking-widest mb-3"
+          style={{ color: 'var(--text-muted)' }}>
+          Prenotazioni ({shuttle.max_seats - shuttle.available_seats} / {shuttle.max_seats})
+        </p>
+        {!bookings?.length ? (
+          <p className="font-mono text-sm" style={{ color: 'var(--text-muted)' }}>
+            Nessuna prenotazione.
+          </p>
+        ) : (
+          <div className="flex flex-col gap-2">
+            {bookings.map((b, i) => {
+              const bookerUsername = profileById[b.booker_id]?.username ?? '—'
+              const participants = participantsByBooking[b.id] ?? []
+              return (
+                <div key={b.id} className="rounded-sm border px-4 py-3"
+                  style={{ borderColor: 'var(--border)', background: 'var(--bg-panel)' }}>
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="font-mono text-[10px] w-4 text-right flex-shrink-0"
+                      style={{ color: 'var(--text-dim)' }}>
+                      {i + 1}.
+                    </span>
+                    <span className="font-mono text-xs font-medium" style={{ color: '#e8e8e8' }}>
+                      {bookerUsername}
+                    </span>
+                  </div>
+                  {participants.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 pl-6">
+                      {participants.map(p => (
+                        <span key={p.id}
+                          className="font-mono text-xs rounded-sm border px-1.5 py-0.5"
+                          style={{ borderColor: 'var(--border-muted)', color: 'var(--text-dim)' }}>
+                          {p.is_guest ? `${p.guest_label} (ospite)` : (p.profiles?.username ?? '—')}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        )}
       </div>
 
       {(canConfirm || canMarkDone || canCancel) && (
