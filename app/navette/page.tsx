@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { NavetteLogo } from '@/components/ui/navettelogo'
+import { SubmitButton } from '@/components/ui/submit-button'
 import { logout } from '@/app/login/actions'
 import { getCurrentUser } from '@/lib/auth'
 import { createSupabaseServerClient } from '@/lib/supabase-server'
@@ -59,13 +60,12 @@ export default async function NavettePage() {
               {profile?.username ?? '—'}
             </span>
             <form action={logout}>
-              <button
-                type="submit"
+              <SubmitButton
                 className="rounded-sm border px-2 py-1 font-mono text-[10px] uppercase tracking-wide transition-colors hover:border-[--red] hover:text-[--red]"
                 style={{ background: 'none', borderColor: 'var(--border-muted)', color: 'var(--text-dim)' }}
               >
                 Esci
-              </button>
+              </SubmitButton>
             </form>
           </div>
         </header>

@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { NavetteLogo } from '@/components/ui/navettelogo'
+import { SubmitButton } from '@/components/ui/submit-button'
 import { supabaseAdmin } from '@/lib/supabase'
 import { confirmShuttle, markShuttleDone, cancelShuttle } from '@/app/master/navette/actions'
 
@@ -111,37 +112,34 @@ export default async function NavettaDetailPage({
             {canConfirm && (
               <form action={confirmShuttle}>
                 <input type="hidden" name="id" value={shuttle.id} />
-                <button
-                  type="submit"
+                <SubmitButton
                   className="rounded-sm border px-4 py-2 font-mono text-xs uppercase tracking-wide transition-colors"
                   style={{ background: '#22c55e', borderColor: '#22c55e', color: 'white' }}
                 >
                   Conferma
-                </button>
+                </SubmitButton>
               </form>
             )}
             {canMarkDone && (
               <form action={markShuttleDone}>
                 <input type="hidden" name="id" value={shuttle.id} />
-                <button
-                  type="submit"
+                <SubmitButton
                   className="rounded-sm border px-4 py-2 font-mono text-xs uppercase tracking-wide transition-colors"
                   style={{ background: 'var(--bg-panel)', borderColor: 'var(--border-muted)', color: 'var(--text-dim)' }}
                 >
                   Segna effettuata
-                </button>
+                </SubmitButton>
               </form>
             )}
             {canCancel && (
               <form action={cancelShuttle}>
                 <input type="hidden" name="id" value={shuttle.id} />
-                <button
-                  type="submit"
+                <SubmitButton
                   className="rounded-sm border px-4 py-2 font-mono text-xs uppercase tracking-wide transition-colors hover:border-[--red] hover:text-[--red]"
                   style={{ background: 'none', borderColor: 'var(--border-muted)', color: 'var(--text-dim)' }}
                 >
                   Annulla navetta
-                </button>
+                </SubmitButton>
               </form>
             )}
           </div>

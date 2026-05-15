@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { NavetteLogo } from '@/components/ui/navettelogo'
+import { SubmitButton } from '@/components/ui/submit-button'
 import { supabaseAdmin } from '@/lib/supabase'
 import { acceptProposal, rejectProposal } from '@/app/master/proposte/actions'
 
@@ -210,13 +211,12 @@ export default async function PropostaDetailPage({
                 </div>
 
                 <div>
-                  <button
-                    type="submit"
+                  <SubmitButton
                     className="rounded-sm border px-5 py-2.5 font-mono text-xs uppercase tracking-wide transition-colors"
                     style={{ background: '#22c55e', borderColor: '#22c55e', color: 'white' }}
                   >
                     Crea navetta in bozza
-                  </button>
+                  </SubmitButton>
                 </div>
               </form>
             </div>
@@ -229,13 +229,12 @@ export default async function PropostaDetailPage({
               </p>
               <form action={rejectProposal}>
                 <input type="hidden" name="proposal_id" value={proposal.id} />
-                <button
-                  type="submit"
+                <SubmitButton
                   className="rounded-sm border px-4 py-2 font-mono text-xs uppercase tracking-wide transition-colors hover:border-[--red] hover:text-[--red]"
                   style={{ background: 'none', borderColor: 'var(--border-muted)', color: 'var(--text-dim)' }}
                 >
                   Rifiuta
-                </button>
+                </SubmitButton>
               </form>
             </div>
 

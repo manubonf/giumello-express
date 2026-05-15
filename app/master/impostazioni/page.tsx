@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { NavetteLogo } from '@/components/ui/navettelogo'
+import { SubmitButton } from '@/components/ui/submit-button'
 import { supabaseAdmin } from '@/lib/supabase'
 import { updateSettings } from '@/app/master/impostazioni/actions'
 
@@ -90,13 +91,12 @@ export default async function ImpostazioniPage({
           </div>
 
           <div className="mt-2">
-            <button
-              type="submit"
+            <SubmitButton
               className="rounded-sm border px-5 py-2.5 font-mono text-xs uppercase tracking-wide transition-colors"
               style={{ background: 'var(--red)', borderColor: 'var(--red)', color: 'white' }}
             >
               Salva
-            </button>
+            </SubmitButton>
           </div>
         </form>
 

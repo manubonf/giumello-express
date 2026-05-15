@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { NavetteLogo } from '@/components/ui/navettelogo'
+import { SubmitButton } from '@/components/ui/submit-button'
 import { getCurrentUser } from '@/lib/auth'
 import { createSupabaseServerClient } from '@/lib/supabase-server'
 import { supabaseAdmin } from '@/lib/supabase'
@@ -167,13 +168,12 @@ export default async function NavettaDetailPage({
               <form action={cancelBooking} className="mt-4">
                 <input type="hidden" name="booking_id" value={myBooking.id} />
                 <input type="hidden" name="shuttle_id" value={shuttle.id} />
-                <button
-                  type="submit"
+                <SubmitButton
                   className="rounded-sm border px-3 py-1.5 font-mono text-xs uppercase tracking-wide transition-colors hover:border-[--red] hover:text-[--red]"
                   style={{ background: 'none', borderColor: 'var(--border-muted)', color: 'var(--text-dim)' }}
                 >
                   Cancella prenotazione
-                </button>
+                </SubmitButton>
               </form>
             )}
           </div>
@@ -249,13 +249,12 @@ export default async function NavettaDetailPage({
             </div>
 
             <div className="mt-1">
-              <button
-                type="submit"
+              <SubmitButton
                 className="rounded-sm border px-5 py-2.5 font-mono text-xs uppercase tracking-wide transition-colors"
                 style={{ background: 'var(--red)', borderColor: 'var(--red)', color: 'white' }}
               >
                 Prenota
-              </button>
+              </SubmitButton>
             </div>
           </form>
         )}

@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { NavetteLogo } from '@/components/ui/navettelogo'
+import { SubmitButton } from '@/components/ui/submit-button'
 import { createProposal } from '@/app/proposte/actions'
 
 const ERROR_MSG: Record<string, string> = {
@@ -86,13 +87,12 @@ export default async function NuovaPropostaPage({
           </div>
 
           <div className="flex gap-3 mt-2">
-            <button
-              type="submit"
+            <SubmitButton
               className="rounded-sm border px-5 py-2.5 font-mono text-xs uppercase tracking-wide transition-colors"
               style={{ background: 'var(--red)', borderColor: 'var(--red)', color: 'white' }}
             >
               Invia proposta
-            </button>
+            </SubmitButton>
             <Link
               href="/proposte"
               className="rounded-sm border px-5 py-2.5 font-mono text-xs uppercase tracking-wide no-underline transition-colors hover:border-[--red] hover:text-[--red]"

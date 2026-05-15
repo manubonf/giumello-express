@@ -2,6 +2,7 @@ import { NavetteLogo } from '@/components/ui/navettelogo'
 import { getCurrentUser } from '@/lib/auth'
 import { logout } from '@/app/login/actions'
 import { PushSubscribe } from '@/components/push-subscribe'
+import { SubmitButton } from '@/components/ui/submit-button'
 
 const NAV_ITEMS = [
   { href: '/navette',      icon: '🚐', title: 'Navette',            desc: 'Navette disponibili e prenotazioni' },
@@ -41,13 +42,12 @@ export default async function HomePage() {
             </span>
             <PushSubscribe />
             <form action={logout}>
-              <button
-                type="submit"
+              <SubmitButton
                 className="rounded-sm border px-2 py-1 font-mono text-[10px] uppercase tracking-wide transition-colors hover:border-[--red] hover:text-[--red]"
                 style={{ background: 'none', borderColor: 'var(--border-muted)', color: 'var(--text-dim)' }}
               >
                 Esci
-              </button>
+              </SubmitButton>
             </form>
           </div>
         </header>

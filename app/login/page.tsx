@@ -1,4 +1,5 @@
 import { NavetteLogo } from '@/components/ui/navettelogo'
+import { SubmitButton } from '@/components/ui/submit-button'
 import { login } from './actions'
 
 interface LoginPageProps {
@@ -76,13 +77,12 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
             </div>
           )}
 
-          <button
-            type="submit"
-            className="mt-1 rounded-sm py-3 font-mono text-xs font-medium uppercase tracking-widest text-white transition-colors hover:opacity-90 active:opacity-75"
+          <SubmitButton
+            className="mt-1 rounded-sm py-3 font-mono text-xs font-medium uppercase tracking-widest text-white transition-colors hover:opacity-90"
             style={{ background: 'var(--red)' }}
           >
             Accedi
-          </button>
+          </SubmitButton>
         </form>
       </div>
     </div>

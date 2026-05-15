@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { NavetteLogo } from '@/components/ui/navettelogo'
+import { SubmitButton } from '@/components/ui/submit-button'
 import { supabaseAdmin } from '@/lib/supabase'
 import { deleteUser } from '@/app/master/utenti/actions'
 
@@ -87,13 +88,12 @@ export default async function UtenteDetailPage({
         {!isMaster && (
           <form action={deleteUser}>
             <input type="hidden" name="id" value={profile.id} />
-            <button
-              type="submit"
+            <SubmitButton
               className="rounded-sm border px-4 py-2 font-mono text-xs uppercase tracking-wide transition-colors hover:border-[--red] hover:text-[--red]"
               style={{ background: 'none', borderColor: 'var(--border-muted)', color: 'var(--text-dim)' }}
             >
               Rimuovi utente
-            </button>
+            </SubmitButton>
           </form>
         )}
 
