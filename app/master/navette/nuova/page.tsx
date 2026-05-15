@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { NavetteLogo } from '@/components/ui/navettelogo'
 import { SubmitButton } from '@/components/ui/submit-button'
+import { DateTimePicker } from '@/components/ui/datetime-picker'
 import { supabaseAdmin } from '@/lib/supabase'
 import { createShuttle } from '@/app/master/navette/actions'
 
@@ -65,18 +66,7 @@ export default async function NuovaNavettePage({
               style={{ color: 'var(--text-muted)' }}>
               Data e ora partenza
             </label>
-            <input
-              type="datetime-local"
-              name="departure_time"
-              required
-              className="w-full rounded-sm border px-3 py-2.5 font-mono text-sm"
-              style={{
-                background: 'var(--bg-panel)',
-                borderColor: 'var(--border-muted)',
-                color: 'var(--text)',
-                colorScheme: 'dark',
-              }}
-            />
+            <DateTimePicker name="departure_time" required />
           </div>
 
           <div className="flex flex-col gap-1.5">

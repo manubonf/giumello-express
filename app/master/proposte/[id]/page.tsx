@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { NavetteLogo } from '@/components/ui/navettelogo'
 import { SubmitButton } from '@/components/ui/submit-button'
+import { DateTimePicker } from '@/components/ui/datetime-picker'
 import { supabaseAdmin } from '@/lib/supabase'
 import { acceptProposal, rejectProposal } from '@/app/master/proposte/actions'
 
@@ -152,18 +153,10 @@ export default async function PropostaDetailPage({
                     style={{ color: 'var(--text-muted)' }}>
                     Data e ora partenza
                   </label>
-                  <input
-                    type="datetime-local"
+                  <DateTimePicker
                     name="departure_time"
                     required
                     defaultValue={toLocalDatetimeValue(proposal.departure_time)}
-                    className="w-full rounded-sm border px-3 py-2.5 font-mono text-sm"
-                    style={{
-                      background: 'var(--bg-panel)',
-                      borderColor: 'var(--border-muted)',
-                      color: 'var(--text)',
-                      colorScheme: 'dark',
-                    }}
                   />
                 </div>
 
