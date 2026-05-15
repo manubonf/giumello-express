@@ -25,7 +25,7 @@ export default async function HomePage() {
             style={{ color: 'var(--text-muted)' }}>
             <span
               className="w-1.5 h-1.5 rounded-full flex-shrink-0"
-              style={{ background: isMaster ? 'var(--red)' : '#444' }}
+              style={{ background: isMaster ? 'var(--red)' : 'var(--text-dim)' }}
             />
             {profile?.username ?? '—'}
           </span>
@@ -65,7 +65,7 @@ export default async function HomePage() {
           >
             <span className="text-xl w-8 text-center flex-shrink-0">{item.icon}</span>
             <span className="flex-1">
-              <span className="block font-medium text-sm" style={{ color: '#e8e8e8' }}>{item.title}</span>
+              <span className="block font-medium text-sm" style={{ color: 'var(--text)' }}>{item.title}</span>
               <span className="block text-xs mt-0.5" style={{ color: 'var(--text-dim)' }}>{item.desc}</span>
             </span>
             <span className="font-mono text-sm transition-transform group-hover:translate-x-0.5"
@@ -81,7 +81,7 @@ export default async function HomePage() {
           >
             <span className="text-xl w-8 text-center flex-shrink-0">⚙️</span>
             <span className="flex-1">
-              <span className="block font-medium text-sm" style={{ color: '#e8e8e8' }}>Pannello master</span>
+              <span className="block font-medium text-sm" style={{ color: 'var(--text)' }}>Pannello master</span>
               <span className="block text-xs mt-0.5" style={{ color: 'var(--text-dim)' }}>Gestione navette, utenti, impostazioni</span>
             </span>
             <span className="font-mono text-sm transition-transform group-hover:translate-x-0.5"

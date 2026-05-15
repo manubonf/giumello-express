@@ -113,7 +113,7 @@ export default async function NavettaDetailPage({
 
       {shuttle.status === 'draft' && (
         <p className="rounded-sm border px-4 py-3 font-mono text-sm mb-6"
-          style={{ borderColor: '#88888840', color: '#888', background: '#88888810' }}>
+          style={{ borderColor: 'var(--border)', color: 'var(--text-dim)', background: 'var(--bg-panel)' }}>
           Navetta in bozza — non ancora garantita. Verrà confermata al raggiungimento di {shuttle.min_seats} prenotazioni.
         </p>
       )}
@@ -147,7 +147,7 @@ export default async function NavettaDetailPage({
                       style={{ color: 'var(--text-dim)' }}>
                       {i + 1}.
                     </span>
-                    <span className="font-mono text-xs font-medium" style={{ color: isMe ? '#e8e8e8' : 'var(--text-muted)' }}>
+                    <span className="font-mono text-xs font-medium" style={{ color: isMe ? 'var(--text)' : 'var(--text-muted)' }}>
                       {bookerUsername}
                       {isMe && <span className="ml-1.5" style={{ color: 'var(--text-dim)' }}>(tu)</span>}
                     </span>
@@ -198,7 +198,7 @@ export default async function NavettaDetailPage({
             <p className="font-mono text-xs mb-1" style={{ color: 'var(--text-dim)' }}>
               Prenotato da
             </p>
-            <span className="font-mono text-sm" style={{ color: '#e8e8e8' }}>
+            <span className="font-mono text-sm" style={{ color: 'var(--text)' }}>
               {profile?.username} (tu)
             </span>
           </div>
@@ -219,7 +219,7 @@ export default async function NavettaDetailPage({
                       value={p.id}
                       className="w-3.5 h-3.5 accent-[--red]"
                     />
-                    <span className="font-mono text-sm" style={{ color: '#e8e8e8' }}>
+                    <span className="font-mono text-sm" style={{ color: 'var(--text)' }}>
                       {p.username}
                     </span>
                   </label>

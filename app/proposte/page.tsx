@@ -63,7 +63,7 @@ export default async function PropostePage({
                 style={{ background: 'var(--bg-panel)', borderColor: 'var(--border)' }}>
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1 min-w-0">
-                    <span className="block font-medium text-sm" style={{ color: '#e8e8e8' }}>
+                    <span className="block font-medium text-sm" style={{ color: 'var(--text)' }}>
                       {formatShort(p.departure_time)}
                     </span>
                     <span className="flex items-center gap-2 mt-1">

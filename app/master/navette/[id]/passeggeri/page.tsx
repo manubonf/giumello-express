@@ -81,7 +81,7 @@ export default async function PasseggeriPage({
                   {participants.map(p => (
                     <span key={p.id}
                       className="font-mono text-xs rounded-sm border px-1.5 py-0.5"
-                      style={{ borderColor: 'var(--border-muted)', color: '#e8e8e8' }}>
+                      style={{ borderColor: 'var(--border-muted)', color: 'var(--text)' }}>
                       {p.is_guest ? `${p.guest_label} (ospite)` : (p.profiles?.username ?? '—')}
                     </span>
                   ))}

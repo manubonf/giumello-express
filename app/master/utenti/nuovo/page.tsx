@@ -35,15 +35,15 @@ export default async function NuovoUtentePage({
           <div className="flex flex-col gap-3">
             <div className="flex items-center justify-between">
               <span className="font-mono text-xs" style={{ color: 'var(--text-dim)' }}>Username</span>
-              <span className="font-mono text-sm font-semibold" style={{ color: '#e8e8e8' }}>{u}</span>
+              <span className="font-mono text-sm font-semibold" style={{ color: 'var(--text)' }}>{u}</span>
             </div>
             <div style={{ borderTop: '1px solid var(--border-subtle)' }} />
             <div className="flex items-center justify-between">
               <span className="font-mono text-xs" style={{ color: 'var(--text-dim)' }}>Password</span>
-              <span className="font-mono text-sm font-semibold tracking-wide" style={{ color: '#e8e8e8' }}>{pw}</span>
+              <span className="font-mono text-sm font-semibold tracking-wide" style={{ color: 'var(--text)' }}>{pw}</span>
             </div>
           </div>
-          <p className="font-mono text-[11px] mt-4" style={{ color: '#888' }}>
+          <p className="font-mono text-[11px] mt-4" style={{ color: 'var(--text-dim)' }}>
             La password non verrà mostrata di nuovo. Comunicala all&apos;utente e poi chiudi questa pagina.
           </p>
         </div>

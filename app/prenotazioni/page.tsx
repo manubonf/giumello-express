@@ -71,7 +71,7 @@ export default async function PrenotazioniPage() {
                   <Link
                     href={`/navette/${shuttle.id}`}
                     className="font-medium text-sm no-underline hover:underline"
-                    style={{ color: '#e8e8e8' }}
+                    style={{ color: 'var(--text)' }}
                   >
                     {formatShort(shuttle.departure_time)}
                   </Link>

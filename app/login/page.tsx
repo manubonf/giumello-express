@@ -47,7 +47,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
               autoCapitalize="none"
               required
               className="rounded-sm border px-3 py-2.5 font-mono text-sm outline-none transition-colors focus:border-[--red] w-full"
-              style={{ background: '#1c1c1c', borderColor: 'var(--border)', color: 'var(--text)' }}
+              style={{ background: 'var(--bg)', borderColor: 'var(--border)', color: 'var(--text)' }}
               placeholder="il tuo nome utente"
             />
           </div>
@@ -65,7 +65,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
               autoComplete="current-password"
               required
               className="rounded-sm border px-3 py-2.5 font-mono text-sm outline-none transition-colors focus:border-[--red] w-full"
-              style={{ background: '#1c1c1c', borderColor: 'var(--border)', color: 'var(--text)' }}
+              style={{ background: 'var(--bg)', borderColor: 'var(--border)', color: 'var(--text)' }}
               placeholder="••••••••••"
             />
           </div>

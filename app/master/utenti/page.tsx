@@ -49,7 +49,7 @@ export default async function MasterUtentiPage() {
               style={{ background: 'var(--bg-panel)', borderColor: 'var(--border)', color: 'inherit' }}
             >
               <span className="flex-1 min-w-0">
-                <span className="block font-medium text-sm" style={{ color: '#e8e8e8' }}>
+                <span className="block font-medium text-sm" style={{ color: 'var(--text)' }}>
                   {p.username}
                 </span>
                 <span className="flex items-center gap-2 mt-0.5">

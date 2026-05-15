@@ -41,7 +41,7 @@ export default function MasterPage() {
           >
             <span className="text-xl w-8 text-center flex-shrink-0">{item.icon}</span>
             <span className="flex-1">
-              <span className="block font-medium text-sm" style={{ color: '#e8e8e8' }}>{item.title}</span>
+              <span className="block font-medium text-sm" style={{ color: 'var(--text)' }}>{item.title}</span>
               <span className="block text-xs mt-0.5" style={{ color: 'var(--text-dim)' }}>{item.desc}</span>
             </span>
             <span className="font-mono text-sm transition-transform group-hover:translate-x-0.5"

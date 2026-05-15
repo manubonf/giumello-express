@@ -104,7 +104,7 @@ export default async function NavettaDetailPage({
                       style={{ color: 'var(--text-dim)' }}>
                       {i + 1}.
                     </span>
-                    <span className="font-mono text-xs font-medium" style={{ color: '#e8e8e8' }}>
+                    <span className="font-mono text-xs font-medium" style={{ color: 'var(--text)' }}>
                       {bookerUsername}
                     </span>
                   </div>

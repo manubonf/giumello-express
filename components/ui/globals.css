@@ -3,21 +3,21 @@
 :root {
   --red: #e01110;
   --red-dark: #c50f0e;
-  --red-muted: rgba(224, 17, 16, 0.08);
+  --red-muted: rgba(224, 17, 16, 0.06);
   --red-border: rgba(224, 17, 16, 0.2);
 
-  --bg: #0d0d0d;
-  --bg-panel: #141414;
-  --bg-hover: #181818;
+  --bg: #ffffff;
+  --bg-panel: #f4f4f4;
+  --bg-hover: #ebebeb;
 
-  --border: #222;
-  --border-muted: #2a2a2a;
-  --border-subtle: #1f1f1f;
+  --border: #c8c8c8;
+  --border-muted: #dcdcdc;
+  --border-subtle: #ebebeb;
 
-  --text: #f0f0f0;
-  --text-muted: #666;
-  --text-dim: #555;
-  --text-faint: #3a3a3a;
+  --text: #111111;
+  --text-muted: #555555;
+  --text-dim: #888888;
+  --text-faint: #c8c8c8;
 }
 
 body {

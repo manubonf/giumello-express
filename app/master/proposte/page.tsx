@@ -56,7 +56,7 @@ export default async function MasterPropostePage({
                   style={{ background: 'var(--bg-panel)', borderColor: 'var(--border)', color: 'inherit' }}
                 >
                   <span className="flex-1 min-w-0">
-                    <span className="block font-medium text-sm" style={{ color: '#e8e8e8' }}>
+                    <span className="block font-medium text-sm" style={{ color: 'var(--text)' }}>
                       {formatShort(p.departure_time)}
                     </span>
                     <span className="font-mono text-xs mt-0.5" style={{ color: 'var(--text-dim)' }}>
@@ -87,7 +87,7 @@ export default async function MasterPropostePage({
                 <div key={p.id} className="flex items-center gap-4 rounded-sm border px-4 py-3"
                   style={{ background: 'var(--bg-panel)', borderColor: 'var(--border-subtle)', opacity: 0.7 }}>
                   <span className="flex-1 min-w-0">
-                    <span className="block font-medium text-sm" style={{ color: '#e8e8e8' }}>
+                    <span className="block font-medium text-sm" style={{ color: 'var(--text)' }}>
                       {formatShort(p.departure_time)}
                     </span>
                     <span className="font-mono text-xs mt-0.5" style={{ color: 'var(--text-dim)' }}>

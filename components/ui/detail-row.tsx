@@ -7,7 +7,7 @@ export function DetailRow({ label, value }: { label: string; value: React.ReactN
       <span className="font-mono text-xs uppercase tracking-wide" style={{ color: 'var(--text-muted)' }}>
         {label}
       </span>
-      <span className="text-sm font-medium" style={{ color: '#e8e8e8' }}>{value}</span>
+      <span className="text-sm font-medium" style={{ color: 'var(--text)' }}>{value}</span>
     </div>
   )
 }

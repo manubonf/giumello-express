@@ -41,7 +41,7 @@ export default async function MasterNavettePage() {
             >
               <StatusDot status={s.status} />
               <span className="flex-1 min-w-0">
-                <span className="block font-medium text-sm" style={{ color: '#e8e8e8' }}>
+                <span className="block font-medium text-sm" style={{ color: 'var(--text)' }}>
                   {formatShort(s.departure_time)}
                 </span>
                 <span className="block font-mono text-xs mt-0.5" style={{ color: 'var(--text-dim)' }}>
