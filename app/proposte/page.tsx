@@ -70,7 +70,7 @@ export default async function PropostePage({
           <h1 className="text-xl font-semibold">Proposte</h1>
           <Link
             href="/proposte/nuova"
-            className="rounded-sm border px-3 py-1.5 font-mono text-xs uppercase tracking-wide no-underline transition-colors hover:border-[--red] hover:text-[--red]"
+            className="rounded-sm border px-3 py-1.5 font-mono text-xs uppercase tracking-wide no-underline transition-colors hover:border-[--red] hover:text-[--red] active:scale-95"
             style={{ borderColor: 'var(--border-muted)', color: 'var(--text-dim)' }}
           >
             + Nuova

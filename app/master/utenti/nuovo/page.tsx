@@ -112,7 +112,7 @@ export default async function NuovoUtentePage({
               </SubmitButton>
               <Link
                 href="/master/utenti"
-                className="rounded-sm border px-5 py-2.5 font-mono text-xs uppercase tracking-wide no-underline transition-colors hover:border-[--red] hover:text-[--red]"
+                className="rounded-sm border px-5 py-2.5 font-mono text-xs uppercase tracking-wide no-underline transition-colors hover:border-[--red] hover:text-[--red] active:scale-95"
                 style={{ borderColor: 'var(--border-muted)', color: 'var(--text-dim)' }}
               >
                 Annulla
@@ -126,14 +126,14 @@ export default async function NuovoUtentePage({
           <div className="flex gap-3">
             <Link
               href="/master/utenti/nuovo"
-              className="rounded-sm border px-5 py-2.5 font-mono text-xs uppercase tracking-wide no-underline transition-colors"
+              className="rounded-sm border px-5 py-2.5 font-mono text-xs uppercase tracking-wide no-underline transition-colors active:scale-95"
               style={{ background: 'var(--red)', borderColor: 'var(--red)', color: 'white' }}
             >
               + Altro utente
             </Link>
             <Link
               href="/master/utenti"
-              className="rounded-sm border px-5 py-2.5 font-mono text-xs uppercase tracking-wide no-underline transition-colors hover:border-[--red] hover:text-[--red]"
+              className="rounded-sm border px-5 py-2.5 font-mono text-xs uppercase tracking-wide no-underline transition-colors hover:border-[--red] hover:text-[--red] active:scale-95"
               style={{ borderColor: 'var(--border-muted)', color: 'var(--text-dim)' }}
             >
               Vai alla lista

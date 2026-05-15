@@ -52,7 +52,7 @@ export default async function MasterUtentiPage() {
           <h1 className="text-xl font-semibold">Utenti</h1>
           <Link
             href="/master/utenti/nuovo"
-            className="rounded-sm border px-3 py-1.5 font-mono text-xs uppercase tracking-wide no-underline transition-colors hover:border-[--red] hover:text-[--red]"
+            className="rounded-sm border px-3 py-1.5 font-mono text-xs uppercase tracking-wide no-underline transition-colors hover:border-[--red] hover:text-[--red] active:scale-95"
             style={{ borderColor: 'var(--border-muted)', color: 'var(--text-dim)' }}
           >
             + Nuovo

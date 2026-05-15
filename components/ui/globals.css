@@ -26,3 +26,7 @@ body {
   font-family: var(--font-sans), sans-serif;
   -webkit-font-smoothing: antialiased;
 }
+
+a:active {
+  opacity: 0.65;
+}
