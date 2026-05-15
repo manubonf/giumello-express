@@ -1,14 +1,9 @@
 'use server'
 
-import { getCurrentUser } from '@/lib/auth'
+import { getMasterUser } from '@/lib/auth'
 import { supabaseAdmin } from '@/lib/supabase'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
-
-async function getMasterUser() {
-  const { profile } = await getCurrentUser()
-  if (profile?.role !== 'master') redirect('/')
-}
 
 export async function updateSettings(formData: FormData) {
   await getMasterUser()

@@ -1,6 +1,6 @@
 'use server'
 
-import { getCurrentUser } from '@/lib/auth'
+import { getMasterUser } from '@/lib/auth'
 import { supabaseAdmin } from '@/lib/supabase'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
@@ -16,11 +16,6 @@ function generatePassword(): string {
   const pick = () => WORDS[Math.floor(Math.random() * WORDS.length)]
   const num = Math.floor(Math.random() * 90) + 10
   return `${pick()}${pick()}${num}`
-}
-
-async function getMasterUser() {
-  const { profile } = await getCurrentUser()
-  if (profile?.role !== 'master') redirect('/')
 }
 
 export async function createUser(formData: FormData) {

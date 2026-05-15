@@ -1,23 +1,11 @@
 'use server'
 
-import { getCurrentUser } from '@/lib/auth'
+import { getMasterUser } from '@/lib/auth'
 import { supabaseAdmin } from '@/lib/supabase'
 import { sendPush } from '@/lib/push'
+import { formatShort } from '@/lib/date'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
-
-function formatDate(iso: string) {
-  return new Intl.DateTimeFormat('it-IT', {
-    weekday: 'short', day: 'numeric', month: 'short',
-    hour: '2-digit', minute: '2-digit',
-  }).format(new Date(iso))
-}
-
-async function getMasterUser() {
-  const { user, profile } = await getCurrentUser()
-  if (profile?.role !== 'master') redirect('/')
-  return user
-}
 
 async function getShuttleBookerIds(shuttleId: string): Promise<string[]> {
   const { data } = await supabaseAdmin
@@ -76,7 +64,7 @@ export async function createShuttle(formData: FormData) {
       participants.map((p) => p.id),
       {
         title: 'Nuova navetta disponibile',
-        body: `È disponibile una navetta per il ${formatDate(departureTime)}`,
+        body: `È disponibile una navetta per il ${formatShort(departureTime)}`,
         url: `/navette/${shuttle.id}`,
       },
     )
@@ -107,7 +95,7 @@ export async function confirmShuttle(formData: FormData) {
     if (bookerIds.length) {
       await sendPush(bookerIds, {
         title: 'Navetta confermata',
-        body: `La navetta del ${formatDate(shuttle.departure_time)} è confermata!`,
+        body: `La navetta del ${formatShort(shuttle.departure_time)} è confermata!`,
         url: `/navette/${id}`,
       })
     }
@@ -154,7 +142,7 @@ export async function cancelShuttle(formData: FormData) {
     if (bookerIds.length) {
       await sendPush(bookerIds, {
         title: 'Navetta annullata',
-        body: `La navetta del ${formatDate(shuttle.departure_time)} è stata annullata.`,
+        body: `La navetta del ${formatShort(shuttle.departure_time)} è stata annullata.`,
         url: '/navette',
       })
     }

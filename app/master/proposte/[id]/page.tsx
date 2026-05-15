@@ -1,34 +1,20 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { NavetteLogo } from '@/components/ui/navettelogo'
+import { PageLayout } from '@/components/ui/page-layout'
+import { PageHeader, MasterBadge } from '@/components/ui/page-header'
 import { SubmitButton } from '@/components/ui/submit-button'
 import { DateTimePicker } from '@/components/ui/datetime-picker'
+import { DetailRow } from '@/components/ui/detail-row'
+import { ErrorAlert } from '@/components/ui/alert'
+import { FormField } from '@/components/ui/form-field'
 import { supabaseAdmin } from '@/lib/supabase'
 import { acceptProposal, rejectProposal } from '@/app/master/proposte/actions'
-
-function formatDatetimeFull(iso: string) {
-  return new Intl.DateTimeFormat('it-IT', {
-    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
-    hour: '2-digit', minute: '2-digit',
-  }).format(new Date(iso))
-}
+import { formatFull, formatMediumTime } from '@/lib/date'
 
 function toLocalDatetimeValue(iso: string) {
   const d = new Date(iso)
   const pad = (n: number) => String(n).padStart(2, '0')
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
-}
-
-function Row({ label, value }: { label: string; value: React.ReactNode }) {
-  return (
-    <div className="flex items-baseline justify-between py-3"
-      style={{ borderBottom: '1px solid var(--border-subtle)' }}>
-      <span className="font-mono text-xs uppercase tracking-wide" style={{ color: 'var(--text-muted)' }}>
-        {label}
-      </span>
-      <span className="text-sm font-medium" style={{ color: '#e8e8e8' }}>{value}</span>
-    </div>
-  )
 }
 
 const ERROR_MSG: Record<string, string> = {
@@ -60,7 +46,6 @@ export default async function PropostaDetailPage({
     .maybeSingle()
   const isPending = proposal.status === 'pending'
 
-  // Se accepted, cerca la navetta collegata
   let linkedShuttleId: string | null = null
   if (proposal.status === 'accepted') {
     const { data: shuttle } = await supabaseAdmin
@@ -78,163 +63,114 @@ export default async function PropostaDetailPage({
   const defaultMinSeats = settings?.min_interest_threshold ?? 5
 
   return (
-    <div
-      className="min-h-screen"
-      style={{
-        backgroundImage: `
-          linear-gradient(var(--red-muted) 1px, transparent 1px),
-          linear-gradient(90deg, var(--red-muted) 1px, transparent 1px)
-        `,
-        backgroundSize: '32px 32px',
-      }}
-    >
-      <div className="max-w-xl mx-auto px-4 py-6 pb-12">
+    <PageLayout>
+      <PageHeader backHref="/master/proposte" right={<MasterBadge />} />
 
-        <header className="flex items-center justify-between pb-6 mb-10"
-          style={{ borderBottom: '1px solid var(--border-subtle)' }}>
-          <div className="flex items-center gap-3">
-            <Link href="/master/proposte" className="font-mono text-sm no-underline"
-              style={{ color: 'var(--text-muted)' }}>←</Link>
-            <NavetteLogo height={24} />
-          </div>
-          <span className="font-mono text-[10px] uppercase tracking-widest rounded-sm border px-1.5 py-0.5"
-            style={{ color: 'var(--red)', borderColor: 'var(--red-border)' }}>
-            Master
-          </span>
-        </header>
+      <h1 className="text-xl font-semibold mb-8">Proposta</h1>
 
-        <h1 className="text-xl font-semibold mb-8">Proposta</h1>
+      {error && <ErrorAlert message={ERROR_MSG[error] ?? 'Errore sconosciuto.'} />}
 
-        {error && (
-          <p className="rounded-sm border px-4 py-3 font-mono text-sm mb-6"
-            style={{ borderColor: 'var(--red-border)', color: 'var(--red)', background: 'var(--red-muted)' }}>
-            {ERROR_MSG[error] ?? 'Errore sconosciuto.'}
-          </p>
-        )}
-
-        {/* Dettagli proposta */}
-        <div className="rounded-sm border mb-8" style={{ borderColor: 'var(--border)' }}>
-          <div className="px-4">
-            <Row label="Proposta da" value={proposerProfile?.username ?? '—'} />
-            <Row label="Data proposta" value={formatDatetimeFull(proposal.departure_time)} />
-            {proposal.notes && <Row label="Note" value={proposal.notes} />}
-            <Row label="Inviata il" value={new Intl.DateTimeFormat('it-IT', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(proposal.created_at))} />
-          </div>
+      <div className="rounded-sm border mb-8" style={{ borderColor: 'var(--border)' }}>
+        <div className="px-4">
+          <DetailRow label="Proposta da" value={proposerProfile?.username ?? '—'} />
+          <DetailRow label="Data proposta" value={formatFull(proposal.departure_time)} />
+          {proposal.notes && <DetailRow label="Note" value={proposal.notes} />}
+          <DetailRow label="Inviata il" value={formatMediumTime(proposal.created_at)} />
         </div>
-
-        {/* Navetta collegata (se accettata) */}
-        {proposal.status === 'accepted' && linkedShuttleId && (
-          <div className="mb-8">
-            <Link
-              href={`/master/navette/${linkedShuttleId}`}
-              className="font-mono text-xs no-underline hover:underline"
-              style={{ color: '#22c55e' }}
-            >
-              Vai alla navetta creata →
-            </Link>
-          </div>
-        )}
-
-        {/* Azioni — solo se pending */}
-        {isPending && (
-          <div className="flex flex-col gap-8">
-
-            {/* Form accetta — crea navetta */}
-            <div>
-              <p className="font-mono text-[10px] uppercase tracking-widest mb-4"
-                style={{ color: 'var(--text-muted)' }}>
-                Accetta — crea navetta in bozza
-              </p>
-              <form action={acceptProposal} className="flex flex-col gap-4">
-                <input type="hidden" name="proposal_id" value={proposal.id} />
-
-                <div className="flex flex-col gap-1.5">
-                  <label className="font-mono text-xs uppercase tracking-wide"
-                    style={{ color: 'var(--text-muted)' }}>
-                    Data e ora partenza
-                  </label>
-                  <DateTimePicker
-                    name="departure_time"
-                    required
-                    defaultValue={toLocalDatetimeValue(proposal.departure_time)}
-                  />
-                </div>
-
-                <div className="flex gap-4">
-                  <div className="flex flex-col gap-1.5 flex-1">
-                    <label className="font-mono text-xs uppercase tracking-wide"
-                      style={{ color: 'var(--text-muted)' }}>
-                      Posti totali
-                    </label>
-                    <input
-                      type="number"
-                      name="max_seats"
-                      min={1}
-                      required
-                      placeholder="es. 20"
-                      className="w-full rounded-sm border px-3 py-2.5 font-mono text-sm"
-                      style={{
-                        background: 'var(--bg-panel)',
-                        borderColor: 'var(--border-muted)',
-                        color: 'var(--text)',
-                      }}
-                    />
-                  </div>
-                  <div className="flex flex-col gap-1.5 flex-1">
-                    <label className="font-mono text-xs uppercase tracking-wide"
-                      style={{ color: 'var(--text-muted)' }}>
-                      Soglia min.
-                      <span className="ml-1 normal-case" style={{ color: 'var(--text-dim)' }}>
-                        (default: {defaultMinSeats})
-                      </span>
-                    </label>
-                    <input
-                      type="number"
-                      name="min_seats"
-                      min={1}
-                      placeholder={String(defaultMinSeats)}
-                      className="w-full rounded-sm border px-3 py-2.5 font-mono text-sm"
-                      style={{
-                        background: 'var(--bg-panel)',
-                        borderColor: 'var(--border-muted)',
-                        color: 'var(--text)',
-                      }}
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <SubmitButton
-                    className="rounded-sm border px-5 py-2.5 font-mono text-xs uppercase tracking-wide transition-colors"
-                    style={{ background: '#22c55e', borderColor: '#22c55e', color: 'white' }}
-                  >
-                    Crea navetta in bozza
-                  </SubmitButton>
-                </div>
-              </form>
-            </div>
-
-            {/* Rifiuta */}
-            <div>
-              <p className="font-mono text-[10px] uppercase tracking-widest mb-4"
-                style={{ color: 'var(--text-muted)' }}>
-                Rifiuta proposta
-              </p>
-              <form action={rejectProposal}>
-                <input type="hidden" name="proposal_id" value={proposal.id} />
-                <SubmitButton
-                  className="rounded-sm border px-4 py-2 font-mono text-xs uppercase tracking-wide transition-colors hover:border-[--red] hover:text-[--red]"
-                  style={{ background: 'none', borderColor: 'var(--border-muted)', color: 'var(--text-dim)' }}
-                >
-                  Rifiuta
-                </SubmitButton>
-              </form>
-            </div>
-
-          </div>
-        )}
-
       </div>
-    </div>
+
+      {proposal.status === 'accepted' && linkedShuttleId && (
+        <div className="mb-8">
+          <Link
+            href={`/master/navette/${linkedShuttleId}`}
+            className="font-mono text-xs no-underline hover:underline"
+            style={{ color: '#22c55e' }}
+          >
+            Vai alla navetta creata →
+          </Link>
+        </div>
+      )}
+
+      {isPending && (
+        <div className="flex flex-col gap-8">
+
+          <div>
+            <p className="font-mono text-[10px] uppercase tracking-widest mb-4"
+              style={{ color: 'var(--text-muted)' }}>
+              Accetta — crea navetta in bozza
+            </p>
+            <form action={acceptProposal} className="flex flex-col gap-4">
+              <input type="hidden" name="proposal_id" value={proposal.id} />
+
+              <FormField label="Data e ora partenza">
+                <DateTimePicker
+                  name="departure_time"
+                  required
+                  defaultValue={toLocalDatetimeValue(proposal.departure_time)}
+                />
+              </FormField>
+
+              <div className="flex gap-4">
+                <FormField label="Posti totali" className="flex-1">
+                  <input
+                    type="number"
+                    name="max_seats"
+                    min={1}
+                    required
+                    placeholder="es. 20"
+                    className="w-full rounded-sm border px-3 py-2.5 font-mono text-sm"
+                    style={{
+                      background: 'var(--bg-panel)',
+                      borderColor: 'var(--border-muted)',
+                      color: 'var(--text)',
+                    }}
+                  />
+                </FormField>
+                <FormField label={`Soglia min. (default: ${defaultMinSeats})`} className="flex-1">
+                  <input
+                    type="number"
+                    name="min_seats"
+                    min={1}
+                    placeholder={String(defaultMinSeats)}
+                    className="w-full rounded-sm border px-3 py-2.5 font-mono text-sm"
+                    style={{
+                      background: 'var(--bg-panel)',
+                      borderColor: 'var(--border-muted)',
+                      color: 'var(--text)',
+                    }}
+                  />
+                </FormField>
+              </div>
+
+              <div>
+                <SubmitButton
+                  className="rounded-sm border px-5 py-2.5 font-mono text-xs uppercase tracking-wide transition-colors"
+                  style={{ background: '#22c55e', borderColor: '#22c55e', color: 'white' }}
+                >
+                  Crea navetta in bozza
+                </SubmitButton>
+              </div>
+            </form>
+          </div>
+
+          <div>
+            <p className="font-mono text-[10px] uppercase tracking-widest mb-4"
+              style={{ color: 'var(--text-muted)' }}>
+              Rifiuta proposta
+            </p>
+            <form action={rejectProposal}>
+              <input type="hidden" name="proposal_id" value={proposal.id} />
+              <SubmitButton
+                className="rounded-sm border px-4 py-2 font-mono text-xs uppercase tracking-wide transition-colors hover:border-[--red] hover:text-[--red]"
+                style={{ background: 'none', borderColor: 'var(--border-muted)', color: 'var(--text-dim)' }}
+              >
+                Rifiuta
+              </SubmitButton>
+            </form>
+          </div>
+
+        </div>
+      )}
+    </PageLayout>
   )
 }

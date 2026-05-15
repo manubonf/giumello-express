@@ -1,23 +1,11 @@
 'use server'
 
-import { getCurrentUser } from '@/lib/auth'
+import { getMasterUser } from '@/lib/auth'
 import { supabaseAdmin } from '@/lib/supabase'
 import { sendPush } from '@/lib/push'
+import { formatShort } from '@/lib/date'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
-
-function formatDate(iso: string) {
-  return new Intl.DateTimeFormat('it-IT', {
-    weekday: 'short', day: 'numeric', month: 'short',
-    hour: '2-digit', minute: '2-digit',
-  }).format(new Date(iso))
-}
-
-async function getMasterUser() {
-  const { user, profile } = await getCurrentUser()
-  if (profile?.role !== 'master') redirect('/')
-  return user
-}
 
 export async function acceptProposal(formData: FormData) {
   const user = await getMasterUser()
@@ -78,7 +66,7 @@ export async function acceptProposal(formData: FormData) {
 
   await sendPush([proposal.proposer_id], {
     title: 'Proposta accettata',
-    body: `La tua proposta per ${formatDate(departureTime)} è stata accettata!`,
+    body: `La tua proposta per ${formatShort(departureTime)} è stata accettata!`,
     url: '/navette',
   })
 
@@ -110,7 +98,7 @@ export async function rejectProposal(formData: FormData) {
   if (proposal) {
     await sendPush([proposal.proposer_id], {
       title: 'Proposta non accettata',
-      body: `La proposta per ${formatDate(proposal.departure_time)} non è stata accettata.`,
+      body: `La proposta per ${formatShort(proposal.departure_time)} non è stata accettata.`,
       url: '/proposte',
     })
   }

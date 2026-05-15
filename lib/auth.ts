@@ -25,3 +25,9 @@ export async function requireMaster() {
 
   return profile
 }
+
+export async function getMasterUser() {
+  const { user, profile } = await getCurrentUser()
+  if (profile?.role !== 'master') redirect('/')
+  return user
+}
