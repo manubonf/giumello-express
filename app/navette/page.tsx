@@ -1,22 +1,32 @@
-import Link from 'next/link'
 import { PageLayout } from '@/components/ui/page-layout'
 import { PageHeader } from '@/components/ui/page-header'
 import { SubmitButton } from '@/components/ui/submit-button'
-import { StatusBadge, StatusDot } from '@/components/ui/status-badge'
 import { logout } from '@/app/login/actions'
 import { getCurrentUser } from '@/lib/auth'
 import { createSupabaseServerClient } from '@/lib/supabase-server'
-import { formatShort } from '@/lib/date'
+import { supabaseAdmin } from '@/lib/supabase'
+import { NavetteList } from '@/components/navette/navette-list'
+
+const ACTIVE_STATUSES  = ['draft', 'confirmed', 'full']
+const HISTORY_STATUSES = ['done', 'cancelled']
 
 export default async function NavettePage() {
   const { profile } = await getCurrentUser()
+
+  await supabaseAdmin
+    .from('shuttles')
+    .update({ status: 'done' })
+    .in('status', ['confirmed', 'full'])
+    .lt('departure_time', new Date().toISOString())
 
   const supabase = await createSupabaseServerClient()
   const { data: shuttles } = await supabase
     .from('shuttles')
     .select('id, status, departure_time, max_seats, available_seats')
-    .in('status', ['draft', 'confirmed', 'full'])
     .order('departure_time', { ascending: true })
+
+  const active  = (shuttles ?? []).filter(s => ACTIVE_STATUSES.includes(s.status))
+  const storico = (shuttles ?? []).filter(s => HISTORY_STATUSES.includes(s.status)).reverse()
 
   return (
     <PageLayout>
@@ -42,48 +52,7 @@ export default async function NavettePage() {
 
       <h1 className="text-xl font-semibold mb-8">Navette disponibili</h1>
 
-      {!shuttles?.length ? (
-        <p className="font-mono text-sm" style={{ color: 'var(--text-muted)' }}>
-          Nessuna navetta disponibile al momento.
-        </p>
-      ) : (
-        <div className="flex flex-col gap-2">
-          {shuttles.map(s => (
-            <Link
-              key={s.id}
-              href={`/navette/${s.id}`}
-              className="flex items-center gap-4 rounded-sm border px-4 py-4 no-underline transition-colors group"
-              style={{ background: 'var(--bg-panel)', borderColor: 'var(--border)', color: 'inherit' }}
-            >
-              <StatusDot status={s.status} />
-              <span className="flex-1 min-w-0">
-                <span className="block font-medium text-sm" style={{ color: 'var(--text)' }}>
-                  {formatShort(s.departure_time)}
-                </span>
-                <span className="flex items-center gap-2 mt-1">
-                  <StatusBadge status={s.status} />
-                  {s.status === 'full' ? (
-                    <span className="font-mono text-xs" style={{ color: 'var(--text-dim)' }}>
-                      Posti esauriti
-                    </span>
-                  ) : (
-                    <span className="font-mono text-xs" style={{ color: 'var(--text-dim)' }}>
-                      {s.available_seats} posti disponibili
-                    </span>
-                  )}
-                </span>
-                {s.status === 'draft' && (
-                  <p className="font-mono text-[11px] mt-1.5" style={{ color: 'var(--text-dim)' }}>
-                    Navetta in bozza — non ancora garantita
-                  </p>
-                )}
-              </span>
-              <span className="font-mono text-sm transition-transform group-hover:translate-x-0.5"
-                style={{ color: 'var(--border)' }}>→</span>
-            </Link>
-          ))}
-        </div>
-      )}
+      <NavetteList initialActive={active} initialStorico={storico} />
     </PageLayout>
   )
 }

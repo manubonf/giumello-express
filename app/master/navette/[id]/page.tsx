@@ -23,6 +23,13 @@ export default async function NavettaDetailPage({
 }) {
   const { id } = await params
 
+  await supabaseAdmin
+    .from('shuttles')
+    .update({ status: 'done' })
+    .in('status', ['confirmed', 'full'])
+    .lt('departure_time', new Date().toISOString())
+    .eq('id', id)
+
   const { data: shuttle } = await supabaseAdmin
     .from('shuttles')
     .select('*')

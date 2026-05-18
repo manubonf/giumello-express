@@ -4,6 +4,7 @@ import { PageHeader, MasterBadge } from '@/components/ui/page-header'
 import { SubmitButton } from '@/components/ui/submit-button'
 import { ErrorAlert } from '@/components/ui/alert'
 import { FormField } from '@/components/ui/form-field'
+import { CredentialBox } from '@/components/ui/credential-box'
 import { createUser } from '@/app/master/utenti/actions'
 
 const ERROR_MSG: Record<string, string> = {
@@ -25,29 +26,7 @@ export default async function NuovoUtentePage({
 
       <h1 className="text-xl font-semibold mb-8">Nuovo utente</h1>
 
-      {ok === '1' && u && pw && (
-        <div className="rounded-sm border px-4 py-4 mb-8"
-          style={{ borderColor: 'var(--border)', background: 'var(--bg-panel)' }}>
-          <p className="font-mono text-[10px] uppercase tracking-widest mb-4"
-            style={{ color: 'var(--text-muted)' }}>
-            Utente creato — salva le credenziali ora
-          </p>
-          <div className="flex flex-col gap-3">
-            <div className="flex items-center justify-between">
-              <span className="font-mono text-xs" style={{ color: 'var(--text-dim)' }}>Username</span>
-              <span className="font-mono text-sm font-semibold" style={{ color: 'var(--text)' }}>{u}</span>
-            </div>
-            <div style={{ borderTop: '1px solid var(--border-subtle)' }} />
-            <div className="flex items-center justify-between">
-              <span className="font-mono text-xs" style={{ color: 'var(--text-dim)' }}>Password</span>
-              <span className="font-mono text-sm font-semibold tracking-wide" style={{ color: 'var(--text)' }}>{pw}</span>
-            </div>
-          </div>
-          <p className="font-mono text-[11px] mt-4" style={{ color: 'var(--text-dim)' }}>
-            La password non verrà mostrata di nuovo. Comunicala all&apos;utente e poi chiudi questa pagina.
-          </p>
-        </div>
-      )}
+      {ok === '1' && u && pw && <CredentialBox username={u} password={pw} />}
 
       {error && <ErrorAlert message={ERROR_MSG[error] ?? 'Errore sconosciuto.'} />}
 

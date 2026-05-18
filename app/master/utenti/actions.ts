@@ -47,6 +47,30 @@ export async function createUser(formData: FormData) {
   redirect(`/master/utenti/nuovo?ok=1&u=${encodeURIComponent(username)}&pw=${encodeURIComponent(password)}`)
 }
 
+export async function resetPassword(formData: FormData) {
+  await getMasterUser()
+
+  const id = formData.get('id') as string
+  const username = formData.get('username') as string
+
+  const { data: profile } = await supabaseAdmin
+    .from('profiles')
+    .select('role')
+    .eq('id', id)
+    .single()
+
+  if (profile?.role === 'master') redirect(`/master/utenti/${id}`)
+
+  const password = generatePassword()
+  const { error } = await supabaseAdmin.auth.admin.updateUserById(id, { password })
+  if (error) {
+    console.error('[resetPassword] Supabase error:', error)
+    redirect(`/master/utenti/${id}?error=errore-reset`)
+  }
+
+  redirect(`/master/utenti/${id}?ok=1&u=${encodeURIComponent(username)}&pw=${encodeURIComponent(password)}`)
+}
+
 export async function deleteUser(formData: FormData) {
   await getMasterUser()
 

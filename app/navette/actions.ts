@@ -20,16 +20,35 @@ export async function createBooking(formData: FormData) {
   const allUserIds = [user.id, ...participantIds]
   const totalCount = allUserIds.length + guestNames.length
 
-  // Verifica prenotazione esistente
-  const { data: existing } = await supabaseAdmin
+  // Verifica prenotazione esistente (come booker o come partecipante)
+  const { data: shuttleBookings } = await supabaseAdmin
     .from('bookings')
-    .select('id')
+    .select('id, booker_id')
     .eq('shuttle_id', shuttleId)
-    .eq('booker_id', user.id)
-    .maybeSingle()
 
-  if (existing) {
+  const myDirectBooking = shuttleBookings?.find(b => b.booker_id === user.id)
+  if (myDirectBooking) redirect(`/navette/${shuttleId}?error=prenotazione-esistente`)
+
+  const shuttleBookingIds = shuttleBookings?.map(b => b.id) ?? []
+  const { data: existingParticipants } = shuttleBookingIds.length
+    ? await supabaseAdmin
+        .from('booking_participants')
+        .select('user_id')
+        .in('booking_id', shuttleBookingIds)
+        .eq('is_guest', false)
+    : { data: [] }
+
+  const alreadyBookedIds = new Set([
+    ...(shuttleBookings?.map(b => b.booker_id) ?? []),
+    ...(existingParticipants ?? []).filter(p => p.user_id).map(p => p.user_id as string),
+  ])
+
+  if (alreadyBookedIds.has(user.id)) {
     redirect(`/navette/${shuttleId}?error=prenotazione-esistente`)
+  }
+
+  if (participantIds.some(id => alreadyBookedIds.has(id))) {
+    redirect(`/navette/${shuttleId}?error=partecipante-già-prenotato`)
   }
 
   // Prenota posti atomicamente
