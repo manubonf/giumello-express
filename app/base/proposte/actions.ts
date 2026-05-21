@@ -2,20 +2,14 @@
 
 import { getCurrentUser } from '@/lib/auth'
 import { createSupabaseServerClient } from '@/lib/supabase-server'
-import { getProfileIdsByRole } from '@/lib/data'
 import { sendPush } from '@/lib/push'
+import { masterIdsWithPref, baseIdsWithPref } from '@/lib/notif'
+import { formatShort } from '@/lib/date'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 
-function formatDate(iso: string) {
-  return new Intl.DateTimeFormat('it-IT', {
-    weekday: 'short', day: 'numeric', month: 'short',
-    hour: '2-digit', minute: '2-digit',
-  }).format(new Date(iso))
-}
-
 export async function createProposal(formData: FormData) {
-  const { user } = await getCurrentUser()
+  const { user, profile } = await getCurrentUser()
 
   const departureTime = (formData.get('departure_time') as string ?? '').trim()
   const notes = (formData.get('notes') as string ?? '').trim() || null
@@ -36,14 +30,22 @@ export async function createProposal(formData: FormData) {
     redirect('/base/proposte/nuova?error=errore-creazione')
   }
 
-  const masterIds = await getProfileIdsByRole('master')
-  if (masterIds.length) {
-    await sendPush(masterIds, {
-      title: 'Nuova proposta',
-      body: `Proposta per ${formatDate(departureTime)}`,
-      url: '/master/proposte',
-    })
-  }
+  const username = profile?.username ?? 'Qualcuno'
+  const proposalBody = `${username} ha proposto per ${formatShort(departureTime)}`
+
+  const [masterIds, otherBaseIds] = await Promise.all([
+    masterIdsWithPref('notif_m1'),
+    baseIdsWithPref('notif_u1', user.id),
+  ])
+
+  await Promise.all([
+    masterIds.length
+      ? sendPush(masterIds, { title: 'Nuova proposta', body: proposalBody, url: '/master/proposte' })
+      : undefined,
+    otherBaseIds.length
+      ? sendPush(otherBaseIds, { title: 'Nuova proposta navetta', body: proposalBody, url: '/base/proposte' })
+      : undefined,
+  ])
 
   revalidatePath('/base/proposte')
   redirect('/base/proposte?ok=1')

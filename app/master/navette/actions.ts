@@ -2,19 +2,15 @@
 
 import { getMasterUser } from '@/lib/auth'
 import { supabaseAdmin } from '@/lib/supabase'
-import { getProfileIdsByRole } from '@/lib/data'
 import { sendPush } from '@/lib/push'
-import { formatShort } from '@/lib/date'
+import {
+  baseIdsWithPref,
+  sendStateChangePush,
+  sendCancelledPush,
+  shuttleBody,
+} from '@/lib/notif'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
-
-async function getShuttleBookerIds(shuttleId: string): Promise<string[]> {
-  const { data } = await supabaseAdmin
-    .from('bookings')
-    .select('booker_id')
-    .eq('shuttle_id', shuttleId)
-  return (data ?? []).map((b) => b.booker_id)
-}
 
 export async function createShuttle(formData: FormData) {
   const user = await getMasterUser()
@@ -34,8 +30,10 @@ export async function createShuttle(formData: FormData) {
       redirect('/master/navette/nuova?error=dati-non-validi')
     }
   } else {
-    minSeats = 0 //defaul confermata
+    minSeats = 0
   }
+
+  const isConfirmed = minSeats === 0
 
   const { data: shuttle, error } = await supabaseAdmin.from('shuttles').insert({
     departure_time: departureTime,
@@ -43,7 +41,7 @@ export async function createShuttle(formData: FormData) {
     available_seats: maxSeats,
     min_seats: minSeats,
     created_by: user.id,
-    status: minSeats === 0 ? 'confirmed' : 'draft',
+    status: isConfirmed ? 'confirmed' : 'draft',
   }).select('id').single()
 
   if (error || !shuttle) {
@@ -51,13 +49,14 @@ export async function createShuttle(formData: FormData) {
     redirect('/master/navette/nuova?error=errore-creazione')
   }
 
-  const baseUserIds = await getProfileIdsByRole('base')
-  if (baseUserIds.length) {
-    await sendPush(baseUserIds, {
-      title: 'Nuova navetta disponibile',
-      body: `È disponibile una navetta per il ${formatShort(departureTime)}`,
-      url: `/base/navette/${shuttle.id}`,
-    })
+  // U2 (nuova navetta in bozza) or U3 (nuova navetta confermata direttamente)
+  const pref = isConfirmed ? 'notif_u3' : 'notif_u2'
+  const title = isConfirmed ? 'Nuova navetta confermata' : 'Nuova navetta disponibile (non ancora confermata)'
+  const body = shuttleBody(departureTime, maxSeats, maxSeats)
+
+  const ids = await baseIdsWithPref(pref)
+  if (ids.length) {
+    await sendPush(ids, { title, body, url: `/base/navette/${shuttle.id}` })
   }
 
   revalidatePath('/master/navette')
@@ -70,7 +69,7 @@ export async function confirmShuttle(formData: FormData) {
 
   const { data: shuttle } = await supabaseAdmin
     .from('shuttles')
-    .select('departure_time')
+    .select('departure_time, max_seats, available_seats')
     .eq('id', id)
     .single()
 
@@ -81,14 +80,8 @@ export async function confirmShuttle(formData: FormData) {
     .eq('status', 'draft')
 
   if (shuttle) {
-    const bookerIds = await getShuttleBookerIds(id)
-    if (bookerIds.length) {
-      await sendPush(bookerIds, {
-        title: 'Navetta confermata',
-        body: `La navetta del ${formatShort(shuttle.departure_time)} è confermata!`,
-        url: `/base/navette/${id}`,
-      })
-    }
+    const body = shuttleBody(shuttle.departure_time, shuttle.available_seats, shuttle.max_seats)
+    await sendStateChangePush(id, 'Navetta confermata', body)
   }
 
   revalidatePath('/master/navette')
@@ -128,14 +121,7 @@ export async function cancelShuttle(formData: FormData) {
     .neq('status', 'done')
 
   if (shuttle) {
-    const bookerIds = await getShuttleBookerIds(id)
-    if (bookerIds.length) {
-      await sendPush(bookerIds, {
-        title: 'Navetta annullata',
-        body: `La navetta del ${formatShort(shuttle.departure_time)} è stata annullata.`,
-        url: '/base/navette',
-      })
-    }
+    await sendCancelledPush(id, shuttle.departure_time)
   }
 
   revalidatePath('/master/navette')

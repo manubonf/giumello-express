@@ -3,6 +3,7 @@
 import { getMasterUser } from '@/lib/auth'
 import { supabaseAdmin } from '@/lib/supabase'
 import { sendPush } from '@/lib/push'
+import { baseIdsWithPref, userHasPref, shuttleBody } from '@/lib/notif'
 import { formatShort } from '@/lib/date'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
@@ -40,17 +41,19 @@ export async function acceptProposal(formData: FormData) {
     redirect('/master/proposte?error=proposta-non-trovata')
   }
 
-  const { error: shuttleError } = await supabaseAdmin.from('shuttles').insert({
+  const isConfirmed = minSeats === 0
+
+  const { data: createdShuttle, error: shuttleError } = await supabaseAdmin.from('shuttles').insert({
     departure_time: departureTime,
     max_seats: maxSeats,
     available_seats: maxSeats,
     min_seats: minSeats,
     created_by: user.id,
-    status: minSeats === 0 ? 'confirmed' : 'draft',
+    status: isConfirmed ? 'confirmed' : 'draft',
     proposal_id: proposalId,
-  })
+  }).select('id').single()
 
-  if (shuttleError) {
+  if (shuttleError || !createdShuttle) {
     console.error('[acceptProposal] shuttle insert error:', shuttleError)
     redirect(`/master/proposte/${proposalId}?error=errore-creazione`)
   }
@@ -60,11 +63,15 @@ export async function acceptProposal(formData: FormData) {
     .update({ status: 'accepted' })
     .eq('id', proposalId)
 
-  await sendPush([proposal.proposer_id], {
-    title: 'Proposta accettata',
-    body: `La tua proposta per ${formatShort(departureTime)} è stata accettata!`,
-    url: '/base/navette',
-  })
+  // U2 (bozza) or U3 (confermata direttamente) — a tutti gli utenti base con la pref attiva
+  const pref = isConfirmed ? 'notif_u3' : 'notif_u2'
+  const title = isConfirmed ? 'Nuova navetta confermata' : 'Nuova navetta disponibile (non ancora confermata)'
+  const body = shuttleBody(departureTime, maxSeats, maxSeats)
+
+  const ids = await baseIdsWithPref(pref)
+  if (ids.length) {
+    await sendPush(ids, { title, body, url: `/base/navette/${createdShuttle.id}` })
+  }
 
   revalidatePath('/master/proposte')
   revalidatePath('/base/proposte')
@@ -91,10 +98,11 @@ export async function rejectProposal(formData: FormData) {
     .eq('id', proposalId)
     .eq('status', 'pending')
 
-  if (proposal) {
+  // U8 — notifica solo al proponente, solo se ha la pref attiva
+  if (proposal && await userHasPref(proposal.proposer_id, 'notif_u8')) {
     await sendPush([proposal.proposer_id], {
       title: 'Proposta non accettata',
-      body: `La proposta per ${formatShort(proposal.departure_time)} non è stata accettata.`,
+      body: `La tua proposta per ${formatShort(proposal.departure_time)} non è stata accettata`,
       url: '/base/proposte',
     })
   }

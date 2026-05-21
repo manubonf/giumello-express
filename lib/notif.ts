@@ -1,0 +1,127 @@
+import { supabaseAdmin } from './supabase'
+import { sendPush } from './push'
+import { formatShort } from './date'
+
+export type MasterPref = 'notif_m1' | 'notif_m2' | 'notif_m3' | 'notif_m4' | 'notif_m5' | 'notif_m6'
+export type BasePref = 'notif_u1' | 'notif_u2' | 'notif_u3' | 'notif_u4' | 'notif_u5' | 'notif_u6' | 'notif_u7' | 'notif_u8' | 'notif_u9'
+
+export function shuttleBody(departure_time: string, available_seats: number, max_seats: number): string {
+  return `Navetta ${formatShort(departure_time)} — ${available_seats}/${max_seats} posti`
+}
+
+export async function masterIdsWithPref(pref: MasterPref): Promise<string[]> {
+  const { data } = await supabaseAdmin
+    .from('profiles')
+    .select('id')
+    .eq('role', 'master')
+    .eq(pref, true)
+  return (data ?? []).map((p: { id: string }) => p.id)
+}
+
+export async function baseIdsWithPref(pref: BasePref, excludeId?: string): Promise<string[]> {
+  let query = supabaseAdmin
+    .from('profiles')
+    .select('id')
+    .eq('role', 'base')
+    .eq(pref, true)
+  if (excludeId) query = query.neq('id', excludeId)
+  const { data } = await query
+  return (data ?? []).map((p: { id: string }) => p.id)
+}
+
+export async function bookedBaseIdsWithPref(shuttleId: string, pref: BasePref, excludeId?: string): Promise<string[]> {
+  const { data: bookings } = await supabaseAdmin
+    .from('bookings')
+    .select('booker_id')
+    .eq('shuttle_id', shuttleId)
+
+  const bookerIds = (bookings ?? []).map((b: { booker_id: string }) => b.booker_id)
+  if (!bookerIds.length) return []
+
+  let query = supabaseAdmin
+    .from('profiles')
+    .select('id')
+    .in('id', bookerIds)
+    .eq(pref, true)
+  if (excludeId) query = query.neq('id', excludeId)
+
+  const { data } = await query
+  return (data ?? []).map((p: { id: string }) => p.id)
+}
+
+export async function userHasPref(userId: string, pref: BasePref | MasterPref): Promise<boolean> {
+  const { data } = await supabaseAdmin
+    .from('profiles')
+    .select('id')
+    .eq('id', userId)
+    .eq(pref, true)
+    .maybeSingle()
+  return !!data
+}
+
+// Sends U4 + U5 (deduped) for any state change except cancellation
+export async function sendStateChangePush(
+  shuttleId: string,
+  title: string,
+  body: string,
+  excludeId?: string,
+) {
+  const [u4Ids, bookedU5Ids] = await Promise.all([
+    baseIdsWithPref('notif_u4', excludeId),
+    bookedBaseIdsWithPref(shuttleId, 'notif_u5', excludeId),
+  ])
+  const u4Set = new Set(u4Ids)
+  const recipients = [...u4Ids, ...bookedU5Ids.filter(id => !u4Set.has(id))]
+  if (recipients.length) {
+    await sendPush(recipients, { title, body, url: `/base/navette/${shuttleId}` })
+  }
+}
+
+// Sends U4 + U5 + U9 (deduped) for shuttle cancellation
+// U4/U5 recipients get the standard cancelled body; U9-only recipients get the personal body
+export async function sendCancelledPush(
+  shuttleId: string,
+  departure_time: string,
+  excludeId?: string,
+) {
+  const title = 'Navetta annullata'
+  const wideBody = `Navetta ${formatShort(departure_time)}`
+  const personalBody = `Navetta ${formatShort(departure_time)} — la tua prenotazione è stata rimossa`
+  const url = '/base/navette'
+
+  const [u4Ids, bookedU5Ids, bookedU9Ids] = await Promise.all([
+    baseIdsWithPref('notif_u4', excludeId),
+    bookedBaseIdsWithPref(shuttleId, 'notif_u5', excludeId),
+    bookedBaseIdsWithPref(shuttleId, 'notif_u9', excludeId),
+  ])
+
+  const u4Set = new Set(u4Ids)
+  const u5Only = bookedU5Ids.filter(id => !u4Set.has(id))
+  const coveredByU4orU5 = new Set([...u4Ids, ...bookedU5Ids])
+  const u9Only = bookedU9Ids.filter(id => !coveredByU4orU5.has(id))
+
+  const wideRecipients = [...new Set([...u4Ids, ...u5Only])]
+
+  await Promise.all([
+    wideRecipients.length ? sendPush(wideRecipients, { title, body: wideBody, url }) : undefined,
+    u9Only.length ? sendPush(u9Only, { title, body: personalBody, url }) : undefined,
+  ])
+}
+
+// Sends U6 + U7 (deduped) for seat count changes without state change
+export async function sendSeatUpdatePush(
+  shuttleId: string,
+  title: string,
+  body: string,
+  excludeId?: string,
+) {
+  const [u6Ids, bookedU7Ids] = await Promise.all([
+    baseIdsWithPref('notif_u6', excludeId),
+    bookedBaseIdsWithPref(shuttleId, 'notif_u7', excludeId),
+  ])
+  const u6Set = new Set(u6Ids)
+  const recipients = [...u6Ids, ...bookedU7Ids.filter(id => !u6Set.has(id))]
+  if (recipients.length) {
+    await sendPush(recipients, { title, body, url: `/base/navette/${shuttleId}` })
+  }
+}

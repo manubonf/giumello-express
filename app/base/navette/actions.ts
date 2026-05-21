@@ -2,8 +2,86 @@
 
 import { getCurrentUser } from '@/lib/auth'
 import { supabaseAdmin } from '@/lib/supabase'
+import { sendPush } from '@/lib/push'
+import {
+  masterIdsWithPref,
+  sendStateChangePush,
+  sendSeatUpdatePush,
+  shuttleBody,
+} from '@/lib/notif'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
+
+type ShuttleSnapshot = {
+  status: string
+  departure_time: string
+  max_seats: number
+  available_seats: number
+}
+
+async function getShuttleSnapshot(shuttleId: string): Promise<ShuttleSnapshot | null> {
+  const { data } = await supabaseAdmin
+    .from('shuttles')
+    .select('status, departure_time, max_seats, available_seats')
+    .eq('id', shuttleId)
+    .single()
+  return data
+}
+
+async function sendBookingNotifications(
+  shuttleId: string,
+  before: ShuttleSnapshot,
+  after: ShuttleSnapshot,
+  actorId: string,
+  masterTitle: string,
+  masterPref: 'notif_m2' | 'notif_m3' | 'notif_m4',
+) {
+  const body = shuttleBody(before.departure_time, after.available_seats, before.max_seats)
+  const masterUrl = `/master/navette/${shuttleId}`
+  const stateChanged = before.status !== after.status
+
+  const tasks: Promise<unknown>[] = []
+
+  // Master notification for the booking event
+  tasks.push(
+    masterIdsWithPref(masterPref).then(ids =>
+      ids.length ? sendPush(ids, { title: masterTitle, body, url: masterUrl }) : undefined
+    )
+  )
+
+  // M5: auto-confirmed (draft → confirmed via book_seats)
+  if (stateChanged && after.status === 'confirmed' && before.status === 'draft') {
+    tasks.push(
+      masterIdsWithPref('notif_m5').then(ids =>
+        ids.length ? sendPush(ids, { title: 'Navetta confermata automaticamente', body, url: masterUrl }) : undefined
+      )
+    )
+  }
+
+  // M6: back to draft (confirmed → draft via release_seats)
+  if (stateChanged && after.status === 'draft') {
+    tasks.push(
+      masterIdsWithPref('notif_m6').then(ids =>
+        ids.length ? sendPush(ids, { title: 'Navetta tornata in bozza — passeggeri insufficienti', body, url: masterUrl }) : undefined
+      )
+    )
+  }
+
+  // Base users: state change (U4/U5) or seat update (U6/U7)
+  if (stateChanged) {
+    let stateTitle: string
+    if (after.status === 'confirmed') stateTitle = 'Navetta confermata'
+    else if (after.status === 'full') stateTitle = 'Navetta al completo'
+    else if (after.status === 'draft') stateTitle = 'Navetta tornata in bozza'
+    else stateTitle = 'Aggiornamento navetta'
+
+    tasks.push(sendStateChangePush(shuttleId, stateTitle, body, actorId))
+  } else {
+    tasks.push(sendSeatUpdatePush(shuttleId, masterTitle, body, actorId))
+  }
+
+  await Promise.all(tasks)
+}
 
 export async function createBooking(formData: FormData) {
   const { user } = await getCurrentUser()
@@ -16,15 +94,13 @@ export async function createBooking(formData: FormData) {
     ? guestsRaw.split('\n').map(g => g.trim()).filter(Boolean).slice(0, 20)
     : []
 
-  // Booker è sempre incluso; deduplicazione degli altri utenti
   const allUserIds = [user.id, ...participantIds]
   const totalCount = allUserIds.length + guestNames.length
 
-  // Verifica prenotazione esistente (come booker o come partecipante)
-  const { data: shuttleBookings } = await supabaseAdmin
-    .from('bookings')
-    .select('id, booker_id')
-    .eq('shuttle_id', shuttleId)
+  const [shuttleBefore, { data: shuttleBookings }] = await Promise.all([
+    getShuttleSnapshot(shuttleId),
+    supabaseAdmin.from('bookings').select('id, booker_id').eq('shuttle_id', shuttleId),
+  ])
 
   const myDirectBooking = shuttleBookings?.find(b => b.booker_id === user.id)
   if (myDirectBooking) redirect(`/base/navette/${shuttleId}?error=prenotazione-esistente`)
@@ -51,7 +127,6 @@ export async function createBooking(formData: FormData) {
     redirect(`/base/navette/${shuttleId}?error=partecipante-già-prenotato`)
   }
 
-  // Prenota posti atomicamente
   const { error: bookError } = await supabaseAdmin
     .rpc('book_seats', { p_shuttle_id: shuttleId, p_count: totalCount })
 
@@ -66,7 +141,6 @@ export async function createBooking(formData: FormData) {
     redirect(`/base/navette/${shuttleId}?error=errore-prenotazione`)
   }
 
-  // Crea il record booking
   const { data: booking, error: insertError } = await supabaseAdmin
     .from('bookings')
     .insert({ shuttle_id: shuttleId, booker_id: user.id })
@@ -78,7 +152,6 @@ export async function createBooking(formData: FormData) {
     redirect(`/base/navette/${shuttleId}?error=errore-prenotazione`)
   }
 
-  // Crea i partecipanti
   const rows = [
     ...allUserIds.map(uid => ({ booking_id: booking.id, user_id: uid, is_guest: false })),
     ...guestNames.map(name => ({ booking_id: booking.id, user_id: null, guest_label: name, is_guest: true })),
@@ -95,8 +168,12 @@ export async function createBooking(formData: FormData) {
     redirect(`/base/navette/${shuttleId}?error=errore-prenotazione`)
   }
 
-  revalidatePath(`/base/navette/${shuttleId}`)
+  const shuttleAfter = await getShuttleSnapshot(shuttleId)
+  if (shuttleBefore && shuttleAfter) {
+    await sendBookingNotifications(shuttleId, shuttleBefore, shuttleAfter, user.id, 'Nuova prenotazione', 'notif_m2')
+  }
 
+  revalidatePath(`/base/navette/${shuttleId}`)
   redirect(`/base/navette/${shuttleId}?ok=1`)
 }
 
@@ -112,12 +189,15 @@ export async function updateBooking(formData: FormData) {
     ? guestsRaw.split('\n').map(g => g.trim()).filter(Boolean).slice(0, 20)
     : []
 
-  const { data: booking } = await supabaseAdmin
-    .from('bookings')
-    .select('id, booker_id, shuttle_id')
-    .eq('id', bookingId)
-    .eq('booker_id', user.id)
-    .single()
+  const [{ data: booking }, shuttleBefore] = await Promise.all([
+    supabaseAdmin
+      .from('bookings')
+      .select('id, booker_id, shuttle_id')
+      .eq('id', bookingId)
+      .eq('booker_id', user.id)
+      .single(),
+    getShuttleSnapshot(shuttleId),
+  ])
 
   if (!booking) redirect(`/base/navette/${shuttleId}?error=non-autorizzato`)
 
@@ -167,6 +247,11 @@ export async function updateBooking(formData: FormData) {
     })
   }
 
+  const shuttleAfter = await getShuttleSnapshot(shuttleId)
+  if (shuttleBefore && shuttleAfter) {
+    await sendBookingNotifications(shuttleId, shuttleBefore, shuttleAfter, user.id, 'Prenotazione modificata', 'notif_m3')
+  }
+
   revalidatePath(`/base/navette/${shuttleId}`)
   redirect(`/base/navette/${shuttleId}?ok=modifica`)
 }
@@ -177,13 +262,15 @@ export async function cancelBooking(formData: FormData) {
   const bookingId = formData.get('booking_id') as string
   const shuttleId = formData.get('shuttle_id') as string
 
-  // Verifica proprietà e conta partecipanti
-  const { data: booking } = await supabaseAdmin
-    .from('bookings')
-    .select('id, booker_id, shuttle_id')
-    .eq('id', bookingId)
-    .eq('booker_id', user.id)
-    .single()
+  const [{ data: booking }, shuttleBefore] = await Promise.all([
+    supabaseAdmin
+      .from('bookings')
+      .select('id, booker_id, shuttle_id')
+      .eq('id', bookingId)
+      .eq('booker_id', user.id)
+      .single(),
+    getShuttleSnapshot(shuttleId),
+  ])
 
   if (!booking) redirect(`/base/navette/${shuttleId}?error=non-autorizzato`)
 
@@ -194,10 +281,8 @@ export async function cancelBooking(formData: FormData) {
 
   const participantCount = count ?? 0
 
-  // Elimina prenotazione (cascade su booking_participants)
   await supabaseAdmin.from('bookings').delete().eq('id', bookingId)
 
-  // Rilascia posti
   if (participantCount > 0) {
     await supabaseAdmin.rpc('release_seats', {
       p_shuttle_id: booking.shuttle_id,
@@ -205,7 +290,11 @@ export async function cancelBooking(formData: FormData) {
     })
   }
 
-  revalidatePath(`/base/navette/${booking.shuttle_id}`)
+  const shuttleAfter = await getShuttleSnapshot(shuttleId)
+  if (shuttleBefore && shuttleAfter) {
+    await sendBookingNotifications(shuttleId, shuttleBefore, shuttleAfter, user.id, 'Prenotazione cancellata', 'notif_m4')
+  }
 
+  revalidatePath(`/base/navette/${booking.shuttle_id}`)
   redirect(`/base/navette/${booking.shuttle_id}`)
 }
