@@ -2,6 +2,7 @@
 
 import { getMasterUser } from '@/lib/auth'
 import { supabaseAdmin } from '@/lib/supabase'
+import { getProfileIdsByRole } from '@/lib/data'
 import { sendPush } from '@/lib/push'
 import { formatShort } from '@/lib/date'
 import { revalidatePath } from 'next/cache'
@@ -50,20 +51,13 @@ export async function createShuttle(formData: FormData) {
     redirect('/master/navette/nuova?error=errore-creazione')
   }
 
-  const { data: participants } = await supabaseAdmin
-    .from('profiles')
-    .select('id')
-    .eq('role', 'base')
-
-  if (participants?.length) {
-    await sendPush(
-      participants.map((p) => p.id),
-      {
-        title: 'Nuova navetta disponibile',
-        body: `È disponibile una navetta per il ${formatShort(departureTime)}`,
-        url: `/base/navette/${shuttle.id}`,
-      },
-    )
+  const baseUserIds = await getProfileIdsByRole('base')
+  if (baseUserIds.length) {
+    await sendPush(baseUserIds, {
+      title: 'Nuova navetta disponibile',
+      body: `È disponibile una navetta per il ${formatShort(departureTime)}`,
+      url: `/base/navette/${shuttle.id}`,
+    })
   }
 
   revalidatePath('/master/navette')

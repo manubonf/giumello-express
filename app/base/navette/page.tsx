@@ -5,6 +5,7 @@ import { logout } from '@/app/login/actions'
 import { getCurrentUser } from '@/lib/auth'
 import { createSupabaseServerClient } from '@/lib/supabase-server'
 import { supabaseAdmin } from '@/lib/supabase'
+import { markExpiredShuttlesDone } from '@/lib/data'
 import { NavetteList } from '@/components/navette/navette-list'
 
 const ACTIVE_STATUSES  = ['draft', 'confirmed', 'full']
@@ -13,11 +14,7 @@ const HISTORY_STATUSES = ['done', 'cancelled']
 export default async function NavettePage() {
   const { user, profile } = await getCurrentUser()
 
-  await supabaseAdmin
-    .from('shuttles')
-    .update({ status: 'done' })
-    .in('status', ['confirmed', 'full'])
-    .lt('departure_time', new Date().toISOString())
+  await markExpiredShuttlesDone()
 
   const supabase = await createSupabaseServerClient()
   const [{ data: shuttles }, { data: participations }] = await Promise.all([

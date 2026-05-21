@@ -3,18 +3,14 @@ import { PageLayout } from '@/components/ui/page-layout'
 import { PageHeader, MasterBadge } from '@/components/ui/page-header'
 import { StatusDot, StatusBadge, STATUS_LABEL } from '@/components/ui/status-badge'
 import { supabaseAdmin } from '@/lib/supabase'
+import { markExpiredShuttlesDone } from '@/lib/data'
 import { formatShort } from '@/lib/date'
 
 const ACTIVE_STATUSES = ['draft', 'confirmed', 'full']
 const HISTORY_STATUSES = ['done', 'cancelled']
 
 export default async function MasterNavettePage() {
-  // Promuovi automaticamente le navette confermate/complete scadute
-  await supabaseAdmin
-    .from('shuttles')
-    .update({ status: 'done' })
-    .in('status', ['confirmed', 'full'])
-    .lt('departure_time', new Date().toISOString())
+  await markExpiredShuttlesDone()
 
   const { data: shuttles } = await supabaseAdmin
     .from('shuttles')

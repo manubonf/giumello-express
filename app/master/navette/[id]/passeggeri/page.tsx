@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import { PageLayout } from '@/components/ui/page-layout'
 import { PageHeader, MasterBadge } from '@/components/ui/page-header'
 import { supabaseAdmin } from '@/lib/supabase'
+import { getBookingsWithParticipants } from '@/lib/data'
 import { formatShort } from '@/lib/date'
 
 export default async function PasseggeriPage({
@@ -11,42 +12,16 @@ export default async function PasseggeriPage({
 }) {
   const { id } = await params
 
-  const { data: shuttle } = await supabaseAdmin
-    .from('shuttles')
-    .select('id, departure_time, status, max_seats, available_seats')
-    .eq('id', id)
-    .single()
+  const [{ data: shuttle }, { bookings, profileById, participantsByBooking }] = await Promise.all([
+    supabaseAdmin
+      .from('shuttles')
+      .select('id, departure_time, status, max_seats, available_seats')
+      .eq('id', id)
+      .single(),
+    getBookingsWithParticipants(id),
+  ])
 
   if (!shuttle) notFound()
-
-  const { data: bookings } = await supabaseAdmin
-    .from('bookings')
-    .select('id, booker_id, created_at')
-    .eq('shuttle_id', id)
-    .order('created_at', { ascending: true })
-
-  const bookerIds = [...new Set(bookings?.map(b => b.booker_id) ?? [])]
-  const { data: bookerProfiles } = bookerIds.length
-    ? await supabaseAdmin.from('profiles').select('id, username').in('id', bookerIds)
-    : { data: [] as { id: string; username: string }[] }
-  const profileById = Object.fromEntries((bookerProfiles ?? []).map(p => [p.id, p]))
-
-  const bookingIds = bookings?.map(b => b.id) ?? []
-
-  const { data: allParticipants } = bookingIds.length
-    ? await supabaseAdmin
-        .from('booking_participants')
-        .select('id, booking_id, is_guest, guest_label, profiles(username)')
-        .in('booking_id', bookingIds)
-    : { data: [] }
-
-  const participantsByBooking = (allParticipants ?? []).reduce<
-    Record<string, { id: string; is_guest: boolean; guest_label: string | null; profiles: { username: string } | null }[]>
-  >((acc, p) => {
-    if (!acc[p.booking_id]) acc[p.booking_id] = []
-    acc[p.booking_id].push(p as unknown as { id: string; is_guest: boolean; guest_label: string | null; profiles: { username: string } | null })
-    return acc
-  }, {})
 
   const booked = shuttle.max_seats - shuttle.available_seats
 

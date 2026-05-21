@@ -2,7 +2,7 @@
 
 import { getCurrentUser } from '@/lib/auth'
 import { createSupabaseServerClient } from '@/lib/supabase-server'
-import { supabaseAdmin } from '@/lib/supabase'
+import { getProfileIdsByRole } from '@/lib/data'
 import { sendPush } from '@/lib/push'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
@@ -36,20 +36,13 @@ export async function createProposal(formData: FormData) {
     redirect('/base/proposte/nuova?error=errore-creazione')
   }
 
-  const { data: masters } = await supabaseAdmin
-    .from('profiles')
-    .select('id')
-    .eq('role', 'master')
-
-  if (masters?.length) {
-    await sendPush(
-      masters.map((m) => m.id),
-      {
-        title: 'Nuova proposta',
-        body: `Proposta per ${formatDate(departureTime)}`,
-        url: '/master/proposte',
-      },
-    )
+  const masterIds = await getProfileIdsByRole('master')
+  if (masterIds.length) {
+    await sendPush(masterIds, {
+      title: 'Nuova proposta',
+      body: `Proposta per ${formatDate(departureTime)}`,
+      url: '/master/proposte',
+    })
   }
 
   revalidatePath('/base/proposte')
