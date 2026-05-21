@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import { IBM_Plex_Sans, IBM_Plex_Mono } from 'next/font/google'
-import '@/components/ui/globals.css'
+import '@/app/globals.css'
 
 const ibmPlexSans = IBM_Plex_Sans({
   variable: '--font-sans',

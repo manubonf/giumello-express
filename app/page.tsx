@@ -4,7 +4,7 @@ import { PageHeader, MasterBadge } from '@/components/ui/page-header'
 import { SubmitButton } from '@/components/ui/submit-button'
 import { getCurrentUser } from '@/lib/auth'
 import { logout } from '@/app/login/actions'
-import { PushSubscribe } from '@/components/push-subscribe'
+import { PushSubscribe } from '@/components/ui/push-subscribe'
 import { supabaseAdmin } from '@/lib/supabase'
 
 type NavItem = { href: string; icon: string; title: string; desc: string; badge?: number }
