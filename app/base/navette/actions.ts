@@ -27,7 +27,7 @@ export async function createBooking(formData: FormData) {
     .eq('shuttle_id', shuttleId)
 
   const myDirectBooking = shuttleBookings?.find(b => b.booker_id === user.id)
-  if (myDirectBooking) redirect(`/navette/${shuttleId}?error=prenotazione-esistente`)
+  if (myDirectBooking) redirect(`/base/navette/${shuttleId}?error=prenotazione-esistente`)
 
   const shuttleBookingIds = shuttleBookings?.map(b => b.id) ?? []
   const { data: existingParticipants } = shuttleBookingIds.length
@@ -44,11 +44,11 @@ export async function createBooking(formData: FormData) {
   ])
 
   if (alreadyBookedIds.has(user.id)) {
-    redirect(`/navette/${shuttleId}?error=prenotazione-esistente`)
+    redirect(`/base/navette/${shuttleId}?error=prenotazione-esistente`)
   }
 
   if (participantIds.some(id => alreadyBookedIds.has(id))) {
-    redirect(`/navette/${shuttleId}?error=partecipante-già-prenotato`)
+    redirect(`/base/navette/${shuttleId}?error=partecipante-già-prenotato`)
   }
 
   // Prenota posti atomicamente
@@ -58,12 +58,12 @@ export async function createBooking(formData: FormData) {
   if (bookError) {
     console.error('[createBooking] book_seats error:', bookError)
     if (bookError.message.includes('non prenotabile')) {
-      redirect(`/navette/${shuttleId}?error=navetta-non-prenotabile`)
+      redirect(`/base/navette/${shuttleId}?error=navetta-non-prenotabile`)
     }
     if (bookError.message.includes('Posti insufficienti')) {
-      redirect(`/navette/${shuttleId}?error=posti-insufficienti`)
+      redirect(`/base/navette/${shuttleId}?error=posti-insufficienti`)
     }
-    redirect(`/navette/${shuttleId}?error=errore-prenotazione`)
+    redirect(`/base/navette/${shuttleId}?error=errore-prenotazione`)
   }
 
   // Crea il record booking
@@ -75,7 +75,7 @@ export async function createBooking(formData: FormData) {
 
   if (insertError || !booking) {
     await supabaseAdmin.rpc('release_seats', { p_shuttle_id: shuttleId, p_count: totalCount })
-    redirect(`/navette/${shuttleId}?error=errore-prenotazione`)
+    redirect(`/base/navette/${shuttleId}?error=errore-prenotazione`)
   }
 
   // Crea i partecipanti
@@ -92,12 +92,12 @@ export async function createBooking(formData: FormData) {
     console.error('[createBooking] participants error:', participantsError)
     await supabaseAdmin.from('bookings').delete().eq('id', booking.id)
     await supabaseAdmin.rpc('release_seats', { p_shuttle_id: shuttleId, p_count: totalCount })
-    redirect(`/navette/${shuttleId}?error=errore-prenotazione`)
+    redirect(`/base/navette/${shuttleId}?error=errore-prenotazione`)
   }
 
-  revalidatePath(`/navette/${shuttleId}`)
-  revalidatePath('/prenotazioni')
-  redirect(`/navette/${shuttleId}?ok=1`)
+  revalidatePath(`/base/navette/${shuttleId}`)
+
+  redirect(`/base/navette/${shuttleId}?ok=1`)
 }
 
 export async function cancelBooking(formData: FormData) {
@@ -114,7 +114,7 @@ export async function cancelBooking(formData: FormData) {
     .eq('booker_id', user.id)
     .single()
 
-  if (!booking) redirect(`/navette/${shuttleId}?error=non-autorizzato`)
+  if (!booking) redirect(`/base/navette/${shuttleId}?error=non-autorizzato`)
 
   const { count } = await supabaseAdmin
     .from('booking_participants')
@@ -134,7 +134,7 @@ export async function cancelBooking(formData: FormData) {
     })
   }
 
-  revalidatePath(`/navette/${booking.shuttle_id}`)
-  revalidatePath('/prenotazioni')
-  redirect(`/navette/${booking.shuttle_id}`)
+  revalidatePath(`/base/navette/${booking.shuttle_id}`)
+
+  redirect(`/base/navette/${booking.shuttle_id}`)
 }

@@ -28,8 +28,12 @@ export default async function MasterPropostePage({
     : { data: [] as { id: string; username: string }[] }
   const profileById = Object.fromEntries((proposerProfiles ?? []).map(p => [p.id, p]))
 
+  const oneWeekAgo = new Date()
+  oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)
+  const cutoff = oneWeekAgo.toISOString()
+
   const pending = proposals?.filter(p => p.status === 'pending') ?? []
-  const others  = proposals?.filter(p => p.status !== 'pending') ?? []
+  const others  = proposals?.filter(p => p.status !== 'pending' && p.departure_time >= cutoff) ?? []
 
   return (
     <PageLayout>

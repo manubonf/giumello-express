@@ -65,7 +65,7 @@ export async function createShuttle(formData: FormData) {
       {
         title: 'Nuova navetta disponibile',
         body: `È disponibile una navetta per il ${formatShort(departureTime)}`,
-        url: `/navette/${shuttle.id}`,
+        url: `/base/navette/${shuttle.id}`,
       },
     )
   }
@@ -96,7 +96,7 @@ export async function confirmShuttle(formData: FormData) {
       await sendPush(bookerIds, {
         title: 'Navetta confermata',
         body: `La navetta del ${formatShort(shuttle.departure_time)} è confermata!`,
-        url: `/navette/${id}`,
+        url: `/base/navette/${id}`,
       })
     }
   }
@@ -143,7 +143,7 @@ export async function cancelShuttle(formData: FormData) {
       await sendPush(bookerIds, {
         title: 'Navetta annullata',
         body: `La navetta del ${formatShort(shuttle.departure_time)} è stata annullata.`,
-        url: '/navette',
+        url: '/base/navette',
       })
     }
   }

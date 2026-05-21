@@ -17,10 +17,17 @@ export function PageHeader({
     >
       <div className="flex items-center gap-3">
         {backHref && (
-          <Link href={backHref} className="font-mono text-sm no-underline"
-            style={{ color: 'var(--text-muted)' }}>←</Link>
+          <Link
+            href={backHref}
+            className="flex items-center rounded-sm border px-2 py-1 font-mono text-sm no-underline transition-colors hover:border-[--red] hover:text-[--red] active:scale-95"
+            style={{ borderColor: 'var(--border-muted)', color: 'var(--text-dim)' }}
+          >
+            ←
+          </Link>
         )}
-        <NavetteLogo height={logoHeight} />
+        <Link href="/" className="no-underline flex items-center">
+          <NavetteLogo height={logoHeight} />
+        </Link>
       </div>
       {right}
     </header>

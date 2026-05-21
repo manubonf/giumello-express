@@ -21,7 +21,7 @@ export default async function NuovaPropostaPage({
 
   return (
     <PageLayout>
-      <PageHeader backHref="/proposte" />
+      <PageHeader backHref="/base/proposte" />
 
       <h1 className="text-xl font-semibold mb-8">Nuova proposta</h1>
 

@@ -21,7 +21,7 @@ export async function createProposal(formData: FormData) {
   const notes = (formData.get('notes') as string ?? '').trim() || null
 
   if (!departureTime) {
-    redirect('/proposte/nuova?error=dati-non-validi')
+    redirect('/base/proposte/nuova?error=dati-non-validi')
   }
 
   const supabase = await createSupabaseServerClient()
@@ -33,7 +33,7 @@ export async function createProposal(formData: FormData) {
 
   if (error) {
     console.error('[createProposal] error:', error)
-    redirect('/proposte/nuova?error=errore-creazione')
+    redirect('/base/proposte/nuova?error=errore-creazione')
   }
 
   const { data: masters } = await supabaseAdmin
@@ -52,6 +52,6 @@ export async function createProposal(formData: FormData) {
     )
   }
 
-  revalidatePath('/proposte')
-  redirect('/proposte?ok=1')
+  revalidatePath('/base/proposte')
+  redirect('/base/proposte?ok=1')
 }

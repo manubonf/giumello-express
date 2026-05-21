@@ -67,12 +67,12 @@ export async function acceptProposal(formData: FormData) {
   await sendPush([proposal.proposer_id], {
     title: 'Proposta accettata',
     body: `La tua proposta per ${formatShort(departureTime)} è stata accettata!`,
-    url: '/navette',
+    url: '/base/navette',
   })
 
   revalidatePath('/master/proposte')
-  revalidatePath('/proposte')
-  revalidatePath('/navette')
+  revalidatePath('/base/proposte')
+  revalidatePath('/base/navette')
   revalidatePath('/master/navette')
   redirect('/master/proposte')
 }
@@ -99,11 +99,11 @@ export async function rejectProposal(formData: FormData) {
     await sendPush([proposal.proposer_id], {
       title: 'Proposta non accettata',
       body: `La proposta per ${formatShort(proposal.departure_time)} non è stata accettata.`,
-      url: '/proposte',
+      url: '/base/proposte',
     })
   }
 
   revalidatePath('/master/proposte')
-  revalidatePath('/proposte')
+  revalidatePath('/base/proposte')
   redirect('/master/proposte')
 }

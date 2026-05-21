@@ -25,8 +25,12 @@ export default async function NavettePage() {
     .select('id, status, departure_time, max_seats, available_seats')
     .order('departure_time', { ascending: true })
 
+  const oneWeekAgo = new Date()
+  oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)
+  const cutoff = oneWeekAgo.toISOString()
+
   const active  = (shuttles ?? []).filter(s => ACTIVE_STATUSES.includes(s.status))
-  const storico = (shuttles ?? []).filter(s => HISTORY_STATUSES.includes(s.status)).reverse()
+  const storico = (shuttles ?? []).filter(s => HISTORY_STATUSES.includes(s.status) && s.departure_time >= cutoff).reverse()
 
   return (
     <PageLayout>

@@ -97,7 +97,7 @@ export default async function NavettaDetailPage({
   return (
     <PageLayout>
       <PageHeader
-        backHref="/navette"
+        backHref="/base/navette"
         right={
           <span className="font-mono text-xs" style={{ color: 'var(--text-muted)' }}>
             {profile?.username}
