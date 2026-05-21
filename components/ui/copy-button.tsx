@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { Button } from '@/components/ui/button'
 
 export function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false)
@@ -14,7 +15,7 @@ export function CopyButton({ text }: { text: string }) {
   }
 
   return (
-    <button
+    <Button
       onClick={handleCopy}
       className="rounded-sm border px-2 py-1 font-mono text-[10px] uppercase tracking-wide transition-colors"
       style={{
@@ -24,6 +25,6 @@ export function CopyButton({ text }: { text: string }) {
       }}
     >
       {copied ? 'Copiato!' : 'Copia'}
-    </button>
+    </Button>
   )
 }

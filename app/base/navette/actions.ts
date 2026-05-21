@@ -100,6 +100,77 @@ export async function createBooking(formData: FormData) {
   redirect(`/base/navette/${shuttleId}?ok=1`)
 }
 
+export async function updateBooking(formData: FormData) {
+  const { user } = await getCurrentUser()
+
+  const bookingId = formData.get('booking_id') as string
+  const shuttleId = formData.get('shuttle_id') as string
+  const newParticipantIds = (formData.getAll('participant_ids') as string[])
+    .filter(id => id && id !== user.id)
+  const guestsRaw = (formData.get('guests') as string ?? '').trim()
+  const newGuestNames = guestsRaw
+    ? guestsRaw.split('\n').map(g => g.trim()).filter(Boolean).slice(0, 20)
+    : []
+
+  const { data: booking } = await supabaseAdmin
+    .from('bookings')
+    .select('id, booker_id, shuttle_id')
+    .eq('id', bookingId)
+    .eq('booker_id', user.id)
+    .single()
+
+  if (!booking) redirect(`/base/navette/${shuttleId}?error=non-autorizzato`)
+
+  const { data: currentParticipants } = await supabaseAdmin
+    .from('booking_participants')
+    .select('id')
+    .eq('booking_id', bookingId)
+
+  const oldCount = currentParticipants?.length ?? 0
+  const allNewUserIds = [user.id, ...newParticipantIds]
+  const newCount = allNewUserIds.length + newGuestNames.length
+  const delta = newCount - oldCount
+
+  if (delta > 0) {
+    const { error } = await supabaseAdmin.rpc('book_seats', {
+      p_shuttle_id: booking.shuttle_id,
+      p_count: delta,
+    })
+    if (error) {
+      if (error.message.includes('Posti insufficienti')) {
+        redirect(`/base/navette/${shuttleId}?error=posti-insufficienti`)
+      }
+      redirect(`/base/navette/${shuttleId}?error=errore-prenotazione`)
+    }
+  }
+
+  await supabaseAdmin.from('booking_participants').delete().eq('booking_id', bookingId)
+
+  const rows = [
+    ...allNewUserIds.map(uid => ({ booking_id: bookingId, user_id: uid, is_guest: false })),
+    ...newGuestNames.map(name => ({ booking_id: bookingId, user_id: null, guest_label: name, is_guest: true })),
+  ]
+
+  const { error: insertError } = await supabaseAdmin.from('booking_participants').insert(rows)
+
+  if (insertError) {
+    if (delta > 0) {
+      await supabaseAdmin.rpc('release_seats', { p_shuttle_id: booking.shuttle_id, p_count: delta })
+    }
+    redirect(`/base/navette/${shuttleId}?error=errore-prenotazione`)
+  }
+
+  if (delta < 0) {
+    await supabaseAdmin.rpc('release_seats', {
+      p_shuttle_id: booking.shuttle_id,
+      p_count: Math.abs(delta),
+    })
+  }
+
+  revalidatePath(`/base/navette/${shuttleId}`)
+  redirect(`/base/navette/${shuttleId}?ok=modifica`)
+}
+
 export async function cancelBooking(formData: FormData) {
   const { user } = await getCurrentUser()
 

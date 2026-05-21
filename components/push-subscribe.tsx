@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { Button } from '@/components/ui/button'
 
 function urlBase64ToUint8Array(base64String: string) {
   const padding = '='.repeat((4 - (base64String.length % 4)) % 4)
@@ -90,7 +91,7 @@ export function PushSubscribe() {
   }
 
   return (
-    <button
+    <Button
       onClick={subscription ? unsubscribe : subscribe}
       disabled={loading}
       title={subscription ? 'Disattiva notifiche' : 'Attiva notifiche'}
@@ -103,6 +104,6 @@ export function PushSubscribe() {
       }}
     >
       {subscription ? '🔔 On' : '🔕 Off'}
-    </button>
+    </Button>
   )
 }

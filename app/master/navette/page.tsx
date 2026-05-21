@@ -55,7 +55,7 @@ export default async function MasterNavettePage() {
             <Link
               key={s.id}
               href={`/master/navette/${s.id}`}
-              className="flex items-center gap-4 rounded-sm border px-4 py-3 no-underline transition-colors group"
+              className="flex items-center gap-4 rounded-sm border px-4 py-3 no-underline transition-colors active:scale-95 group"
               style={{ background: 'var(--bg-panel)', borderColor: 'var(--border)', color: 'inherit' }}
             >
               <StatusDot status={s.status} />
@@ -85,7 +85,7 @@ export default async function MasterNavettePage() {
               <Link
                 key={s.id}
                 href={`/master/navette/${s.id}`}
-                className="flex items-center gap-4 rounded-sm border px-4 py-3 no-underline group"
+                className="flex items-center gap-4 rounded-sm border px-4 py-3 no-underline transition-colors active:scale-95 group"
                 style={{ background: 'var(--bg-panel)', borderColor: 'var(--border-subtle)', color: 'inherit' }}
               >
                 <StatusDot status={s.status} />

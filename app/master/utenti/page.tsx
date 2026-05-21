@@ -45,7 +45,7 @@ export default async function MasterUtentiPage() {
             <Link
               key={p.id}
               href={`/master/utenti/${p.id}`}
-              className="flex items-center gap-4 rounded-sm border px-4 py-3 no-underline transition-colors group"
+              className="flex items-center gap-4 rounded-sm border px-4 py-3 no-underline transition-colors active:scale-95 group"
               style={{ background: 'var(--bg-panel)', borderColor: 'var(--border)', color: 'inherit' }}
             >
               <span className="flex-1 min-w-0">

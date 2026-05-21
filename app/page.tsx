@@ -71,7 +71,7 @@ export default async function HomePage() {
           <Link
             key={item.href}
             href={item.href}
-            className="flex items-center gap-4 rounded-sm border px-5 py-4 no-underline transition-colors group"
+            className="flex items-center gap-4 rounded-sm border px-5 py-4 no-underline transition-colors active:scale-95 group"
             style={{ background: 'var(--bg-panel)', borderColor: 'var(--border)', color: 'inherit' }}
           >
             <span className="text-xl w-8 text-center flex-shrink-0">{item.icon}</span>

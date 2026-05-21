@@ -3,9 +3,10 @@
 import { useEffect, useMemo, useState } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
 import { SubmitButton } from '@/components/ui/submit-button'
+import { Button } from '@/components/ui/button'
 import { StatusBadge, StatusDot } from '@/components/ui/status-badge'
 import { ErrorAlert, SuccessAlert } from '@/components/ui/alert'
-import { createBooking, cancelBooking } from '@/app/base/navette/actions'
+import { createBooking, cancelBooking, updateBooking } from '@/app/base/navette/actions'
 import { formatFull } from '@/lib/date'
 
 type ParticipantEntry = {
@@ -64,6 +65,7 @@ export function NavettaDetail({
 }) {
   const [shuttleInfo, setShuttleInfo] = useState(initialShuttle)
   const [bookings, setBookings] = useState(initialBookings)
+  const [isEditing, setIsEditing] = useState(false)
 
   const alreadyBookedUserIds = useMemo(() => {
     const ids = new Set<string>()
@@ -79,6 +81,28 @@ export function NavettaDetail({
   const availableProfiles = useMemo(
     () => allOtherProfiles.filter(p => !alreadyBookedUserIds.has(p.id)),
     [allOtherProfiles, alreadyBookedUserIds],
+  )
+
+  const myBookingParticipantIds = useMemo(() => {
+    const myBooking = bookings.find(b => b.booker_id === userId)
+    const ids = new Set<string>()
+    for (const p of myBooking?.participants ?? []) {
+      if (!p.is_guest && p.user_id && p.user_id !== userId) ids.add(p.user_id)
+    }
+    return ids
+  }, [bookings, userId])
+
+  const myCurrentGuests = useMemo(() => {
+    const myBooking = bookings.find(b => b.booker_id === userId)
+    return (myBooking?.participants ?? [])
+      .filter(p => p.is_guest)
+      .map(p => p.guest_label ?? '')
+      .join('\n')
+  }, [bookings, userId])
+
+  const editableProfiles = useMemo(
+    () => allOtherProfiles.filter(p => !alreadyBookedUserIds.has(p.id) || myBookingParticipantIds.has(p.id)),
+    [allOtherProfiles, alreadyBookedUserIds, myBookingParticipantIds],
   )
 
   const canBook =
@@ -193,6 +217,7 @@ export function NavettaDetail({
       )}
 
       {ok === '1' && <SuccessAlert message="Prenotazione confermata." />}
+      {ok === 'modifica' && <SuccessAlert message="Prenotazione aggiornata." />}
       {error && <ErrorAlert message={ERROR_MSG[error] ?? 'Errore sconosciuto.'} />}
 
       {bookings.length > 0 && (
@@ -255,16 +280,96 @@ export function NavettaDetail({
       )}
 
       {myBookingId && canCancel && (
-        <form action={cancelBooking} className="mb-8">
-          <input type="hidden" name="booking_id" value={myBookingId} />
-          <input type="hidden" name="shuttle_id" value={shuttleInfo.id} />
-          <SubmitButton
-            className="rounded-sm border px-3 py-1.5 font-mono text-xs uppercase tracking-wide transition-colors hover:border-[--red] hover:text-[--red]"
-            style={{ background: 'none', borderColor: 'var(--border-muted)', color: 'var(--text-dim)' }}
-          >
-            Cancella prenotazione
-          </SubmitButton>
-        </form>
+        <div className="mb-8">
+          {!isEditing ? (
+            <div className="flex gap-2">
+              <Button
+                onClick={() => setIsEditing(true)}
+                className="rounded-sm border px-3 py-1.5 font-mono text-xs uppercase tracking-wide transition-colors hover:border-[--red] hover:text-[--red]"
+                style={{ background: 'none', borderColor: 'var(--border-muted)', color: 'var(--text-dim)' }}
+              >
+                Modifica
+              </Button>
+              <form action={cancelBooking}>
+                <input type="hidden" name="booking_id" value={myBookingId} />
+                <input type="hidden" name="shuttle_id" value={shuttleInfo.id} />
+                <SubmitButton
+                  className="rounded-sm border px-3 py-1.5 font-mono text-xs uppercase tracking-wide transition-colors hover:border-[--red] hover:text-[--red]"
+                  style={{ background: 'none', borderColor: 'var(--border-muted)', color: 'var(--text-dim)' }}
+                >
+                  Cancella prenotazione
+                </SubmitButton>
+              </form>
+            </div>
+          ) : (
+            <form action={updateBooking} className="flex flex-col gap-5">
+              <input type="hidden" name="booking_id" value={myBookingId} />
+              <input type="hidden" name="shuttle_id" value={shuttleInfo.id} />
+
+              <p className="font-mono text-[10px] uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>
+                Modifica prenotazione
+              </p>
+
+              {editableProfiles.length > 0 && (
+                <div className="flex flex-col gap-1.5">
+                  <label className="font-mono text-xs uppercase tracking-wide" style={{ color: 'var(--text-muted)' }}>
+                    Altri partecipanti registrati
+                  </label>
+                  <div
+                    className="rounded-sm border px-4 py-3 flex flex-col gap-2"
+                    style={{ borderColor: 'var(--border)', background: 'var(--bg-panel)' }}
+                  >
+                    {editableProfiles.map(p => (
+                      <label key={p.id} className="flex items-center gap-2.5 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          name="participant_ids"
+                          value={p.id}
+                          defaultChecked={myBookingParticipantIds.has(p.id)}
+                          className="w-3.5 h-3.5 accent-[--red]"
+                        />
+                        <span className="font-mono text-sm" style={{ color: 'var(--text)' }}>{p.username}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="flex flex-col gap-1.5">
+                <label className="font-mono text-xs uppercase tracking-wide" style={{ color: 'var(--text-muted)' }}>
+                  Ospiti
+                </label>
+                <textarea
+                  name="guests"
+                  rows={3}
+                  defaultValue={myCurrentGuests}
+                  placeholder={'Mario Rossi\nGiulia Bianchi'}
+                  className="w-full rounded-sm border px-3 py-2.5 font-mono text-sm resize-none"
+                  style={{ background: 'var(--bg-panel)', borderColor: 'var(--border-muted)', color: 'var(--text)' }}
+                />
+                <p className="font-mono text-[11px]" style={{ color: 'var(--text-dim)' }}>
+                  Un nome per riga. Ogni ospite occupa un posto.
+                </p>
+              </div>
+
+              <div className="flex gap-2 mt-1">
+                <SubmitButton
+                  className="rounded-sm border px-5 py-2.5 font-mono text-xs uppercase tracking-wide transition-colors"
+                  style={{ background: 'var(--red)', borderColor: 'var(--red)', color: 'white' }}
+                >
+                  Salva modifiche
+                </SubmitButton>
+                <Button
+                  onClick={() => setIsEditing(false)}
+                  className="rounded-sm border px-5 py-2.5 font-mono text-xs uppercase tracking-wide transition-colors hover:border-[--red] hover:text-[--red]"
+                  style={{ borderColor: 'var(--border-muted)', color: 'var(--text-dim)' }}
+                >
+                  Annulla
+                </Button>
+              </div>
+            </form>
+          )}
+        </div>
       )}
 
       {canBook && (

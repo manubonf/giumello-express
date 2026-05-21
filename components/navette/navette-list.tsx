@@ -19,11 +19,14 @@ const ACTIVE_STATUSES = ['draft', 'confirmed', 'full']
 export function NavetteList({
   initialActive,
   initialStorico,
+  bookedIds = [],
 }: {
   initialActive: Shuttle[]
   initialStorico: Shuttle[]
+  bookedIds?: string[]
 }) {
   const [active, setActive] = useState(initialActive)
+  const bookedSet = new Set(bookedIds)
 
   useEffect(() => {
     const supabase = createBrowserClient(
@@ -68,7 +71,7 @@ export function NavetteList({
             <Link
               key={s.id}
               href={`/base/navette/${s.id}`}
-              className="flex items-center gap-4 rounded-sm border px-4 py-4 no-underline transition-colors group"
+              className="flex items-center gap-4 rounded-sm border px-4 py-4 no-underline transition-colors active:scale-95 group"
               style={{ background: 'var(--bg-panel)', borderColor: 'var(--border)', color: 'inherit' }}
             >
               <StatusDot status={s.status} />
@@ -85,6 +88,12 @@ export function NavetteList({
                   ) : (
                     <span className="font-mono text-xs" style={{ color: 'var(--text-dim)' }}>
                       {s.available_seats} posti disponibili
+                    </span>
+                  )}
+                  {bookedSet.has(s.id) && (
+                    <span className="rounded-sm border px-1.5 py-0.5 font-mono text-[10px] leading-none"
+                      style={{ borderColor: '#22c55e60', color: '#22c55e', background: '#22c55e12' }}>
+                      Prenotato
                     </span>
                   )}
                 </span>
@@ -116,7 +125,7 @@ export function NavetteList({
               <Link
                 key={s.id}
                 href={`/base/navette/${s.id}`}
-                className="flex items-center gap-4 rounded-sm border px-4 py-3 no-underline group"
+                className="flex items-center gap-4 rounded-sm border px-4 py-3 no-underline transition-colors active:scale-95 group"
                 style={{ background: 'var(--bg-panel)', borderColor: 'var(--border-subtle)', color: 'inherit' }}
               >
                 <StatusDot status={s.status} />
@@ -124,7 +133,15 @@ export function NavetteList({
                   <span className="block font-medium text-sm" style={{ color: 'var(--text)' }}>
                     {formatShort(s.departure_time)}
                   </span>
-                  <StatusBadge status={s.status} />
+                  <span className="flex items-center gap-2">
+                    <StatusBadge status={s.status} />
+                    {bookedSet.has(s.id) && (
+                      <span className="rounded-sm border px-1.5 py-0.5 font-mono text-[10px] leading-none"
+                        style={{ borderColor: '#22c55e60', color: '#22c55e', background: '#22c55e12' }}>
+                        Prenotato
+                      </span>
+                    )}
+                  </span>
                 </span>
                 <span
                   className="font-mono text-sm transition-transform group-hover:translate-x-0.5"

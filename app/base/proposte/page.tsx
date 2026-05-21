@@ -59,7 +59,7 @@ export default async function PropostePage({
         )}
       </>
     )
-    const cls = 'flex items-center gap-4 rounded-sm border px-4 py-3'
+    const cls = 'flex items-center gap-4 rounded-sm border px-4 py-3 transition-colors active:scale-95'
     const style = { background: 'var(--bg-panel)', borderColor: dim ? 'var(--border-subtle)' : 'var(--border)' }
     return href
       ? <Link href={href} className={`${cls} no-underline transition-colors group`} style={{ ...style, color: 'inherit' }}>{inner}</Link>

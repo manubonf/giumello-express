@@ -11,7 +11,7 @@ const ACTIVE_STATUSES  = ['draft', 'confirmed', 'full']
 const HISTORY_STATUSES = ['done', 'cancelled']
 
 export default async function NavettePage() {
-  const { profile } = await getCurrentUser()
+  const { user, profile } = await getCurrentUser()
 
   await supabaseAdmin
     .from('shuttles')
@@ -20,10 +20,23 @@ export default async function NavettePage() {
     .lt('departure_time', new Date().toISOString())
 
   const supabase = await createSupabaseServerClient()
-  const { data: shuttles } = await supabase
-    .from('shuttles')
-    .select('id, status, departure_time, max_seats, available_seats')
-    .order('departure_time', { ascending: true })
+  const [{ data: shuttles }, { data: participations }] = await Promise.all([
+    supabase
+      .from('shuttles')
+      .select('id, status, departure_time, max_seats, available_seats')
+      .order('departure_time', { ascending: true }),
+    supabaseAdmin
+      .from('booking_participants')
+      .select('booking_id')
+      .eq('user_id', user.id)
+      .eq('is_guest', false),
+  ])
+
+  const bookingIds = participations?.map(p => p.booking_id) ?? []
+  const { data: myBookings } = bookingIds.length
+    ? await supabaseAdmin.from('bookings').select('shuttle_id').in('id', bookingIds)
+    : { data: [] as { shuttle_id: string }[] }
+  const bookedIds = [...new Set(myBookings?.map(b => b.shuttle_id) ?? [])]
 
   const oneWeekAgo = new Date()
   oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)
@@ -56,7 +69,7 @@ export default async function NavettePage() {
 
       <h1 className="text-xl font-semibold mb-8">Navette disponibili</h1>
 
-      <NavetteList initialActive={active} initialStorico={storico} />
+      <NavetteList initialActive={active} initialStorico={storico} bookedIds={bookedIds} />
     </PageLayout>
   )
 }
