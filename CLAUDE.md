@@ -95,6 +95,7 @@ Non aggiungere controlli di autenticazione ridondanti nei Server Components se `
 /base/navette              → lista navette (utenti base)
 /base/navette/[id]         → dettaglio + prenotazione
 /base/proposte             → proposte utente
+/base/proposte/[id]        → modifica/cancellazione proposta
 /base/impostazioni         → impostazioni (notifiche personalizzate)
 /master/navette            → lista navette (master)
 /master/navette/nuova      → crea navetta
@@ -102,6 +103,8 @@ Non aggiungere controlli di autenticazione ridondanti nei Server Components se `
 /master/utenti             → lista utenti
 /master/utenti/nuovo       → crea utente
 /master/impostazioni       → impostazioni (soglie default e notifiche personalizzate)
+/master/proposte           → lista proposte da utente base 
+/master/proposte/[id]      → pannello di creazione navetta o rifiuto proposta
 ```
 
 ---

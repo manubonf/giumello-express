@@ -13,7 +13,7 @@ export default async function PropostePage({
   searchParams: Promise<{ ok?: string }>
 }) {
   const { ok } = await searchParams
-  const { profile } = await getCurrentUser()
+  const { user, profile } = await getCurrentUser()
 
   const oneWeekAgo = new Date()
   oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)
@@ -33,12 +33,11 @@ export default async function PropostePage({
   const pending = proposals?.filter(p => p.status === 'pending') ?? []
   const storico = proposals?.filter(p => p.status !== 'pending' && p.departure_time >= cutoff) ?? []
 
-  const PropostaCard = ({ p, dim }: { p: typeof pending[0]; dim?: boolean }) => {
+  const PropostaCard = ({ p, dim, href }: { p: typeof pending[0]; dim?: boolean; href?: string }) => {
     const proposerUsername = profileById[p.proposer_id]?.username ?? '—'
-    return (
-      <div className="rounded-sm border px-4 py-3"
-        style={{ background: 'var(--bg-panel)', borderColor: dim ? 'var(--border-subtle)' : 'var(--border)' }}>
-        <div className="flex-1 min-w-0">
+    const inner = (
+      <>
+        <span className="flex-1 min-w-0">
           <span className="block font-medium text-sm" style={{ color: 'var(--text)' }}>
             {formatShort(p.departure_time)}
           </span>
@@ -53,9 +52,18 @@ export default async function PropostePage({
               {p.notes}
             </p>
           )}
-        </div>
-      </div>
+        </span>
+        {href && (
+          <span className="font-mono text-sm transition-transform group-hover:translate-x-0.5 flex-shrink-0"
+            style={{ color: 'var(--border)' }}>→</span>
+        )}
+      </>
     )
+    const cls = 'flex items-center gap-4 rounded-sm border px-4 py-3'
+    const style = { background: 'var(--bg-panel)', borderColor: dim ? 'var(--border-subtle)' : 'var(--border)' }
+    return href
+      ? <Link href={href} className={`${cls} no-underline transition-colors group`} style={{ ...style, color: 'inherit' }}>{inner}</Link>
+      : <div className={cls} style={style}>{inner}</div>
   }
 
   return (
@@ -91,7 +99,13 @@ export default async function PropostePage({
           {pending.length > 0 && (
             <section className="mb-8">
               <div className="flex flex-col gap-2">
-                {pending.map(p => <PropostaCard key={p.id} p={p} />)}
+                {pending.map(p => (
+                  <PropostaCard
+                    key={p.id}
+                    p={p}
+                    href={p.proposer_id === user.id ? `/base/proposte/${p.id}` : undefined}
+                  />
+                ))}
               </div>
             </section>
           )}
