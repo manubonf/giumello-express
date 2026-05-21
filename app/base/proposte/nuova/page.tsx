@@ -5,7 +5,7 @@ import { SubmitButton } from '@/components/ui/submit-button'
 import { DateTimePicker } from '@/components/ui/datetime-picker'
 import { ErrorAlert } from '@/components/ui/alert'
 import { FormField } from '@/components/ui/form-field'
-import { createProposal } from '@/app/proposte/actions'
+import { createProposal } from '@/app/base/proposte/actions'
 
 const ERROR_MSG: Record<string, string> = {
   'dati-non-validi': 'Inserisci una data e orario validi.',
