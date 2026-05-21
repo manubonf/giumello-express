@@ -67,7 +67,7 @@ export function NavetteList({
           {active.map(s => (
             <Link
               key={s.id}
-              href={`/navette/${s.id}`}
+              href={`/base/navette/${s.id}`}
               className="flex items-center gap-4 rounded-sm border px-4 py-4 no-underline transition-colors group"
               style={{ background: 'var(--bg-panel)', borderColor: 'var(--border)', color: 'inherit' }}
             >
@@ -115,7 +115,7 @@ export function NavetteList({
             {initialStorico.map(s => (
               <Link
                 key={s.id}
-                href={`/navette/${s.id}`}
+                href={`/base/navette/${s.id}`}
                 className="flex items-center gap-4 rounded-sm border px-4 py-3 no-underline group"
                 style={{ background: 'var(--bg-panel)', borderColor: 'var(--border-subtle)', color: 'inherit' }}
               >

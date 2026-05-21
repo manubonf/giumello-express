@@ -40,7 +40,7 @@ export default async function PropostePage({
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-xl font-semibold">Proposte</h1>
         <Link
-          href="/proposte/nuova"
+          href="/base/proposte/nuova"
           className="rounded-sm border px-3 py-1.5 font-mono text-xs uppercase tracking-wide no-underline transition-colors hover:border-[--red] hover:text-[--red] active:scale-95"
           style={{ borderColor: 'var(--border-muted)', color: 'var(--text-dim)' }}
         >

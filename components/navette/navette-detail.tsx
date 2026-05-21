@@ -5,7 +5,7 @@ import { createBrowserClient } from '@supabase/ssr'
 import { SubmitButton } from '@/components/ui/submit-button'
 import { StatusBadge, StatusDot } from '@/components/ui/status-badge'
 import { ErrorAlert, SuccessAlert } from '@/components/ui/alert'
-import { createBooking, cancelBooking } from '@/app/navette/actions'
+import { createBooking, cancelBooking } from '@/app/base/navette/actions'
 import { formatFull } from '@/lib/date'
 
 type ParticipantEntry = {

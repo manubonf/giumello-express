@@ -27,7 +27,7 @@ export default async function ImpostazioniPage({
 
   return (
     <PageLayout>
-      <PageHeader backHref="/master" right={<MasterBadge />} />
+      <PageHeader backHref="/" right={<MasterBadge />} />
 
       <h1 className="text-xl font-semibold mb-8">Impostazioni</h1>
 

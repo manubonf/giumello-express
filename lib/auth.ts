@@ -1,5 +1,15 @@
+import type { SupabaseClient } from '@supabase/supabase-js'
 import { createSupabaseServerClient } from '@/lib/supabase-server'
 import { redirect } from 'next/navigation'
+
+export async function fetchUserRole(supabase: SupabaseClient, userId: string): Promise<string | null> {
+  const { data } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', userId)
+    .single()
+  return data?.role ?? null
+}
 
 export async function getCurrentUser() {
   const supabase = await createSupabaseServerClient()

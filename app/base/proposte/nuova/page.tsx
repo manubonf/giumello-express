@@ -55,7 +55,7 @@ export default async function NuovaPropostaPage({
             Invia proposta
           </SubmitButton>
           <Link
-            href="/proposte"
+            href="/base/proposte"
             className="rounded-sm border px-5 py-2.5 font-mono text-xs uppercase tracking-wide no-underline transition-colors hover:border-[--red] hover:text-[--red] active:scale-95"
             style={{ borderColor: 'var(--border-muted)', color: 'var(--text-dim)' }}
           >

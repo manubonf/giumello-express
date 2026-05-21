@@ -77,8 +77,9 @@ Entrambi sono in `lib/auth.ts`. Usali sempre invece di chiamare `supabase.auth.g
 La protezione route avviene in `proxy.ts` (Next.js 16 — `middleware.ts` è deprecato). Gestisce già:
 
 - `/login` — pubblica, redirect a `/` se già loggato
-- `/*` — richiede autenticazione
-- `/master/*` — richiede `role = 'master'`
+- `/base/*` — solo `role = 'base'`; il master viene reindirizzato a `/master`
+- `/master/*` — solo `role = 'master'`; gli altri vengono reindirizzati a `/`
+- `/` — redirect automatico a `/master` se il profilo è master
 
 La funzione esportata si chiama `proxy`, non `middleware`. Il runtime è Node.js — non usare API Edge-only in questo file.
 
@@ -91,16 +92,16 @@ Non aggiungere controlli di autenticazione ridondanti nei Server Components se `
 ```
 /                          → homepage (nav per ruolo)
 /login                     → login username+password
-/navette                   → lista navette (utenti base)
-/navette/[id]              → dettaglio + prenotazione
-/prenotazioni              → prenotazioni attive e storico
-/proposte                  → proposte utente
+/base/navette              → lista navette (utenti base)
+/base/navette/[id]         → dettaglio + prenotazione
+/base/proposte             → proposte utente
+/base/impostazioni         → impostazioni (notifiche personalizzate)
 /master/navette            → lista navette (master)
 /master/navette/nuova      → crea navetta
 /master/navette/[id]       → dettaglio + azioni master
 /master/utenti             → lista utenti
 /master/utenti/nuovo       → crea utente
-/master/impostazioni       → soglia minima passeggeri
+/master/impostazioni       → impostazioni (soglie default e notifiche personalizzate)
 ```
 
 ---

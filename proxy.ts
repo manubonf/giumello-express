@@ -1,6 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+import { fetchUserRole } from '@/lib/auth'
 
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request })
@@ -39,16 +40,14 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
-  // Route master-only
-  if (pathname.startsWith('/master')) {
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single()
+  if (pathname.startsWith('/master') || pathname.startsWith('/base')) {
+    const role = await fetchUserRole(supabase, user.id)
 
-    if (profile?.role !== 'master') {
+    if (pathname.startsWith('/master') && role !== 'master') {
       return NextResponse.redirect(new URL('/', request.url))
+    }
+    if (pathname.startsWith('/base') && role !== 'base') {
+      return NextResponse.redirect(new URL('/master', request.url))
     }
   }
 
