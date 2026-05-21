@@ -5,24 +5,36 @@ import { SubmitButton } from '@/components/ui/submit-button'
 import { getCurrentUser } from '@/lib/auth'
 import { logout } from '@/app/login/actions'
 import { PushSubscribe } from '@/components/push-subscribe'
+import { supabaseAdmin } from '@/lib/supabase'
 
-const BASE_NAV = [
-  { href: '/base/navette',      icon: '🚐', title: 'Navette',      desc: 'Navette disponibili e prenotazioni' },
-  { href: '/base/proposte',     icon: '💡', title: 'Proposte',     desc: 'Proponi o unisciti a una navetta'   },
-  { href: '/base/impostazioni', icon: '⚙️', title: 'Impostazioni', desc: 'Notifiche e preferenze personali'   },
-]
-
-const MASTER_NAV = [
-  { href: '/master/navette',      icon: '🚐', title: 'Navette',      desc: 'Crea e gestisci il ciclo di vita delle navette' },
-  { href: '/master/utenti',       icon: '👤', title: 'Utenti',       desc: 'Crea e rimuovi utenti base'                     },
-  { href: '/master/proposte',     icon: '💡', title: 'Proposte',     desc: 'Valuta le proposte degli utenti'                },
-  { href: '/master/impostazioni', icon: '⚙️', title: 'Impostazioni', desc: 'Soglia minima prenotazioni e parametri globali' },
-]
+type NavItem = { href: string; icon: string; title: string; desc: string; badge?: number }
 
 export default async function HomePage() {
-  const { profile } = await getCurrentUser()
+  const { user, profile } = await getCurrentUser()
   const isMaster = profile?.role === 'master'
-  const navItems = isMaster ? MASTER_NAV : BASE_NAV
+
+  const [{ count: shuttleCount }, { count: proposalCount }] = await Promise.all([
+    supabaseAdmin
+      .from('shuttles')
+      .select('id', { count: 'exact', head: true })
+      .in('status', ['draft', 'confirmed', 'full']),
+    isMaster
+      ? supabaseAdmin.from('proposals').select('id', { count: 'exact', head: true }).eq('status', 'pending')
+      : supabaseAdmin.from('proposals').select('id', { count: 'exact', head: true }).eq('proposer_id', user.id).eq('status', 'pending'),
+  ])
+
+  const navItems: NavItem[] = isMaster
+    ? [
+        { href: '/master/navette',      icon: '🚐', title: 'Navette',      desc: 'Crea e gestisci il ciclo di vita delle navette', badge: shuttleCount ?? 0 },
+        { href: '/master/utenti',       icon: '👤', title: 'Utenti',       desc: 'Crea e rimuovi utenti base' },
+        { href: '/master/proposte',     icon: '💡', title: 'Proposte',     desc: 'Valuta le proposte degli utenti',                badge: proposalCount ?? 0 },
+        { href: '/master/impostazioni', icon: '⚙️', title: 'Impostazioni', desc: 'Soglia minima prenotazioni e parametri globali' },
+      ]
+    : [
+        { href: '/base/navette',      icon: '🚐', title: 'Navette',      desc: 'Navette disponibili e prenotazioni', badge: shuttleCount ?? 0 },
+        { href: '/base/proposte',     icon: '💡', title: 'Proposte',     desc: 'Proponi o unisciti a una navetta',   badge: proposalCount ?? 0 },
+        { href: '/base/impostazioni', icon: '⚙️', title: 'Impostazioni', desc: 'Notifiche e preferenze personali' },
+      ]
 
   return (
     <PageLayout>
@@ -64,7 +76,15 @@ export default async function HomePage() {
           >
             <span className="text-xl w-8 text-center flex-shrink-0">{item.icon}</span>
             <span className="flex-1">
-              <span className="block font-medium text-sm" style={{ color: 'var(--text)' }}>{item.title}</span>
+              <span className="flex items-center gap-2">
+                <span className="font-medium text-sm" style={{ color: 'var(--text)' }}>{item.title}</span>
+                {!!item.badge && (
+                  <span className="rounded-full px-1.5 py-0.5 font-mono text-[10px] leading-none"
+                    style={{ background: 'var(--red)', color: 'white' }}>
+                    {item.badge > 99 ? '99+' : item.badge}
+                  </span>
+                )}
+              </span>
               <span className="block text-xs mt-0.5" style={{ color: 'var(--text-dim)' }}>{item.desc}</span>
             </span>
             <span className="font-mono text-sm transition-transform group-hover:translate-x-0.5"
