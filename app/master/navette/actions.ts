@@ -29,15 +29,11 @@ export async function createShuttle(formData: FormData) {
   let minSeats: number
   if (minSeatsRaw !== '') {
     minSeats = parseInt(minSeatsRaw)
-    if (isNaN(minSeats) || minSeats < 1) {
+    if (isNaN(minSeats) || minSeats < 0) {
       redirect('/master/navette/nuova?error=dati-non-validi')
     }
   } else {
-    const { data: settings } = await supabaseAdmin
-      .from('app_settings')
-      .select('min_interest_threshold')
-      .single()
-    minSeats = settings?.min_interest_threshold ?? 5
+    minSeats = 0 //defaul confermata
   }
 
   const { data: shuttle, error } = await supabaseAdmin.from('shuttles').insert({
@@ -46,7 +42,7 @@ export async function createShuttle(formData: FormData) {
     available_seats: maxSeats,
     min_seats: minSeats,
     created_by: user.id,
-    status: 'draft',
+    status: minSeats === 0 ? 'confirmed' : 'draft',
   }).select('id').single()
 
   if (error || !shuttle) {

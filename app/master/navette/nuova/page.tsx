@@ -5,7 +5,6 @@ import { SubmitButton } from '@/components/ui/submit-button'
 import { DateTimePicker } from '@/components/ui/datetime-picker'
 import { ErrorAlert } from '@/components/ui/alert'
 import { FormField } from '@/components/ui/form-field'
-import { supabaseAdmin } from '@/lib/supabase'
 import { createShuttle } from '@/app/master/navette/actions'
 
 const ERROR_MSG: Record<string, string> = {
@@ -19,13 +18,6 @@ export default async function NuovaNavettePage({
   searchParams: Promise<{ error?: string }>
 }) {
   const { error } = await searchParams
-
-  const { data: settings } = await supabaseAdmin
-    .from('app_settings')
-    .select('min_interest_threshold')
-    .single()
-
-  const defaultMinSeats = settings?.min_interest_threshold ?? 5
 
   return (
     <PageLayout>
@@ -58,14 +50,14 @@ export default async function NuovaNavettePage({
         </FormField>
 
         <FormField
-          label={`Soglia minima prenotazioni (default: ${defaultMinSeats})`}
-          description="Lascia vuoto per usare il valore globale. Al raggiungimento di questa soglia la navetta passerà automaticamente a «Confermata»."
+          label={`Soglia minima prenotazioni`}
+          description="Lascia vuoto oppure 0 per creare navetta «Confermata». Altrimenti la navetta passa a «Confermata» al raggiungimento della soglia indicata"
         >
           <input
             type="number"
             name="min_seats"
-            min={1}
-            placeholder={String(defaultMinSeats)}
+            min={0}
+            placeholder="Default Confermata"
             className="w-full rounded-sm border px-3 py-2.5 font-mono text-sm"
             style={{
               background: 'var(--bg-panel)',

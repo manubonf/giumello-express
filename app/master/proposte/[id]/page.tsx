@@ -56,12 +56,6 @@ export default async function PropostaDetailPage({
     linkedShuttleId = shuttle?.id ?? null
   }
 
-  const { data: settings } = await supabaseAdmin
-    .from('app_settings')
-    .select('min_interest_threshold')
-    .single()
-  const defaultMinSeats = settings?.min_interest_threshold ?? 5
-
   return (
     <PageLayout>
       <PageHeader backHref="/master/proposte" right={<MasterBadge />} />
@@ -97,7 +91,7 @@ export default async function PropostaDetailPage({
           <div>
             <p className="font-mono text-[10px] uppercase tracking-widest mb-4"
               style={{ color: 'var(--text-muted)' }}>
-              Accetta — crea navetta in bozza
+              Accetta — crea navetta
             </p>
             <form action={acceptProposal} className="flex flex-col gap-4">
               <input type="hidden" name="proposal_id" value={proposal.id} />
@@ -126,12 +120,12 @@ export default async function PropostaDetailPage({
                     }}
                   />
                 </FormField>
-                <FormField label={`Soglia min. (default: ${defaultMinSeats})`} className="flex-1">
+                <FormField label="Soglia min." className="flex-1">
                   <input
                     type="number"
                     name="min_seats"
-                    min={1}
-                    placeholder={String(defaultMinSeats)}
+                    min={0}
+                    placeholder="Default Confermata"
                     className="w-full rounded-sm border px-3 py-2.5 font-mono text-sm"
                     style={{
                       background: 'var(--bg-panel)',
@@ -147,7 +141,7 @@ export default async function PropostaDetailPage({
                   className="rounded-sm border px-5 py-2.5 font-mono text-xs uppercase tracking-wide transition-colors"
                   style={{ background: '#22c55e', borderColor: '#22c55e', color: 'white' }}
                 >
-                  Crea navetta in bozza
+                  Crea navetta
                 </SubmitButton>
               </div>
             </form>
