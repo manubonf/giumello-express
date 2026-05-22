@@ -87,15 +87,25 @@ export async function createBooking(formData: FormData) {
   const { user } = await getCurrentUser()
 
   const shuttleId = formData.get('shuttle_id') as string
+  const includeBooker = formData.get('include_booker') === 'on'
   const participantIds = (formData.getAll('participant_ids') as string[])
     .filter(id => id && id !== user.id)
-  const guestsRaw = (formData.get('guests') as string ?? '').trim()
-  const guestNames = guestsRaw
-    ? guestsRaw.split('\n').map(g => g.trim()).filter(Boolean).slice(0, 20)
-    : []
+  const guestNames = (formData.getAll('guest_names') as string[])
+    .map(g => g.trim()).filter(Boolean).slice(0, 20)
 
-  const allUserIds = [user.id, ...participantIds]
+  const allUserIds = includeBooker ? [user.id, ...participantIds] : participantIds
   const totalCount = allUserIds.length + guestNames.length
+
+  if (participantIds.length > 0) {
+    const { data: masterCheck } = await supabaseAdmin
+      .from('profiles')
+      .select('id')
+      .in('id', participantIds)
+      .eq('role', 'master')
+    if (masterCheck && masterCheck.length > 0) {
+      redirect(`/base/navette/${shuttleId}?error=partecipante-non-valido`)
+    }
+  }
 
   const [shuttleBefore, { data: shuttleBookings }] = await Promise.all([
     getShuttleSnapshot(shuttleId),
@@ -153,7 +163,7 @@ export async function createBooking(formData: FormData) {
   }
 
   const rows = [
-    ...allUserIds.map(uid => ({ booking_id: booking.id, user_id: uid, is_guest: false })),
+    ...allUserIds.map(uid => ({ booking_id: booking.id, user_id: uid, is_guest: false, guest_label: null })),
     ...guestNames.map(name => ({ booking_id: booking.id, user_id: null, guest_label: name, is_guest: true })),
   ]
 
@@ -182,12 +192,22 @@ export async function updateBooking(formData: FormData) {
 
   const bookingId = formData.get('booking_id') as string
   const shuttleId = formData.get('shuttle_id') as string
+  const includeBooker = formData.get('include_booker') === 'on'
   const newParticipantIds = (formData.getAll('participant_ids') as string[])
     .filter(id => id && id !== user.id)
-  const guestsRaw = (formData.get('guests') as string ?? '').trim()
-  const newGuestNames = guestsRaw
-    ? guestsRaw.split('\n').map(g => g.trim()).filter(Boolean).slice(0, 20)
-    : []
+  const newGuestNames = (formData.getAll('guest_names') as string[])
+    .map(g => g.trim()).filter(Boolean).slice(0, 20)
+
+  if (newParticipantIds.length > 0) {
+    const { data: masterCheck } = await supabaseAdmin
+      .from('profiles')
+      .select('id')
+      .in('id', newParticipantIds)
+      .eq('role', 'master')
+    if (masterCheck && masterCheck.length > 0) {
+      redirect(`/base/navette/${shuttleId}?error=partecipante-non-valido`)
+    }
+  }
 
   const [{ data: booking }, shuttleBefore] = await Promise.all([
     supabaseAdmin
@@ -207,7 +227,7 @@ export async function updateBooking(formData: FormData) {
     .eq('booking_id', bookingId)
 
   const oldCount = currentParticipants?.length ?? 0
-  const allNewUserIds = [user.id, ...newParticipantIds]
+  const allNewUserIds = includeBooker ? [user.id, ...newParticipantIds] : newParticipantIds
   const newCount = allNewUserIds.length + newGuestNames.length
   const delta = newCount - oldCount
 
@@ -227,7 +247,7 @@ export async function updateBooking(formData: FormData) {
   await supabaseAdmin.from('booking_participants').delete().eq('booking_id', bookingId)
 
   const rows = [
-    ...allNewUserIds.map(uid => ({ booking_id: bookingId, user_id: uid, is_guest: false })),
+    ...allNewUserIds.map(uid => ({ booking_id: bookingId, user_id: uid, is_guest: false, guest_label: null })),
     ...newGuestNames.map(name => ({ booking_id: bookingId, user_id: null, guest_label: name, is_guest: true })),
   ]
 

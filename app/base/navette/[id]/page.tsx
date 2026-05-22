@@ -29,11 +29,10 @@ export default async function NavettaDetailPage({
 
   if (!shuttle) notFound()
 
-  const [{ data: myBooking }, { bookings: allBookings, profileById, participantsByBooking }, { data: otherProfiles }] =
+  const [{ data: myBooking }, { bookings: allBookings, profileById, participantsByBooking }] =
     await Promise.all([
       supabaseAdmin.from('bookings').select('id').eq('shuttle_id', id).eq('booker_id', user.id).maybeSingle(),
       getBookingsWithParticipants(id),
-      supabaseAdmin.from('profiles').select('id, username').neq('id', user.id).order('username'),
     ])
 
   const initialBookings = allBookings.map(b => ({
@@ -65,7 +64,6 @@ export default async function NavettaDetailPage({
         userId={user.id}
         username={profile?.username ?? ''}
         initialBookings={initialBookings}
-        allOtherProfiles={otherProfiles ?? []}
         error={error}
         ok={ok}
       />

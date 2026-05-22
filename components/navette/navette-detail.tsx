@@ -6,6 +6,7 @@ import { SubmitButton } from '@/components/ui/submit-button'
 import { Button } from '@/components/ui/button'
 import { StatusBadge, StatusDot } from '@/components/ui/status-badge'
 import { ErrorAlert, SuccessAlert } from '@/components/ui/alert'
+import { ParticipantsInput, type Chip } from '@/components/ui/participants-input'
 import { createBooking, cancelBooking, updateBooking } from '@/app/base/navette/actions'
 import { formatFull } from '@/lib/date'
 
@@ -33,15 +34,14 @@ type ShuttleInfo = {
   min_seats: number
 }
 
-type OtherProfile = { id: string; username: string }
-
 const ERROR_MSG: Record<string, string> = {
-  'posti-insufficienti':           'Posti insufficienti per il numero di partecipanti selezionati.',
-  'navetta-non-prenotabile':       'Questa navetta non è più prenotabile.',
-  'prenotazione-esistente':        'Hai già una prenotazione per questa navetta.',
-  'partecipante-già-prenotato':    'Uno o più partecipanti selezionati hanno già una prenotazione per questa navetta.',
-  'errore-prenotazione':           'Errore durante la prenotazione. Riprova.',
-  'non-autorizzato':               'Operazione non autorizzata.',
+  'posti-insufficienti':          'Posti insufficienti per il numero di partecipanti selezionati.',
+  'navetta-non-prenotabile':      'Questa navetta non è più prenotabile.',
+  'prenotazione-esistente':       'Hai già una prenotazione per questa navetta.',
+  'partecipante-già-prenotato':   'Uno o più partecipanti selezionati hanno già una prenotazione per questa navetta.',
+  'partecipante-non-valido':      'Non è possibile prenotare per un utente master.',
+  'errore-prenotazione':          'Errore durante la prenotazione. Riprova.',
+  'non-autorizzato':              'Operazione non autorizzata.',
 }
 
 export function NavettaDetail({
@@ -50,7 +50,6 @@ export function NavettaDetail({
   userId,
   username,
   initialBookings,
-  allOtherProfiles,
   error,
   ok,
 }: {
@@ -59,7 +58,6 @@ export function NavettaDetail({
   userId: string
   username: string
   initialBookings: BookingEntry[]
-  allOtherProfiles: OtherProfile[]
   error?: string
   ok?: string
 }) {
@@ -67,6 +65,7 @@ export function NavettaDetail({
   const [bookings, setBookings] = useState(initialBookings)
   const [isEditing, setIsEditing] = useState(false)
 
+  // All user IDs already booked (any booking, any role)
   const alreadyBookedUserIds = useMemo(() => {
     const ids = new Set<string>()
     for (const b of bookings) {
@@ -78,32 +77,36 @@ export function NavettaDetail({
     return ids
   }, [bookings])
 
-  const availableProfiles = useMemo(
-    () => allOtherProfiles.filter(p => !alreadyBookedUserIds.has(p.id)),
-    [allOtherProfiles, alreadyBookedUserIds],
-  )
-
-  const myBookingParticipantIds = useMemo(() => {
-    const myBooking = bookings.find(b => b.booker_id === userId)
+  // User IDs booked through OTHER people's bookings (not mine) — hard-excluded from search
+  const othersBookedUserIds = useMemo(() => {
     const ids = new Set<string>()
-    for (const p of myBooking?.participants ?? []) {
-      if (!p.is_guest && p.user_id && p.user_id !== userId) ids.add(p.user_id)
+    for (const b of bookings) {
+      if (b.booker_id === userId) continue
+      ids.add(b.booker_id)
+      for (const p of b.participants) {
+        if (!p.is_guest && p.user_id) ids.add(p.user_id)
+      }
     }
     return ids
   }, [bookings, userId])
 
-  const myCurrentGuests = useMemo(() => {
-    const myBooking = bookings.find(b => b.booker_id === userId)
-    return (myBooking?.participants ?? [])
-      .filter(p => p.is_guest)
-      .map(p => p.guest_label ?? '')
-      .join('\n')
-  }, [bookings, userId])
+  const myBooking = useMemo(() => bookings.find(b => b.booker_id === userId), [bookings, userId])
 
-  const editableProfiles = useMemo(
-    () => allOtherProfiles.filter(p => !alreadyBookedUserIds.has(p.id) || myBookingParticipantIds.has(p.id)),
-    [allOtherProfiles, alreadyBookedUserIds, myBookingParticipantIds],
-  )
+  // Initial state for the edit form
+  const editInitialIncludeMe = myBooking?.participants.some(p => !p.is_guest && p.user_id === userId) ?? false
+  const editInitialChips: Chip[] = useMemo(() => {
+    if (!myBooking) return []
+    return [
+      ...myBooking.participants
+        .filter(p => !p.is_guest && p.user_id && p.user_id !== userId)
+        .map(p => ({ kind: 'profile' as const, id: p.user_id!, username: p.username ?? '—' })),
+      ...myBooking.participants
+        .filter(p => p.is_guest)
+        .map(p => ({ kind: 'guest' as const, key: `existing-${p.id}`, name: p.guest_label ?? '' })),
+    ]
+  }, [myBooking, userId])
+
+  const currentParticipantCount = myBooking?.participants.length ?? 0
 
   const canBook =
     !myBookingId &&
@@ -310,47 +313,15 @@ export function NavettaDetail({
                 Modifica prenotazione
               </p>
 
-              {editableProfiles.length > 0 && (
-                <div className="flex flex-col gap-1.5">
-                  <label className="font-mono text-xs uppercase tracking-wide" style={{ color: 'var(--text-muted)' }}>
-                    Altri partecipanti registrati
-                  </label>
-                  <div
-                    className="rounded-sm border px-4 py-3 flex flex-col gap-2"
-                    style={{ borderColor: 'var(--border)', background: 'var(--bg-panel)' }}
-                  >
-                    {editableProfiles.map(p => (
-                      <label key={p.id} className="flex items-center gap-2.5 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          name="participant_ids"
-                          value={p.id}
-                          defaultChecked={myBookingParticipantIds.has(p.id)}
-                          className="w-3.5 h-3.5 accent-[--red]"
-                        />
-                        <span className="font-mono text-sm" style={{ color: 'var(--text)' }}>{p.username}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              <div className="flex flex-col gap-1.5">
-                <label className="font-mono text-xs uppercase tracking-wide" style={{ color: 'var(--text-muted)' }}>
-                  Ospiti
-                </label>
-                <textarea
-                  name="guests"
-                  rows={3}
-                  defaultValue={myCurrentGuests}
-                  placeholder={'Mario Rossi\nGiulia Bianchi'}
-                  className="w-full rounded-sm border px-3 py-2.5 font-mono text-sm resize-none"
-                  style={{ background: 'var(--bg-panel)', borderColor: 'var(--border-muted)', color: 'var(--text)' }}
-                />
-                <p className="font-mono text-[11px]" style={{ color: 'var(--text-dim)' }}>
-                  Un nome per riga. Ogni ospite occupa un posto.
-                </p>
-              </div>
+              <ParticipantsInput
+                userId={userId}
+                username={username}
+                hardExcludedUserIds={othersBookedUserIds}
+                initialChips={editInitialChips}
+                initialIncludeMe={editInitialIncludeMe}
+                availableSeats={shuttleInfo.available_seats}
+                currentParticipantCount={currentParticipantCount}
+              />
 
               <div className="flex gap-2 mt-1">
                 <SubmitButton
@@ -380,59 +351,13 @@ export function NavettaDetail({
             Nuova prenotazione
           </p>
 
-          <div
-            className="rounded-sm border px-4 py-3"
-            style={{ borderColor: 'var(--border)', background: 'var(--bg-panel)' }}
-          >
-            <p className="font-mono text-xs mb-1" style={{ color: 'var(--text-dim)' }}>
-              Prenotato da
-            </p>
-            <span className="font-mono text-sm" style={{ color: 'var(--text)' }}>
-              {username} (tu)
-            </span>
-          </div>
-
-          {availableProfiles.length > 0 && (
-            <div className="flex flex-col gap-1.5">
-              <label className="font-mono text-xs uppercase tracking-wide" style={{ color: 'var(--text-muted)' }}>
-                Altri partecipanti registrati
-              </label>
-              <div
-                className="rounded-sm border px-4 py-3 flex flex-col gap-2"
-                style={{ borderColor: 'var(--border)', background: 'var(--bg-panel)' }}
-              >
-                {availableProfiles.map(p => (
-                  <label key={p.id} className="flex items-center gap-2.5 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      name="participant_ids"
-                      value={p.id}
-                      className="w-3.5 h-3.5 accent-[--red]"
-                    />
-                    <span className="font-mono text-sm" style={{ color: 'var(--text)' }}>
-                      {p.username}
-                    </span>
-                  </label>
-                ))}
-              </div>
-            </div>
-          )}
-
-          <div className="flex flex-col gap-1.5">
-            <label className="font-mono text-xs uppercase tracking-wide" style={{ color: 'var(--text-muted)' }}>
-              Ospiti
-            </label>
-            <textarea
-              name="guests"
-              rows={3}
-              placeholder={'Mario Rossi\nGiulia Bianchi'}
-              className="w-full rounded-sm border px-3 py-2.5 font-mono text-sm resize-none"
-              style={{ background: 'var(--bg-panel)', borderColor: 'var(--border-muted)', color: 'var(--text)' }}
-            />
-            <p className="font-mono text-[11px]" style={{ color: 'var(--text-dim)' }}>
-              Un nome per riga. Ogni ospite occupa un posto.
-            </p>
-          </div>
+          <ParticipantsInput
+            userId={userId}
+            username={username}
+            hardExcludedUserIds={othersBookedUserIds}
+            initialIncludeMe={true}
+            availableSeats={shuttleInfo.available_seats}
+          />
 
           <div className="mt-1">
             <SubmitButton
