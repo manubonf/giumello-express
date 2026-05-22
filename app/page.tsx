@@ -49,7 +49,8 @@ export default async function HomePage() {
               />
               {profile?.username ?? '—'}
             </span>
-            {isMaster ? <MasterBadge /> : <PushSubscribe />}
+            {isMaster && <MasterBadge />}
+            <PushSubscribe />
             <form action={logout}>
               <SubmitButton
                 className="rounded-sm border px-2 py-1 font-mono text-[10px] uppercase tracking-wide transition-colors hover:border-[--red] hover:text-[--red]"

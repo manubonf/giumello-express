@@ -12,7 +12,6 @@ function roundTo15(hhmm: string): string {
 const inputStyle = {
   background: 'var(--bg-panel)',
   borderColor: 'var(--border-muted)',
-  colorScheme: 'dark' as const,
 }
 
 export function DateTimePicker({
@@ -29,7 +28,9 @@ export function DateTimePicker({
     defaultValue ? roundTo15(defaultValue.slice(11, 16)) : ''
   )
 
-  const combined = date && time ? `${date}T${time}` : ''
+  const combined = date && time
+    ? new Date(`${date}T${time}`).toISOString().slice(0, 16)
+    : ''
 
   return (
     <div className="flex gap-2">
@@ -39,7 +40,7 @@ export function DateTimePicker({
         onChange={e => setDate(e.target.value)}
         required={required}
         className="flex-1 min-w-0 rounded-sm border px-3 py-2.5 font-mono text-sm"
-        style={{ ...inputStyle, color: date ? 'var(--text)' : 'var(--text-dim)' }}
+        style={{ ...inputStyle, color: date ? 'var(--text)' : 'var(--text-dim)', colorScheme: 'light' }}
       />
       <input
         type="time"
@@ -47,8 +48,8 @@ export function DateTimePicker({
         onChange={e => setTime(e.target.value)}
         required={required}
         step={900}
-        className="rounded-sm border px-3 py-2.5 font-mono text-sm"
-        style={{ ...inputStyle, color: time ? 'var(--text)' : 'var(--text-dim)' }}
+        className="w-[7.5rem] flex-shrink-0 rounded-sm border px-3 py-2.5 font-mono text-sm"
+        style={{ ...inputStyle, color: time ? 'var(--text)' : 'var(--text-dim)', colorScheme: 'light' }}
       />
       <input type="hidden" name={name} value={combined} />
     </div>
