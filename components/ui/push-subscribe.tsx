@@ -103,7 +103,7 @@ export function PushSubscribe() {
         opacity: loading ? 0.5 : 1,
       }}
     >
-      {subscription ? '🔔 On' : '🔕 Off'}
+      {subscription ? '🔔 ATTIVE' : '🔕 DISATTIVE'}
     </Button>
   )
 }
