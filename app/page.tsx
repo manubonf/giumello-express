@@ -1,10 +1,7 @@
 import Link from 'next/link'
 import { PageLayout } from '@/components/ui/page-layout'
 import { PageHeader, MasterBadge } from '@/components/ui/page-header'
-import { SubmitButton } from '@/components/ui/submit-button'
 import { getCurrentUser } from '@/lib/auth'
-import { logout } from '@/app/login/actions'
-import { PushSubscribe } from '@/components/ui/push-subscribe'
 import { supabaseAdmin } from '@/lib/supabase'
 
 type NavItem = { href: string; icon: string; title: string; desc: string; badge?: number }
@@ -50,15 +47,6 @@ export default async function HomePage() {
               {profile?.username ?? '—'}
             </span>
             {isMaster && <MasterBadge />}
-            <PushSubscribe />
-            <form action={logout}>
-              <SubmitButton
-                className="rounded-sm border px-2 py-1 font-mono text-[10px] uppercase tracking-wide transition-colors hover:border-[--red] hover:text-[--red]"
-                style={{ background: 'none', borderColor: 'var(--border-muted)', color: 'var(--text-dim)' }}
-              >
-                Esci
-              </SubmitButton>
-            </form>
           </div>
         }
       />

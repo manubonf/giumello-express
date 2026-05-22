@@ -3,7 +3,9 @@
     "allow": [
       "Bash(npx tsc *)",
       "Bash(npx next *)",
-      "Bash(curl -s http://localhost:3000/api/health)"
+      "Bash(curl -s http://localhost:3000/api/health)",
+      "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\ManueleBonfanti\\\\projects\\\\giumello-express\" -Directory)",
+      "Bash(Select-Object Name)"
     ]
   }
 }

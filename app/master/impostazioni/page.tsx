@@ -1,9 +1,12 @@
 import { PageLayout } from '@/components/ui/page-layout'
 import { PageHeader, MasterBadge } from '@/components/ui/page-header'
 import { NotifToggle } from '@/components/ui/notif-toggle'
+import { PushSubscribe } from '@/components/ui/push-subscribe'
+import { SubmitButton } from '@/components/ui/submit-button'
 import { getMasterUser } from '@/lib/auth'
 import { supabaseAdmin } from '@/lib/supabase'
 import { updateMasterNotifPref } from './actions'
+import { logout } from '@/app/login/actions'
 
 export default async function ImpostazioniPage() {
   const user = await getMasterUser()
@@ -26,6 +29,15 @@ export default async function ImpostazioniPage() {
       <PageHeader backHref="/" right={<MasterBadge />} />
 
       <h1 className="text-xl font-semibold mb-8">Impostazioni</h1>
+
+      <p className="font-mono text-[10px] uppercase tracking-widest mb-3" style={{ color: 'var(--text-muted)' }}>
+        Questo dispositivo
+      </p>
+
+      <div className="rounded-sm border flex items-center justify-between px-4 py-3 mb-8" style={{ borderColor: 'var(--border)', background: 'var(--bg-panel)' }}>
+        <span className="text-sm" style={{ color: 'var(--text)' }}>Notifiche push</span>
+        <PushSubscribe />
+      </div>
 
       <p className="font-mono text-[10px] uppercase tracking-widest mb-3" style={{ color: 'var(--text-muted)' }}>
         Notifiche push
@@ -82,6 +94,19 @@ export default async function ImpostazioniPage() {
           />
         </div>
       </div>
+
+      <p className="font-mono text-[10px] uppercase tracking-widest mb-3 mt-8" style={{ color: 'var(--text-muted)' }}>
+        Account
+      </p>
+
+      <form action={logout}>
+        <SubmitButton
+          className="w-full rounded-sm border px-4 py-3 text-sm text-left transition-colors hover:border-[--red] hover:text-[--red]"
+          style={{ background: 'var(--bg-panel)', borderColor: 'var(--border)', color: 'var(--text-dim)' }}
+        >
+          Esci dall&apos;account
+        </SubmitButton>
+      </form>
     </PageLayout>
   )
 }
