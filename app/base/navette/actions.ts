@@ -11,6 +11,7 @@ import {
 } from '@/lib/notif'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
+import { after } from 'next/server'
 
 type ShuttleSnapshot = {
   status: string
@@ -180,7 +181,7 @@ export async function createBooking(formData: FormData) {
 
   const shuttleAfter = await getShuttleSnapshot(shuttleId)
   if (shuttleBefore && shuttleAfter) {
-    await sendBookingNotifications(shuttleId, shuttleBefore, shuttleAfter, user.id, 'Nuova prenotazione', 'notif_m2')
+    after(() => sendBookingNotifications(shuttleId, shuttleBefore, shuttleAfter, user.id, 'Nuova prenotazione', 'notif_m2'))
   }
 
   revalidatePath(`/base/navette/${shuttleId}`)
@@ -269,7 +270,7 @@ export async function updateBooking(formData: FormData) {
 
   const shuttleAfter = await getShuttleSnapshot(shuttleId)
   if (shuttleBefore && shuttleAfter) {
-    await sendBookingNotifications(shuttleId, shuttleBefore, shuttleAfter, user.id, 'Prenotazione modificata', 'notif_m3')
+    after(() => sendBookingNotifications(shuttleId, shuttleBefore, shuttleAfter, user.id, 'Prenotazione modificata', 'notif_m3'))
   }
 
   revalidatePath(`/base/navette/${shuttleId}`)
@@ -312,7 +313,7 @@ export async function cancelBooking(formData: FormData) {
 
   const shuttleAfter = await getShuttleSnapshot(shuttleId)
   if (shuttleBefore && shuttleAfter) {
-    await sendBookingNotifications(shuttleId, shuttleBefore, shuttleAfter, user.id, 'Prenotazione cancellata', 'notif_m4')
+    after(() => sendBookingNotifications(shuttleId, shuttleBefore, shuttleAfter, user.id, 'Prenotazione cancellata', 'notif_m4'))
   }
 
   revalidatePath(`/base/navette/${booking.shuttle_id}`)

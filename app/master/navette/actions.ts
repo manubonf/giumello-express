@@ -11,6 +11,7 @@ import {
 } from '@/lib/notif'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
+import { after } from 'next/server'
 
 export async function createShuttle(formData: FormData) {
   const user = await getMasterUser()
@@ -53,11 +54,14 @@ export async function createShuttle(formData: FormData) {
   const pref = isConfirmed ? 'notif_u3' : 'notif_u2'
   const title = isConfirmed ? 'Nuova navetta confermata' : 'Nuova navetta disponibile (non ancora confermata)'
   const body = shuttleBody(departureTime, maxSeats, maxSeats)
+  const shuttleId = shuttle.id
 
-  const ids = await baseIdsWithPref(pref)
-  if (ids.length) {
-    await sendPush(ids, { title, body, url: `/base/navette/${shuttle.id}` })
-  }
+  after(async () => {
+    const ids = await baseIdsWithPref(pref)
+    if (ids.length) {
+      await sendPush(ids, { title, body, url: `/base/navette/${shuttleId}` })
+    }
+  })
 
   revalidatePath('/master/navette')
   redirect('/master/navette')
@@ -81,7 +85,7 @@ export async function confirmShuttle(formData: FormData) {
 
   if (shuttle) {
     const body = shuttleBody(shuttle.departure_time, shuttle.available_seats, shuttle.max_seats)
-    await sendStateChangePush(id, 'Navetta confermata', body)
+    after(() => sendStateChangePush(id, 'Navetta confermata', body))
   }
 
   revalidatePath('/master/navette')
@@ -121,7 +125,7 @@ export async function cancelShuttle(formData: FormData) {
     .neq('status', 'done')
 
   if (shuttle) {
-    await sendCancelledPush(id, shuttle.departure_time)
+    after(() => sendCancelledPush(id, shuttle.departure_time))
   }
 
   revalidatePath('/master/navette')
