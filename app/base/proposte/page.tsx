@@ -15,9 +15,9 @@ export default async function PropostePage({
   const { ok } = await searchParams
   const { user, profile } = await getCurrentUser()
 
-  const oneWeekAgo = new Date()
-  oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)
-  const cutoff = oneWeekAgo.toISOString()
+  const twoDaysAgo = new Date()
+  twoDaysAgo.setDate(twoDaysAgo.getDate() - 2)
+  const cutoff = twoDaysAgo.toISOString()
 
   const { data: proposals } = await supabaseAdmin
     .from('proposals')

@@ -17,9 +17,9 @@ export default async function MasterNavettePage() {
     .select('*')
     .order('departure_time', { ascending: true })
 
-  const oneWeekAgo = new Date()
-  oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)
-  const cutoff = oneWeekAgo.toISOString()
+  const twoDaysAgo = new Date()
+  twoDaysAgo.setDate(twoDaysAgo.getDate() - 2)
+  const cutoff = twoDaysAgo.toISOString()
 
   const active  = (shuttles ?? []).filter(s => ACTIVE_STATUSES.includes(s.status))
   const storico = (shuttles ?? []).filter(s => HISTORY_STATUSES.includes(s.status) && s.departure_time >= cutoff).reverse()

@@ -12,7 +12,9 @@ import {
   markShuttleDone,
   cancelShuttle,
   masterCancelBooking,
+  updateShuttleCapacity,
 } from '@/app/master/navette/actions'
+import { Button } from '@/components/ui/button'
 import { formatFull, formatMediumTime } from '@/lib/date'
 
 // ─── Tipi ────────────────────────────────────────────────────────────────────
@@ -52,6 +54,9 @@ const MASTER_ERROR_MSG: Record<string, string> = {
   'errore-prenotazione':        'Errore durante la prenotazione. Riprova.',
   'utente-mancante':            'Seleziona un utente.',
   'non-trovato':                'Prenotazione non trovata.',
+  'posti-occupati':             'I posti massimi non possono essere inferiori ai posti già occupati.',
+  'navetta-non-modificabile':   'Questa navetta non può essere modificata.',
+  'dati-non-validi':            'Dati non validi.',
 }
 
 // ─── Componente principale ────────────────────────────────────────────────────
@@ -69,6 +74,7 @@ export function MasterNavettaDetail({
 }) {
   const [shuttleInfo, setShuttleInfo] = useState(initialShuttle)
   const [bookings, setBookings] = useState(initialBookings)
+  const [isEditingCapacity, setIsEditingCapacity] = useState(false)
 
   // ── Realtime ──────────────────────────────────────────────────────────────
 
@@ -85,7 +91,14 @@ export function MasterNavettaDetail({
         { event: 'UPDATE', schema: 'public', table: 'shuttles', filter: `id=eq.${initialShuttle.id}` },
         (payload) => {
           const u = payload.new as ShuttleInfo
-          setShuttleInfo(prev => ({ ...prev, available_seats: u.available_seats, status: u.status }))
+          setShuttleInfo(prev => ({
+            ...prev,
+            status: u.status,
+            available_seats: u.available_seats,
+            max_seats: u.max_seats,
+            min_seats: u.min_seats,
+          }))
+          setIsEditingCapacity(false)
         },
       )
       .on(
@@ -134,6 +147,7 @@ export function MasterNavettaDetail({
   const canMarkDone = shuttleInfo.status === 'confirmed' || shuttleInfo.status === 'full'
   const canCancel = shuttleInfo.status !== 'done' && shuttleInfo.status !== 'cancelled'
   const canBook = shuttleInfo.status !== 'done' && shuttleInfo.status !== 'cancelled' && shuttleInfo.status !== 'full'
+  const canEditCapacity = shuttleInfo.status !== 'done' && shuttleInfo.status !== 'cancelled'
 
   const booked = shuttleInfo.max_seats - shuttleInfo.available_seats
 
@@ -162,14 +176,109 @@ export function MasterNavettaDetail({
       <div className="rounded-sm border mb-8" style={{ borderColor: 'var(--border)' }}>
         <div className="px-4">
           <DetailRow label="Partenza" value={formatFull(shuttleInfo.departure_time)} />
-          <DetailRow label="Posti disponibili" value={`${shuttleInfo.available_seats} / ${shuttleInfo.max_seats}`} />
-          <DetailRow label="Soglia conferma" value={`${shuttleInfo.min_seats} prenotazioni`} />
+
+          {isEditingCapacity ? (
+            <form action={updateShuttleCapacity}>
+              <input type="hidden" name="shuttle_id" value={shuttleInfo.id} />
+
+              {/* Posti massimi */}
+              <div
+                className="flex items-center justify-between py-3"
+                style={{ borderBottom: '1px solid var(--border-subtle)' }}
+              >
+                <label
+                  htmlFor="edit-max-seats"
+                  className="font-mono text-xs uppercase tracking-wide"
+                  style={{ color: 'var(--text-muted)' }}
+                >
+                  Posti massimi
+                </label>
+                <input
+                  id="edit-max-seats"
+                  name="max_seats"
+                  type="number"
+                  min={booked}
+                  defaultValue={shuttleInfo.max_seats}
+                  required
+                  className="w-20 rounded-sm border px-2 py-1 font-mono text-sm text-right outline-none"
+                  style={{ background: 'var(--bg-panel)', borderColor: 'var(--border)', color: 'var(--text)' }}
+                />
+              </div>
+
+              {/* Soglia conferma */}
+              <div
+                className="flex items-center justify-between py-3"
+                style={{ borderBottom: '1px solid var(--border-subtle)' }}
+              >
+                <label
+                  htmlFor="edit-min-seats"
+                  className="font-mono text-xs uppercase tracking-wide"
+                  style={{ color: 'var(--text-muted)' }}
+                >
+                  Soglia conferma
+                </label>
+                <input
+                  id="edit-min-seats"
+                  name="min_seats"
+                  type="number"
+                  min={0}
+                  defaultValue={shuttleInfo.min_seats}
+                  required
+                  className="w-20 rounded-sm border px-2 py-1 font-mono text-sm text-right outline-none"
+                  style={{ background: 'var(--bg-panel)', borderColor: 'var(--border)', color: 'var(--text)' }}
+                />
+              </div>
+
+              {booked > 0 && (
+                <p className="font-mono text-[10px] pt-2 pb-1" style={{ color: 'var(--text-dim)' }}>
+                  Posti già occupati: {booked} — i posti massimi non possono essere inferiori a questo valore.
+                </p>
+              )}
+
+              <div className="flex gap-2 py-3">
+                <SubmitButton
+                  className="rounded-sm border px-3 py-1.5 font-mono text-xs uppercase tracking-wide"
+                  style={{ background: '#22c55e', borderColor: '#22c55e', color: 'white' }}
+                >
+                  Salva
+                </SubmitButton>
+                <Button
+                  type="button"
+                  onClick={() => setIsEditingCapacity(false)}
+                  className="rounded-sm border px-3 py-1.5 font-mono text-xs uppercase tracking-wide transition-colors hover:border-[--red] hover:text-[--red]"
+                  style={{ background: 'none', borderColor: 'var(--border-muted)', color: 'var(--text-dim)' }}
+                >
+                  Annulla
+                </Button>
+              </div>
+            </form>
+          ) : (
+            <>
+              <DetailRow label="Posti disponibili" value={`${shuttleInfo.available_seats} / ${shuttleInfo.max_seats}`} />
+              <DetailRow label="Soglia conferma" value={`${shuttleInfo.min_seats} prenotazioni`} />
+            </>
+          )}
+
           <DetailRow label="Creata il" value={formatMediumTime(shuttleInfo.created_at)} />
         </div>
+
+        {canEditCapacity && !isEditingCapacity && (
+          <div className="px-4 pb-4 pt-1">
+            <button
+              type="button"
+              onClick={() => setIsEditingCapacity(true)}
+              className="rounded-sm border px-3 py-1.5 font-mono text-xs uppercase tracking-wide transition-colors hover:opacity-80"
+              style={{ background: 'none', borderColor: 'var(--border)', color: 'var(--text)' }}
+            >
+              Modifica capacità
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Messaggi ok/error */}
       {ok === 'prenotazione' && <SuccessAlert message="Prenotazione aggiunta." />}
+      {ok === 'capacita-aggiornata' && <SuccessAlert message="Capacità navetta aggiornata." />}
       {error && <ErrorAlert message={MASTER_ERROR_MSG[error] ?? 'Errore sconosciuto.'} />}
 
       {/* Lista prenotazioni con struttura booker → partecipanti */}

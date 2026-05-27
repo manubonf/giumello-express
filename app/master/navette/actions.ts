@@ -173,6 +173,67 @@ export async function masterCancelBooking(formData: FormData) {
   redirect(`/master/navette/${shuttleId}`)
 }
 
+/**
+ * Modifica i posti massimi e la soglia di conferma di una navetta attiva.
+ * Ricalcola available_seats e aggiorna lo status se necessario.
+ */
+export async function updateShuttleCapacity(formData: FormData) {
+  await getMasterUser()
+  const shuttleId = formData.get('shuttle_id') as string
+  const newMaxSeats = parseInt(formData.get('max_seats') as string)
+  const newMinSeats = parseInt(formData.get('min_seats') as string)
+
+  if (isNaN(newMaxSeats) || newMaxSeats < 1 || isNaN(newMinSeats) || newMinSeats < 0) {
+    redirect(`/master/navette/${shuttleId}?error=dati-non-validi`)
+  }
+
+  const { data: shuttle } = await supabaseAdmin
+    .from('shuttles')
+    .select('max_seats, available_seats, status')
+    .eq('id', shuttleId)
+    .single()
+
+  if (!shuttle) redirect(`/master/navette/${shuttleId}?error=non-trovato`)
+  if (shuttle.status === 'done' || shuttle.status === 'cancelled') {
+    redirect(`/master/navette/${shuttleId}?error=navetta-non-modificabile`)
+  }
+
+  const booked = shuttle.max_seats - shuttle.available_seats
+  if (newMaxSeats < booked) {
+    redirect(`/master/navette/${shuttleId}?error=posti-occupati`)
+  }
+
+  const newAvailableSeats = newMaxSeats - booked
+
+  // Aggiorna lo status in base alla nuova configurazione
+  let newStatus: string = shuttle.status
+  if (newAvailableSeats === 0) {
+    newStatus = 'full'
+  } else if (shuttle.status === 'full') {
+    // Non è più piena: torna a confirmed o draft
+    newStatus = booked >= newMinSeats ? 'confirmed' : 'draft'
+  } else if (booked >= newMinSeats) {
+    // Soglia raggiunta (o azzerata): conferma (gestisce sia draft→confirmed che lo resta se era confirmed)
+    newStatus = 'confirmed'
+  } else {
+    // Soglia non raggiunta: torna/rimane in draft (gestisce anche confirmed→draft se soglia alzata)
+    newStatus = 'draft'
+  }
+
+  await supabaseAdmin
+    .from('shuttles')
+    .update({
+      max_seats: newMaxSeats,
+      min_seats: newMinSeats,
+      available_seats: newAvailableSeats,
+      status: newStatus,
+    })
+    .eq('id', shuttleId)
+
+  revalidatePath(`/master/navette/${shuttleId}`)
+  redirect(`/master/navette/${shuttleId}?ok=capacita-aggiornata`)
+}
+
 export async function createShuttle(formData: FormData) {
   const user = await getMasterUser()
 
