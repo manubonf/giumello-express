@@ -6,6 +6,7 @@ import { SubmitButton } from '@/components/ui/submit-button'
 import { StatusDot, STATUS_LABEL } from '@/components/ui/status-badge'
 import { DetailRow } from '@/components/ui/detail-row'
 import { ErrorAlert, SuccessAlert } from '@/components/ui/alert'
+import { DateTimePicker } from '@/components/ui/datetime-picker'
 import { MasterBookingPanel } from '@/components/navette/master-booking-panel'
 import {
   confirmShuttle,
@@ -13,6 +14,7 @@ import {
   cancelShuttle,
   masterCancelBooking,
   updateShuttleCapacity,
+  updateShuttleDepartureTime,
 } from '@/app/master/navette/actions'
 import { Button } from '@/components/ui/button'
 import { formatFull, formatMediumTime } from '@/lib/date'
@@ -57,6 +59,7 @@ const MASTER_ERROR_MSG: Record<string, string> = {
   'posti-occupati':             'I posti massimi non possono essere inferiori ai posti già occupati.',
   'navetta-non-modificabile':   'Questa navetta non può essere modificata.',
   'dati-non-validi':            'Dati non validi.',
+  'orario-non-valido':          'Data e ora non valide.',
 }
 
 // ─── Componente principale ────────────────────────────────────────────────────
@@ -75,6 +78,7 @@ export function MasterNavettaDetail({
   const [shuttleInfo, setShuttleInfo] = useState(initialShuttle)
   const [bookings, setBookings] = useState(initialBookings)
   const [isEditingCapacity, setIsEditingCapacity] = useState(false)
+  const [isEditingDeparture, setIsEditingDeparture] = useState(false)
 
   // ── Realtime ──────────────────────────────────────────────────────────────
 
@@ -94,11 +98,13 @@ export function MasterNavettaDetail({
           setShuttleInfo(prev => ({
             ...prev,
             status: u.status,
+            departure_time: u.departure_time,
             available_seats: u.available_seats,
             max_seats: u.max_seats,
             min_seats: u.min_seats,
           }))
           setIsEditingCapacity(false)
+          setIsEditingDeparture(false)
         },
       )
       .on(
@@ -148,6 +154,7 @@ export function MasterNavettaDetail({
   const canCancel = shuttleInfo.status !== 'done' && shuttleInfo.status !== 'cancelled'
   const canBook = shuttleInfo.status !== 'done' && shuttleInfo.status !== 'cancelled' && shuttleInfo.status !== 'full'
   const canEditCapacity = shuttleInfo.status !== 'done' && shuttleInfo.status !== 'cancelled'
+  const canEditDeparture = shuttleInfo.status !== 'done' && shuttleInfo.status !== 'cancelled'
 
   const booked = shuttleInfo.max_seats - shuttleInfo.available_seats
 
@@ -175,7 +182,43 @@ export function MasterNavettaDetail({
       {/* Dettagli */}
       <div className="rounded-sm border mb-8" style={{ borderColor: 'var(--border)' }}>
         <div className="px-4">
-          <DetailRow label="Partenza" value={formatFull(shuttleInfo.departure_time)} />
+          {/* Riga partenza — statica o form modifica */}
+          {isEditingDeparture ? (
+            <form action={updateShuttleDepartureTime}>
+              <input type="hidden" name="shuttle_id" value={shuttleInfo.id} />
+              <div className="py-3" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+                <p
+                  className="font-mono text-xs uppercase tracking-wide mb-2"
+                  style={{ color: 'var(--text-muted)' }}
+                >
+                  Data e ora partenza
+                </p>
+                <DateTimePicker
+                  name="departure_time"
+                  required
+                  defaultValue={shuttleInfo.departure_time}
+                />
+              </div>
+              <div className="flex gap-2 py-3" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+                <SubmitButton
+                  className="rounded-sm border px-3 py-1.5 font-mono text-xs uppercase tracking-wide"
+                  style={{ background: '#22c55e', borderColor: '#22c55e', color: 'white' }}
+                >
+                  Salva
+                </SubmitButton>
+                <Button
+                  type="button"
+                  onClick={() => setIsEditingDeparture(false)}
+                  className="rounded-sm border px-3 py-1.5 font-mono text-xs uppercase tracking-wide transition-colors hover:border-[--red] hover:text-[--red]"
+                  style={{ background: 'none', borderColor: 'var(--border-muted)', color: 'var(--text-dim)' }}
+                >
+                  Annulla
+                </Button>
+              </div>
+            </form>
+          ) : (
+            <DetailRow label="Partenza" value={formatFull(shuttleInfo.departure_time)} />
+          )}
 
           {isEditingCapacity ? (
             <form action={updateShuttleCapacity}>
@@ -262,16 +305,28 @@ export function MasterNavettaDetail({
           <DetailRow label="Creata il" value={formatMediumTime(shuttleInfo.created_at)} />
         </div>
 
-        {canEditCapacity && !isEditingCapacity && (
-          <div className="px-4 pb-4 pt-1">
-            <button
-              type="button"
-              onClick={() => setIsEditingCapacity(true)}
-              className="rounded-sm border px-3 py-1.5 font-mono text-xs uppercase tracking-wide transition-colors hover:opacity-80"
-              style={{ background: 'none', borderColor: 'var(--border)', color: 'var(--text)' }}
-            >
-              Modifica capacità
-            </button>
+        {(canEditDeparture || canEditCapacity) && !isEditingDeparture && !isEditingCapacity && (
+          <div className="px-4 pb-4 pt-1 flex gap-2">
+            {canEditDeparture && (
+              <button
+                type="button"
+                onClick={() => setIsEditingDeparture(true)}
+                className="rounded-sm border px-3 py-1.5 font-mono text-xs uppercase tracking-wide transition-colors hover:opacity-80"
+                style={{ background: 'none', borderColor: 'var(--border)', color: 'var(--text)' }}
+              >
+                Modifica orario
+              </button>
+            )}
+            {canEditCapacity && (
+              <button
+                type="button"
+                onClick={() => setIsEditingCapacity(true)}
+                className="rounded-sm border px-3 py-1.5 font-mono text-xs uppercase tracking-wide transition-colors hover:opacity-80"
+                style={{ background: 'none', borderColor: 'var(--border)', color: 'var(--text)' }}
+              >
+                Modifica capacità
+              </button>
+            )}
           </div>
         )}
       </div>
@@ -279,6 +334,7 @@ export function MasterNavettaDetail({
       {/* Messaggi ok/error */}
       {ok === 'prenotazione' && <SuccessAlert message="Prenotazione aggiunta." />}
       {ok === 'capacita-aggiornata' && <SuccessAlert message="Capacità navetta aggiornata." />}
+      {ok === 'orario-aggiornato' && <SuccessAlert message="Orario navetta aggiornato." />}
       {error && <ErrorAlert message={MASTER_ERROR_MSG[error] ?? 'Errore sconosciuto.'} />}
 
       {/* Lista prenotazioni con struttura booker → partecipanti */}

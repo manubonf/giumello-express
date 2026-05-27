@@ -288,6 +288,39 @@ export async function createShuttle(formData: FormData) {
   redirect('/master/navette')
 }
 
+export async function updateShuttleDepartureTime(formData: FormData) {
+  await getMasterUser()
+  const shuttleId = formData.get('shuttle_id') as string
+  const newDepartureTime = (formData.get('departure_time') as string ?? '').trim()
+
+  if (!newDepartureTime) {
+    redirect(`/master/navette/${shuttleId}?error=orario-non-valido`)
+  }
+
+  const { data: shuttle } = await supabaseAdmin
+    .from('shuttles')
+    .select('status, available_seats, max_seats')
+    .eq('id', shuttleId)
+    .single()
+
+  if (!shuttle) redirect(`/master/navette/${shuttleId}?error=non-trovato`)
+  if (shuttle.status === 'done' || shuttle.status === 'cancelled') {
+    redirect(`/master/navette/${shuttleId}?error=navetta-non-modificabile`)
+  }
+
+  await supabaseAdmin
+    .from('shuttles')
+    .update({ departure_time: newDepartureTime })
+    .eq('id', shuttleId)
+
+  const body = shuttleBody(newDepartureTime, shuttle.available_seats, shuttle.max_seats)
+  after(() => sendStateChangePush(shuttleId, 'Orario navetta aggiornato', body))
+
+  revalidatePath('/master/navette')
+  revalidatePath(`/master/navette/${shuttleId}`)
+  redirect(`/master/navette/${shuttleId}?ok=orario-aggiornato`)
+}
+
 export async function confirmShuttle(formData: FormData) {
   await getMasterUser()
   const id = formData.get('id') as string
