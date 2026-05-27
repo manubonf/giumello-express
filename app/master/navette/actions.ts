@@ -189,7 +189,7 @@ export async function updateShuttleCapacity(formData: FormData) {
 
   const { data: shuttle } = await supabaseAdmin
     .from('shuttles')
-    .select('max_seats, available_seats, status')
+    .select('max_seats, available_seats, status, departure_time')
     .eq('id', shuttleId)
     .single()
 
@@ -229,6 +229,17 @@ export async function updateShuttleCapacity(formData: FormData) {
       status: newStatus,
     })
     .eq('id', shuttleId)
+
+  // Notifica cambio di stato (U4/U5) solo se lo stato è effettivamente cambiato
+  if (newStatus !== shuttle.status) {
+    const stateTitle =
+      newStatus === 'confirmed' ? 'Navetta confermata' :
+      newStatus === 'full'      ? 'Navetta al completo' :
+      newStatus === 'draft'     ? 'Navetta tornata in bozza' :
+                                  'Aggiornamento navetta'
+    const body = shuttleBody(shuttle.departure_time, newAvailableSeats, newMaxSeats)
+    after(() => sendStateChangePush(shuttleId, stateTitle, body))
+  }
 
   revalidatePath(`/master/navette/${shuttleId}`)
   redirect(`/master/navette/${shuttleId}?ok=capacita-aggiornata`)
