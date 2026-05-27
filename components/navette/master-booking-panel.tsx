@@ -126,7 +126,9 @@ export function MasterBookingPanel({
   )
 }
 
-// ─── Ricerca utente per il master ─────────────────────────────────────────────
+// ─── Ricerca utente per il master (con preferiti sempre visibili e stelline) ───
+
+const MAX_FAVORITES_SHOWN = 5
 
 function MasterUserSearchInput({
   excludedSet,
@@ -140,7 +142,9 @@ function MasterUserSearchInput({
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<Profile[]>([])
   const [favorites, setFavorites] = useState<Profile[]>([])
+  const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set())
   const [dropdownOpen, setDropdownOpen] = useState(false)
+  const [showAllFavorites, setShowAllFavorites] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -148,7 +152,12 @@ function MasterUserSearchInput({
   useEffect(() => {
     fetch('/api/favorites')
       .then(r => r.json())
-      .then((data: Profile[]) => { if (Array.isArray(data)) setFavorites(data) })
+      .then((data: Profile[]) => {
+        if (Array.isArray(data)) {
+          setFavorites(data)
+          setFavoriteIds(new Set(data.map(f => f.id)))
+        }
+      })
       .catch(() => {})
   }, [])
 
@@ -184,11 +193,35 @@ function MasterUserSearchInput({
     setDropdownOpen(false)
   }, [onSelect])
 
+  async function toggleFavorite(profile: Profile, e: React.MouseEvent) {
+    e.stopPropagation()
+    const isFav = favoriteIds.has(profile.id)
+    if (isFav) {
+      setFavoriteIds(prev => { const s = new Set(prev); s.delete(profile.id); return s })
+      setFavorites(prev => prev.filter(f => f.id !== profile.id))
+      await fetch('/api/favorites', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ profile_id: profile.id }),
+      })
+    } else {
+      setFavoriteIds(prev => new Set([...prev, profile.id]))
+      setFavorites(prev => [...prev, profile])
+      await fetch('/api/favorites', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ profile_id: profile.id }),
+      })
+    }
+  }
+
   const visibleFavorites = favorites.filter(f => !excludedSet.has(f.id))
   const visibleResults = results.filter(p => !excludedSet.has(p.id))
-  const showFavorites = dropdownOpen && !query && visibleFavorites.length > 0
-  const showResults = dropdownOpen && visibleResults.length > 0
-  const showDropdown = showFavorites || showResults
+  // Dropdown solo per i risultati di ricerca; i preferiti sono fissi sopra la barra
+  const showDropdown = dropdownOpen && visibleResults.length > 0
+  const favoritesSlice = showAllFavorites
+    ? visibleFavorites
+    : visibleFavorites.slice(0, MAX_FAVORITES_SHOWN)
 
   if (selectedUser) {
     return (
@@ -212,65 +245,129 @@ function MasterUserSearchInput({
   }
 
   return (
-    <div className="relative">
-      <div
-        className="flex items-center gap-2 rounded-sm border px-3"
-        style={{ borderColor: 'var(--border)', background: 'var(--bg-panel)' }}
-      >
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-          strokeWidth="2" aria-hidden="true" style={{ color: 'var(--text-dim)', flexShrink: 0 }}>
-          <circle cx="11" cy="11" r="8" />
-          <line x1="21" y1="21" x2="16.65" y2="16.65" />
-        </svg>
-        <input
-          ref={inputRef}
-          type="text"
-          value={query}
-          onChange={e => { setQuery(e.target.value); setDropdownOpen(true) }}
-          onFocus={() => setDropdownOpen(true)}
-          placeholder="Cerca utente…"
-          autoFocus
-          className="flex-1 py-2.5 bg-transparent outline-none font-mono text-sm"
-          style={{ color: 'var(--text)' }}
-        />
-      </div>
-      {showDropdown && (
-        <div
-          ref={dropdownRef}
-          className="absolute left-0 right-0 top-full mt-1 z-10 rounded-sm border shadow-lg py-1"
-          style={{ borderColor: 'var(--border)', background: 'var(--bg-panel)' }}
-        >
-          {showFavorites && (
-            <>
-              <p className="font-mono text-[10px] uppercase tracking-widest px-3 pt-2 pb-1"
-                style={{ color: 'var(--text-muted)' }}>Preferiti</p>
-              {visibleFavorites.map(f => (
-                <button key={f.id} type="button" onClick={() => selectUser(f)}
-                  className="w-full text-left px-3 py-1.5 font-mono text-sm hover:opacity-80"
-                  style={{ color: 'var(--text)' }}>
+    <div>
+      {/* Preferiti fissi sopra la barra di ricerca */}
+      {visibleFavorites.length > 0 && (
+        <div className="mb-2">
+          <p
+            className="font-mono text-[10px] uppercase tracking-widest mb-1"
+            style={{ color: 'var(--text-muted)' }}
+          >
+            Preferiti
+          </p>
+          <div
+            className="rounded-sm border py-1"
+            style={{ borderColor: 'var(--border)', background: 'var(--bg-panel)' }}
+          >
+            {favoritesSlice.map(f => (
+              <div key={f.id} className="flex items-center gap-1 px-3 py-1.5">
+                <button
+                  type="button"
+                  onClick={() => selectUser(f)}
+                  className="flex-1 text-left font-mono text-sm transition-opacity hover:opacity-70"
+                  style={{ color: 'var(--text)' }}
+                >
                   {f.username}
                 </button>
-              ))}
-            </>
-          )}
-          {showResults && (
-            <>
-              {showFavorites && (
-                <div className="mx-3 my-1.5" style={{ height: 1, background: 'var(--border-subtle)' }} />
-              )}
-              <p className="font-mono text-[10px] uppercase tracking-widest px-3 pt-1 pb-1"
-                style={{ color: 'var(--text-muted)' }}>Risultati</p>
-              {visibleResults.map(p => (
-                <button key={p.id} type="button" onClick={() => selectUser(p)}
-                  className="w-full text-left px-3 py-1.5 font-mono text-sm hover:opacity-80"
-                  style={{ color: 'var(--text)' }}>
-                  {p.username}
+                <button
+                  type="button"
+                  onClick={e => toggleFavorite(f, e)}
+                  className="text-base leading-none transition-opacity hover:opacity-70"
+                  style={{ color: 'var(--red)' }}
+                  aria-label={`Rimuovi ${f.username} dai preferiti`}
+                  title="Rimuovi dai preferiti"
+                >
+                  ★
                 </button>
-              ))}
-            </>
-          )}
+              </div>
+            ))}
+            {!showAllFavorites && visibleFavorites.length > MAX_FAVORITES_SHOWN && (
+              <button
+                type="button"
+                onClick={() => setShowAllFavorites(true)}
+                className="w-full text-left font-mono text-xs px-3 py-1.5 transition-opacity hover:opacity-70"
+                style={{ color: 'var(--text-dim)' }}
+              >
+                Mostra tutti ({visibleFavorites.length - MAX_FAVORITES_SHOWN} altri)
+              </button>
+            )}
+          </div>
         </div>
       )}
+
+      {/* Barra di ricerca con dropdown solo per i risultati */}
+      <div className="relative">
+        <div
+          className="flex items-center gap-2 rounded-sm border px-3"
+          style={{ borderColor: 'var(--border)', background: 'var(--bg-panel)' }}
+        >
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            strokeWidth="2" aria-hidden="true" style={{ color: 'var(--text-dim)', flexShrink: 0 }}>
+            <circle cx="11" cy="11" r="8" />
+            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+          </svg>
+          <input
+            ref={inputRef}
+            type="text"
+            value={query}
+            onChange={e => { setQuery(e.target.value); setDropdownOpen(true) }}
+            onFocus={() => setDropdownOpen(true)}
+            placeholder="Cerca utente…"
+            autoFocus
+            className="flex-1 py-2.5 bg-transparent outline-none font-mono text-sm"
+            style={{ color: 'var(--text)' }}
+          />
+        </div>
+
+        {showDropdown && (
+          <div
+            ref={dropdownRef}
+            className="absolute left-0 right-0 top-full mt-1 z-10 rounded-sm border shadow-lg py-1"
+            style={{ borderColor: 'var(--border)', background: 'var(--bg-panel)' }}
+          >
+            {visibleResults.map(p => (
+              <MasterDropdownRow
+                key={p.id}
+                profile={p}
+                isFavorite={favoriteIds.has(p.id)}
+                onSelect={() => selectUser(p)}
+                onToggleFavorite={e => toggleFavorite(p, e)}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function MasterDropdownRow({
+  profile,
+  isFavorite,
+  onSelect,
+  onToggleFavorite,
+}: {
+  profile: Profile
+  isFavorite: boolean
+  onSelect: () => void
+  onToggleFavorite: (e: React.MouseEvent) => void
+}) {
+  return (
+    <div className="flex items-center gap-1 px-3 py-1.5 cursor-pointer hover:opacity-80"
+      role="option" aria-selected={false}>
+      <button type="button" onClick={onSelect}
+        className="flex-1 text-left font-mono text-sm" style={{ color: 'var(--text)' }}>
+        {profile.username}
+      </button>
+      <button type="button" onClick={onToggleFavorite}
+        className="text-base leading-none transition-colors"
+        style={{ color: isFavorite ? 'var(--red)' : 'var(--text-dim)' }}
+        aria-label={isFavorite
+          ? `Rimuovi ${profile.username} dai preferiti`
+          : `Aggiungi ${profile.username} ai preferiti`}
+        title={isFavorite ? 'Rimuovi dai preferiti' : 'Aggiungi ai preferiti'}>
+        {isFavorite ? '★' : '☆'}
+      </button>
     </div>
   )
 }
