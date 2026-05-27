@@ -1,14 +1,21 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
 import { SubmitButton } from '@/components/ui/submit-button'
 import { Button } from '@/components/ui/button'
 import { StatusBadge, StatusDot } from '@/components/ui/status-badge'
 import { ErrorAlert, SuccessAlert } from '@/components/ui/alert'
-import { ParticipantsInput, type Chip } from '@/components/ui/participants-input'
-import { createBooking, cancelBooking, updateBooking } from '@/app/base/navette/actions'
+import {
+  bookSelf,
+  bookOtherUser,
+  bookGuest,
+  leaveBookingAsParticipant,
+  cancelBooking,
+} from '@/app/base/navette/actions'
 import { formatFull } from '@/lib/date'
+
+// ─── Tipi ────────────────────────────────────────────────────────────────────
 
 type ParticipantEntry = {
   id: string
@@ -34,19 +41,27 @@ type ShuttleInfo = {
   min_seats: number
 }
 
+type Profile = { id: string; username: string }
+
+// ─── Messaggi di errore ───────────────────────────────────────────────────────
+
 const ERROR_MSG: Record<string, string> = {
-  'posti-insufficienti':          'Posti insufficienti per il numero di partecipanti selezionati.',
+  'posti-insufficienti':          'Posti insufficienti per questa prenotazione.',
   'navetta-non-prenotabile':      'Questa navetta non è più prenotabile.',
-  'prenotazione-esistente':       'Hai già una prenotazione per questa navetta.',
-  'partecipante-già-prenotato':   'Uno o più partecipanti selezionati hanno già una prenotazione per questa navetta.',
+  'prenotazione-esistente':       'Sei già presente come passeggero su questa navetta.',
+  'partecipante-già-prenotato':   'Questo utente è già presente su questa navetta.',
   'partecipante-non-valido':      'Non è possibile prenotare per un utente master.',
+  'nome-ospite-mancante':         'Inserisci il nome dell\'ospite.',
   'errore-prenotazione':          'Errore durante la prenotazione. Riprova.',
   'non-autorizzato':              'Operazione non autorizzata.',
 }
 
+// ─── Componente principale ────────────────────────────────────────────────────
+
+type ActivePanel = null | 'user' | 'guest'
+
 export function NavettaDetail({
   shuttle: initialShuttle,
-  myBookingId,
   userId,
   username,
   initialBookings,
@@ -54,7 +69,6 @@ export function NavettaDetail({
   ok,
 }: {
   shuttle: ShuttleInfo
-  myBookingId: string | null
   userId: string
   username: string
   initialBookings: BookingEntry[]
@@ -63,58 +77,56 @@ export function NavettaDetail({
 }) {
   const [shuttleInfo, setShuttleInfo] = useState(initialShuttle)
   const [bookings, setBookings] = useState(initialBookings)
-  const [isEditing, setIsEditing] = useState(false)
+  const [activePanel, setActivePanel] = useState<ActivePanel>(null)
+  const [selectedUser, setSelectedUser] = useState<Profile | null>(null)
 
-  // All user IDs already booked (any booking, any role)
-  const alreadyBookedUserIds = useMemo(() => {
+  // ── Stato derivato ────────────────────────────────────────────────────────
+
+  /** Lista piatta di tutti i partecipanti su questa navetta */
+  const flatParticipants = useMemo(() =>
+    bookings.flatMap(b =>
+      b.participants.map(p => ({ ...p, bookerId: b.booker_id, bookerUsername: b.bookerUsername }))
+    ),
+    [bookings],
+  )
+
+  /** Mie prenotazioni come booker */
+  const myBookingsAsBooker = useMemo(
+    () => bookings.filter(b => b.booker_id === userId),
+    [bookings, userId],
+  )
+
+  /** Sono partecipante in una prenotazione di qualcun altro? */
+  const myParticipantInOtherBooking = useMemo(() => {
+    for (const b of bookings) {
+      if (b.booker_id === userId) continue
+      const p = b.participants.find(p => !p.is_guest && p.user_id === userId)
+      if (p) return { ...p, bookerUsername: b.bookerUsername }
+    }
+    return null
+  }, [bookings, userId])
+
+  /** Sono già presente come passeggero (in qualunque prenotazione)? */
+  const isSelfParticipant = useMemo(
+    () => flatParticipants.some(p => !p.is_guest && p.user_id === userId),
+    [flatParticipants, userId],
+  )
+
+  /** ID utenti da escludere dalla ricerca (già presenti come booker o partecipante) */
+  const excludedUserIds = useMemo(() => {
     const ids = new Set<string>()
     for (const b of bookings) {
       ids.add(b.booker_id)
-      for (const p of b.participants) {
-        if (!p.is_guest && p.user_id) ids.add(p.user_id)
-      }
+      for (const p of b.participants) if (!p.is_guest && p.user_id) ids.add(p.user_id)
     }
     return ids
   }, [bookings])
 
-  // User IDs booked through OTHER people's bookings (not mine) — hard-excluded from search
-  const othersBookedUserIds = useMemo(() => {
-    const ids = new Set<string>()
-    for (const b of bookings) {
-      if (b.booker_id === userId) continue
-      ids.add(b.booker_id)
-      for (const p of b.participants) {
-        if (!p.is_guest && p.user_id) ids.add(p.user_id)
-      }
-    }
-    return ids
-  }, [bookings, userId])
+  const canBook = !['full', 'done', 'cancelled'].includes(shuttleInfo.status)
+  const canBookSelf = canBook && !isSelfParticipant
+  const booked = shuttleInfo.max_seats - shuttleInfo.available_seats
 
-  const myBooking = useMemo(() => bookings.find(b => b.booker_id === userId), [bookings, userId])
-
-  // Initial state for the edit form
-  const editInitialIncludeMe = myBooking?.participants.some(p => !p.is_guest && p.user_id === userId) ?? false
-  const editInitialChips: Chip[] = useMemo(() => {
-    if (!myBooking) return []
-    return [
-      ...myBooking.participants
-        .filter(p => !p.is_guest && p.user_id && p.user_id !== userId)
-        .map(p => ({ kind: 'profile' as const, id: p.user_id!, username: p.username ?? '—' })),
-      ...myBooking.participants
-        .filter(p => p.is_guest)
-        .map(p => ({ kind: 'guest' as const, key: `existing-${p.id}`, name: p.guest_label ?? '' })),
-    ]
-  }, [myBooking, userId])
-
-  const currentParticipantCount = myBooking?.participants.length ?? 0
-
-  const canBook =
-    !myBookingId &&
-    !alreadyBookedUserIds.has(userId) &&
-    !['full', 'done', 'cancelled'].includes(shuttleInfo.status)
-  const canCancel =
-    !!myBookingId &&
-    !['done', 'cancelled'].includes(shuttleInfo.status)
+  // ── Realtime ──────────────────────────────────────────────────────────────
 
   useEffect(() => {
     const supabase = createBrowserClient(
@@ -126,12 +138,7 @@ export function NavettaDetail({
       .channel(`navetta-detail-${initialShuttle.id}`)
       .on(
         'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'shuttles',
-          filter: `id=eq.${initialShuttle.id}`,
-        },
+        { event: 'UPDATE', schema: 'public', table: 'shuttles', filter: `id=eq.${initialShuttle.id}` },
         (payload) => {
           const u = payload.new as ShuttleInfo
           setShuttleInfo(prev => ({ ...prev, available_seats: u.available_seats, status: u.status }))
@@ -139,27 +146,15 @@ export function NavettaDetail({
       )
       .on(
         'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'bookings',
-          filter: `shuttle_id=eq.${initialShuttle.id}`,
-        },
+        { event: 'INSERT', schema: 'public', table: 'bookings', filter: `shuttle_id=eq.${initialShuttle.id}` },
         async (payload) => {
           const nb = payload.new as { id: string; booker_id: string }
-
           const { data: bookerProfile } = await supabase
-            .from('profiles')
-            .select('username')
-            .eq('id', nb.booker_id)
-            .single()
-
-          // RLS: participant details only visible for own bookings
+            .from('profiles').select('username').eq('id', nb.booker_id).single()
           const { data: parts } = await supabase
             .from('booking_participants')
             .select('id, is_guest, guest_label, user_id, profiles(username)')
             .eq('booking_id', nb.id)
-
           const participants: ParticipantEntry[] = (parts ?? []).map((p: any) => ({
             id: p.id,
             is_guest: p.is_guest,
@@ -167,22 +162,18 @@ export function NavettaDetail({
             user_id: p.user_id ?? null,
             username: p.is_guest ? null : (p.profiles?.username ?? null),
           }))
-
-          setBookings(prev => [
-            ...prev,
-            {
-              id: nb.id,
-              booker_id: nb.booker_id,
-              bookerUsername: bookerProfile?.username ?? '—',
-              participants,
-            },
-          ])
+          setBookings(prev => {
+            // Evita duplicati: l'evento può arrivare dopo un redirect SSR che ha già incluso la prenotazione
+            if (prev.some(b => b.id === nb.id)) return prev
+            return [
+              ...prev,
+              { id: nb.id, booker_id: nb.booker_id, bookerUsername: bookerProfile?.username ?? '—', participants },
+            ]
+          })
         },
       )
       .on(
         'postgres_changes',
-        // DELETE filter on shuttle_id requires REPLICA IDENTITY FULL;
-        // without it, filter is skipped server-side → filter client-side instead
         { event: 'DELETE', schema: 'public', table: 'bookings' },
         (payload) => {
           const deleted = payload.old as { id: string }
@@ -194,10 +185,16 @@ export function NavettaDetail({
     return () => { supabase.removeChannel(channel) }
   }, [initialShuttle.id])
 
-  const booked = shuttleInfo.max_seats - shuttleInfo.available_seats
+  function closePanel() {
+    setActivePanel(null)
+    setSelectedUser(null)
+  }
+
+  // ── Render ────────────────────────────────────────────────────────────────
 
   return (
     <>
+      {/* Intestazione navetta */}
       <div className="flex items-center gap-3 mb-2">
         <StatusDot status={shuttleInfo.status} size="md" />
         <StatusBadge status={shuttleInfo.status} />
@@ -220,60 +217,101 @@ export function NavettaDetail({
       )}
 
       {ok === '1' && <SuccessAlert message="Prenotazione confermata." />}
-      {ok === 'modifica' && <SuccessAlert message="Prenotazione aggiornata." />}
       {error && <ErrorAlert message={ERROR_MSG[error] ?? 'Errore sconosciuto.'} />}
 
-      {bookings.length > 0 && (
+      {/* Lista piatta passeggeri */}
+      {flatParticipants.length > 0 && (
         <div className="mb-8">
           <p
             className="font-mono text-[10px] uppercase tracking-widest mb-3"
             style={{ color: 'var(--text-muted)' }}
           >
-            Chi si è prenotato ({booked})
+            Chi c&apos;è sulla navetta ({booked})
+          </p>
+          <div className="flex flex-col gap-1.5">
+            {flatParticipants.map(p => (
+              <div key={p.id} className="font-mono text-sm" style={{ color: 'var(--text)' }}>
+                {p.is_guest ? (
+                  <span style={{ color: 'var(--text-dim)' }}>Ospite: {p.guest_label}</span>
+                ) : p.user_id === userId ? (
+                  <>
+                    {p.username ?? '—'}
+                    <span className="ml-1.5" style={{ color: 'var(--text-dim)' }}>(tu)</span>
+                  </>
+                ) : (
+                  p.username ?? '—'
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Prenotato da qualcun altro → opzione per uscire */}
+      {myParticipantInOtherBooking && (
+        <div
+          className="rounded-sm border px-4 py-3 mb-6"
+          style={{ borderColor: 'var(--border)', background: 'var(--bg-panel)' }}
+        >
+          <p className="font-mono text-xs mb-3" style={{ color: 'var(--text-dim)' }}>
+            Sei stato prenotato da{' '}
+            <span style={{ color: 'var(--text)' }}>{myParticipantInOtherBooking.bookerUsername}</span>
+          </p>
+          {!['done', 'cancelled'].includes(shuttleInfo.status) && (
+            <form action={leaveBookingAsParticipant}>
+              <input type="hidden" name="shuttle_id" value={shuttleInfo.id} />
+              <SubmitButton
+                className="rounded-sm border px-3 py-1.5 font-mono text-xs uppercase tracking-wide transition-colors hover:border-[--red] hover:text-[--red]"
+                style={{ background: 'none', borderColor: 'var(--border-muted)', color: 'var(--text-dim)' }}
+              >
+                Rimuovimi
+              </SubmitButton>
+            </form>
+          )}
+        </div>
+      )}
+
+      {/* Mie prenotazioni come booker */}
+      {myBookingsAsBooker.length > 0 && (
+        <div className="mb-8">
+          <p
+            className="font-mono text-[10px] uppercase tracking-widest mb-3"
+            style={{ color: 'var(--text-muted)' }}
+          >
+            Le tue prenotazioni
           </p>
           <div className="flex flex-col gap-2">
-            {bookings.map((b, i) => {
-              const isMe = b.booker_id === userId
+            {myBookingsAsBooker.map(b => {
+              const canCancel = !['done', 'cancelled'].includes(shuttleInfo.status)
+              const participant = b.participants[0]
+              const label = !participant
+                ? '—'
+                : participant.is_guest
+                ? `Ospite: ${participant.guest_label}`
+                : participant.user_id === userId
+                ? `${participant.username ?? '—'} (tu)`
+                : (participant.username ?? '—')
+
               return (
                 <div
                   key={b.id}
-                  className="rounded-sm border px-4 py-3"
-                  style={{
-                    borderColor: isMe ? 'var(--border)' : 'var(--border-subtle)',
-                    background: isMe ? 'var(--bg-panel)' : 'transparent',
-                  }}
+                  className="flex items-center justify-between rounded-sm border px-4 py-3"
+                  style={{ borderColor: 'var(--border)', background: 'var(--bg-panel)' }}
                 >
-                  <div className="flex items-center gap-2 mb-2">
-                    <span
-                      className="font-mono text-[10px] w-4 text-right flex-shrink-0"
-                      style={{ color: 'var(--text-dim)' }}
-                    >
-                      {i + 1}.
-                    </span>
-                    <span
-                      className="font-mono text-xs font-medium"
-                      style={{ color: isMe ? 'var(--text)' : 'var(--text-muted)' }}
-                    >
-                      {b.bookerUsername}
-                      {isMe && (
-                        <span className="ml-1.5" style={{ color: 'var(--text-dim)' }}>
-                          (tu)
-                        </span>
-                      )}
-                    </span>
-                  </div>
-                  {b.participants.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5 pl-6">
-                      {b.participants.map(p => (
-                        <span
-                          key={p.id}
-                          className="font-mono text-xs rounded-sm border px-1.5 py-0.5"
-                          style={{ borderColor: 'var(--border-muted)', color: 'var(--text-dim)' }}
-                        >
-                          {p.is_guest ? `${p.guest_label} (ospite)` : (p.username ?? '—')}
-                        </span>
-                      ))}
-                    </div>
+                  <span className="font-mono text-sm" style={{ color: 'var(--text)' }}>
+                    {label}
+                  </span>
+                  {canCancel && (
+                    <form action={cancelBooking}>
+                      <input type="hidden" name="booking_id" value={b.id} />
+                      <input type="hidden" name="shuttle_id" value={shuttleInfo.id} />
+                      <SubmitButton
+                        className="rounded-sm border px-2.5 py-1 font-mono text-xs uppercase tracking-wide transition-colors hover:border-[--red] hover:text-[--red]"
+                        style={{ background: 'none', borderColor: 'var(--border-muted)', color: 'var(--text-dim)' }}
+                      >
+                        Cancella
+                      </SubmitButton>
+                    </form>
                   )}
                 </div>
               )
@@ -282,58 +320,115 @@ export function NavettaDetail({
         </div>
       )}
 
-      {myBookingId && canCancel && (
+      {/* Nuova prenotazione */}
+      {canBook && (
         <div className="mb-8">
-          {!isEditing ? (
-            <div className="flex gap-2">
+          <p
+            className="font-mono text-[10px] uppercase tracking-widest mb-3"
+            style={{ color: 'var(--text-muted)' }}
+          >
+            Nuova prenotazione
+          </p>
+
+          {/* Selezione modalità */}
+          {activePanel === null && (
+            <div className="flex flex-wrap gap-2">
+              {canBookSelf && (
+                <form action={bookSelf}>
+                  <input type="hidden" name="shuttle_id" value={shuttleInfo.id} />
+                  <SubmitButton
+                    className="rounded-sm border px-4 py-2 font-mono text-xs uppercase tracking-wide transition-colors"
+                    style={{ background: 'var(--red)', borderColor: 'var(--red)', color: 'white' }}
+                  >
+                    Prenota per te
+                  </SubmitButton>
+                </form>
+              )}
               <Button
-                onClick={() => setIsEditing(true)}
-                className="rounded-sm border px-3 py-1.5 font-mono text-xs uppercase tracking-wide transition-colors hover:border-[--red] hover:text-[--red]"
-                style={{ background: 'none', borderColor: 'var(--border-muted)', color: 'var(--text-dim)' }}
+                onClick={() => setActivePanel('user')}
+                className="rounded-sm border px-4 py-2 font-mono text-xs uppercase tracking-wide transition-colors hover:opacity-80"
+                style={{ background: 'none', borderColor: 'var(--border)', color: 'var(--text)' }}
               >
-                Modifica
+                Prenota un utente
               </Button>
-              <form action={cancelBooking}>
-                <input type="hidden" name="booking_id" value={myBookingId} />
-                <input type="hidden" name="shuttle_id" value={shuttleInfo.id} />
-                <SubmitButton
-                  className="rounded-sm border px-3 py-1.5 font-mono text-xs uppercase tracking-wide transition-colors hover:border-[--red] hover:text-[--red]"
+              <Button
+                onClick={() => setActivePanel('guest')}
+                className="rounded-sm border px-4 py-2 font-mono text-xs uppercase tracking-wide transition-colors hover:opacity-80"
+                style={{ background: 'none', borderColor: 'var(--border)', color: 'var(--text)' }}
+              >
+                Prenota un ospite
+              </Button>
+            </div>
+          )}
+
+          {/* Pannello: prenota utente registrato */}
+          {activePanel === 'user' && (
+            <div className="flex flex-col gap-3">
+              <p className="font-mono text-xs" style={{ color: 'var(--text-muted)' }}>
+                Seleziona un utente registrato da prenotare
+              </p>
+              <UserSearchInput
+                excludedUserIds={excludedUserIds}
+                currentUserId={userId}
+                selectedUser={selectedUser}
+                onSelect={setSelectedUser}
+              />
+              <div className="flex gap-2 mt-1">
+                {selectedUser && (
+                  <form action={bookOtherUser}>
+                    <input type="hidden" name="shuttle_id" value={shuttleInfo.id} />
+                    <input type="hidden" name="user_id" value={selectedUser.id} />
+                    <SubmitButton
+                      className="rounded-sm border px-4 py-2 font-mono text-xs uppercase tracking-wide"
+                      style={{ background: 'var(--red)', borderColor: 'var(--red)', color: 'white' }}
+                    >
+                      Conferma prenotazione
+                    </SubmitButton>
+                  </form>
+                )}
+                <Button
+                  onClick={closePanel}
+                  className="rounded-sm border px-4 py-2 font-mono text-xs uppercase tracking-wide transition-colors hover:border-[--red] hover:text-[--red]"
                   style={{ background: 'none', borderColor: 'var(--border-muted)', color: 'var(--text-dim)' }}
                 >
-                  Cancella prenotazione
-                </SubmitButton>
-              </form>
+                  Annulla
+                </Button>
+              </div>
             </div>
-          ) : (
-            <form action={updateBooking} className="flex flex-col gap-5">
-              <input type="hidden" name="booking_id" value={myBookingId} />
+          )}
+
+          {/* Pannello: prenota ospite */}
+          {activePanel === 'guest' && (
+            <form action={bookGuest} className="flex flex-col gap-3">
               <input type="hidden" name="shuttle_id" value={shuttleInfo.id} />
-
-              <p className="font-mono text-[10px] uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>
-                Modifica prenotazione
+              <p className="font-mono text-xs" style={{ color: 'var(--text-muted)' }}>
+                Nome dell&apos;ospite da prenotare
               </p>
-
-              <ParticipantsInput
-                userId={userId}
-                username={username}
-                hardExcludedUserIds={othersBookedUserIds}
-                initialChips={editInitialChips}
-                initialIncludeMe={editInitialIncludeMe}
-                availableSeats={shuttleInfo.available_seats}
-                currentParticipantCount={currentParticipantCount}
-              />
-
-              <div className="flex gap-2 mt-1">
+              <div className="flex gap-2">
+                <input
+                  name="guest_name"
+                  type="text"
+                  placeholder="Mario Rossi"
+                  autoFocus
+                  className="flex-1 rounded-sm border px-3 py-2 font-mono text-sm outline-none"
+                  style={{
+                    background: 'var(--bg-panel)',
+                    borderColor: 'var(--border)',
+                    color: 'var(--text)',
+                  }}
+                />
+              </div>
+              <div className="flex gap-2">
                 <SubmitButton
-                  className="rounded-sm border px-5 py-2.5 font-mono text-xs uppercase tracking-wide transition-colors"
+                  className="rounded-sm border px-4 py-2 font-mono text-xs uppercase tracking-wide"
                   style={{ background: 'var(--red)', borderColor: 'var(--red)', color: 'white' }}
                 >
-                  Salva modifiche
+                  Prenota ospite
                 </SubmitButton>
                 <Button
-                  onClick={() => setIsEditing(false)}
-                  className="rounded-sm border px-5 py-2.5 font-mono text-xs uppercase tracking-wide transition-colors hover:border-[--red] hover:text-[--red]"
-                  style={{ borderColor: 'var(--border-muted)', color: 'var(--text-dim)' }}
+                  onClick={closePanel}
+                  className="rounded-sm border px-4 py-2 font-mono text-xs uppercase tracking-wide transition-colors hover:border-[--red] hover:text-[--red]"
+                  style={{ background: 'none', borderColor: 'var(--border-muted)', color: 'var(--text-dim)' }}
                 >
                   Annulla
                 </Button>
@@ -342,33 +437,190 @@ export function NavettaDetail({
           )}
         </div>
       )}
-
-      {canBook && (
-        <form action={createBooking} className="flex flex-col gap-5">
-          <input type="hidden" name="shuttle_id" value={shuttleInfo.id} />
-
-          <p className="font-mono text-[10px] uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>
-            Nuova prenotazione
-          </p>
-
-          <ParticipantsInput
-            userId={userId}
-            username={username}
-            hardExcludedUserIds={othersBookedUserIds}
-            initialIncludeMe={true}
-            availableSeats={shuttleInfo.available_seats}
-          />
-
-          <div className="mt-1">
-            <SubmitButton
-              className="rounded-sm border px-5 py-2.5 font-mono text-xs uppercase tracking-wide transition-colors"
-              style={{ background: 'var(--red)', borderColor: 'var(--red)', color: 'white' }}
-            >
-              Prenota
-            </SubmitButton>
-          </div>
-        </form>
-      )}
     </>
+  )
+}
+
+// ─── UserSearchInput ──────────────────────────────────────────────────────────
+// Ricerca utente singolo con debounce e preferiti.
+
+const DEBOUNCE_MS = 250
+const MIN_QUERY = 2
+
+function UserSearchInput({
+  excludedUserIds,
+  currentUserId,
+  selectedUser,
+  onSelect,
+}: {
+  excludedUserIds: Set<string>
+  currentUserId: string
+  selectedUser: Profile | null
+  onSelect: (profile: Profile | null) => void
+}) {
+  const [query, setQuery] = useState('')
+  const [results, setResults] = useState<Profile[]>([])
+  const [favorites, setFavorites] = useState<Profile[]>([])
+  const [dropdownOpen, setDropdownOpen] = useState(false)
+  const inputRef = useRef<HTMLInputElement>(null)
+  const dropdownRef = useRef<HTMLDivElement>(null)
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // Carica preferiti
+  useEffect(() => {
+    fetch('/api/favorites')
+      .then(r => r.json())
+      .then((data: Profile[]) => { if (Array.isArray(data)) setFavorites(data) })
+      .catch(() => {})
+  }, [])
+
+  // Ricerca con debounce
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    if (query.length < MIN_QUERY) { setResults([]); return }
+    debounceRef.current = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/profiles?q=${encodeURIComponent(query)}&limit=10`)
+        if (res.ok) setResults(await res.json())
+      } catch {}
+    }, DEBOUNCE_MS)
+    return () => { if (debounceRef.current) clearTimeout(debounceRef.current) }
+  }, [query])
+
+  // Chiudi dropdown al click esterno
+  useEffect(() => {
+    function onMouseDown(e: MouseEvent) {
+      if (
+        !inputRef.current?.contains(e.target as Node) &&
+        !dropdownRef.current?.contains(e.target as Node)
+      ) {
+        setDropdownOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', onMouseDown)
+    return () => document.removeEventListener('mousedown', onMouseDown)
+  }, [])
+
+  const selectUser = useCallback((profile: Profile) => {
+    onSelect(profile)
+    setQuery('')
+    setResults([])
+    setDropdownOpen(false)
+  }, [onSelect])
+
+  const visibleFavorites = favorites.filter(
+    f => !excludedUserIds.has(f.id) && f.id !== currentUserId,
+  )
+  const visibleResults = results.filter(
+    p => !excludedUserIds.has(p.id) && p.id !== currentUserId,
+  )
+  const showFavorites = dropdownOpen && !query && visibleFavorites.length > 0
+  const showResults = dropdownOpen && visibleResults.length > 0
+  const showDropdown = showFavorites || showResults
+
+  // Utente già selezionato → mostra chip con ×
+  if (selectedUser) {
+    return (
+      <div className="flex items-center gap-2">
+        <span
+          className="inline-flex items-center gap-1.5 rounded-sm border px-2.5 py-1.5 font-mono text-sm"
+          style={{ borderColor: 'var(--border)', background: 'var(--bg-panel)', color: 'var(--text)' }}
+        >
+          {selectedUser.username}
+          <button
+            type="button"
+            onClick={() => onSelect(null)}
+            className="leading-none transition-colors hover:text-[--red]"
+            style={{ color: 'var(--text-dim)' }}
+            aria-label="Rimuovi selezione"
+          >
+            ×
+          </button>
+        </span>
+      </div>
+    )
+  }
+
+  return (
+    <div className="relative">
+      <div
+        className="flex items-center gap-2 rounded-sm border px-3"
+        style={{ borderColor: 'var(--border)', background: 'var(--bg-panel)' }}
+      >
+        <svg
+          width="13" height="13" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" strokeWidth="2" aria-hidden="true"
+          style={{ color: 'var(--text-dim)', flexShrink: 0 }}
+        >
+          <circle cx="11" cy="11" r="8" />
+          <line x1="21" y1="21" x2="16.65" y2="16.65" />
+        </svg>
+        <input
+          ref={inputRef}
+          type="text"
+          value={query}
+          onChange={e => { setQuery(e.target.value); setDropdownOpen(true) }}
+          onFocus={() => setDropdownOpen(true)}
+          placeholder="Cerca utente…"
+          autoFocus
+          className="flex-1 py-2.5 bg-transparent outline-none font-mono text-sm"
+          style={{ color: 'var(--text)' }}
+        />
+      </div>
+
+      {showDropdown && (
+        <div
+          ref={dropdownRef}
+          className="absolute left-0 right-0 top-full mt-1 z-10 rounded-sm border shadow-lg py-1"
+          style={{ borderColor: 'var(--border)', background: 'var(--bg-panel)' }}
+        >
+          {showFavorites && (
+            <>
+              <p
+                className="font-mono text-[10px] uppercase tracking-widest px-3 pt-2 pb-1"
+                style={{ color: 'var(--text-muted)' }}
+              >
+                Preferiti
+              </p>
+              {visibleFavorites.map(f => (
+                <button
+                  key={f.id}
+                  type="button"
+                  onClick={() => selectUser(f)}
+                  className="w-full text-left px-3 py-1.5 font-mono text-sm hover:opacity-80"
+                  style={{ color: 'var(--text)' }}
+                >
+                  {f.username}
+                </button>
+              ))}
+            </>
+          )}
+          {showResults && (
+            <>
+              {showFavorites && (
+                <div className="mx-3 my-1.5" style={{ height: 1, background: 'var(--border-subtle)' }} />
+              )}
+              <p
+                className="font-mono text-[10px] uppercase tracking-widest px-3 pt-1 pb-1"
+                style={{ color: 'var(--text-muted)' }}
+              >
+                Risultati
+              </p>
+              {visibleResults.map(p => (
+                <button
+                  key={p.id}
+                  type="button"
+                  onClick={() => selectUser(p)}
+                  className="w-full text-left px-3 py-1.5 font-mono text-sm hover:opacity-80"
+                  style={{ color: 'var(--text)' }}
+                >
+                  {p.username}
+                </button>
+              ))}
+            </>
+          )}
+        </div>
+      )}
+    </div>
   )
 }

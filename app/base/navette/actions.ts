@@ -43,14 +43,12 @@ async function sendBookingNotifications(
 
   const tasks: Promise<unknown>[] = []
 
-  // Master notification for the booking event
   tasks.push(
     masterIdsWithPref(masterPref).then(ids =>
       ids.length ? sendPush(ids, { title: masterTitle, body, url: masterUrl }) : undefined
     )
   )
 
-  // M5: auto-confirmed (draft → confirmed via book_seats)
   if (stateChanged && after.status === 'confirmed' && before.status === 'draft') {
     tasks.push(
       masterIdsWithPref('notif_m5').then(ids =>
@@ -59,7 +57,6 @@ async function sendBookingNotifications(
     )
   }
 
-  // M6: back to draft (confirmed → draft via release_seats)
   if (stateChanged && after.status === 'draft') {
     tasks.push(
       masterIdsWithPref('notif_m6').then(ids =>
@@ -68,14 +65,12 @@ async function sendBookingNotifications(
     )
   }
 
-  // Base users: state change (U4/U5) or seat update (U6/U7)
   if (stateChanged) {
     let stateTitle: string
     if (after.status === 'confirmed') stateTitle = 'Navetta confermata'
     else if (after.status === 'full') stateTitle = 'Navetta al completo'
     else if (after.status === 'draft') stateTitle = 'Navetta tornata in bozza'
     else stateTitle = 'Aggiornamento navetta'
-
     tasks.push(sendStateChangePush(shuttleId, stateTitle, body, actorId))
   } else {
     tasks.push(sendSeatUpdatePush(shuttleId, masterTitle, body, actorId))
@@ -84,100 +79,124 @@ async function sendBookingNotifications(
   await Promise.all(tasks)
 }
 
-export async function createBooking(formData: FormData) {
-  const { user } = await getCurrentUser()
+/**
+ * Restituisce gli user_id dei profili registrati che sono PARTECIPANTI su questa navetta.
+ * Non include i booker che non compaiono anche come partecipanti.
+ */
+async function getParticipantUserIds(shuttleId: string): Promise<Set<string>> {
+  const { data: bookings } = await supabaseAdmin
+    .from('bookings')
+    .select('id')
+    .eq('shuttle_id', shuttleId)
 
-  const shuttleId = formData.get('shuttle_id') as string
-  const includeBooker = formData.get('include_booker') === 'on'
-  const participantIds = (formData.getAll('participant_ids') as string[])
-    .filter(id => id && id !== user.id)
-  const guestNames = (formData.getAll('guest_names') as string[])
-    .map(g => g.trim()).filter(Boolean).slice(0, 20)
+  const bookingIds = (bookings ?? []).map(b => b.id)
+  if (!bookingIds.length) return new Set()
 
-  const allUserIds = includeBooker ? [user.id, ...participantIds] : participantIds
-  const totalCount = allUserIds.length + guestNames.length
+  const { data: participants } = await supabaseAdmin
+    .from('booking_participants')
+    .select('user_id')
+    .in('booking_id', bookingIds)
+    .eq('is_guest', false)
 
-  if (participantIds.length > 0) {
-    const { data: masterCheck } = await supabaseAdmin
-      .from('profiles')
-      .select('id')
-      .in('id', participantIds)
-      .eq('role', 'master')
-    if (masterCheck && masterCheck.length > 0) {
-      redirect(`/base/navette/${shuttleId}?error=partecipante-non-valido`)
-    }
+  return new Set((participants ?? []).filter(p => p.user_id).map(p => p.user_id as string))
+}
+
+/**
+ * Restituisce gli user_id dei profili registrati che sono booker O partecipanti su questa navetta.
+ * Usato per `bookOtherUser`: previene di prenotare qualcuno già "presente" nella navetta in qualunque ruolo.
+ */
+async function getBookedUserIds(shuttleId: string): Promise<Set<string>> {
+  const { data: bookings } = await supabaseAdmin
+    .from('bookings')
+    .select('id, booker_id')
+    .eq('shuttle_id', shuttleId)
+
+  const ids = new Set<string>()
+  const bookingIds = (bookings ?? []).map(b => b.id)
+
+  for (const b of bookings ?? []) ids.add(b.booker_id)
+
+  if (bookingIds.length) {
+    const { data: participants } = await supabaseAdmin
+      .from('booking_participants')
+      .select('user_id')
+      .in('booking_id', bookingIds)
+      .eq('is_guest', false)
+    for (const p of participants ?? []) if (p.user_id) ids.add(p.user_id)
   }
 
-  const [shuttleBefore, { data: shuttleBookings }] = await Promise.all([
-    getShuttleSnapshot(shuttleId),
-    supabaseAdmin.from('bookings').select('id, booker_id').eq('shuttle_id', shuttleId),
-  ])
+  return ids
+}
 
-  const myDirectBooking = shuttleBookings?.find(b => b.booker_id === user.id)
-  if (myDirectBooking) redirect(`/base/navette/${shuttleId}?error=prenotazione-esistente`)
-
-  const shuttleBookingIds = shuttleBookings?.map(b => b.id) ?? []
-  const { data: existingParticipants } = shuttleBookingIds.length
-    ? await supabaseAdmin
-        .from('booking_participants')
-        .select('user_id')
-        .in('booking_id', shuttleBookingIds)
-        .eq('is_guest', false)
-    : { data: [] }
-
-  const alreadyBookedIds = new Set([
-    ...(shuttleBookings?.map(b => b.booker_id) ?? []),
-    ...(existingParticipants ?? []).filter(p => p.user_id).map(p => p.user_id as string),
-  ])
-
-  if (alreadyBookedIds.has(user.id)) {
-    redirect(`/base/navette/${shuttleId}?error=prenotazione-esistente`)
-  }
-
-  if (participantIds.some(id => alreadyBookedIds.has(id))) {
-    redirect(`/base/navette/${shuttleId}?error=partecipante-già-prenotato`)
-  }
-
-  const { error: bookError } = await supabaseAdmin
-    .rpc('book_seats', { p_shuttle_id: shuttleId, p_count: totalCount })
+/**
+ * Helper condiviso: crea un booking + un singolo partecipante dopo aver prenotato un posto.
+ */
+async function createSingleBooking(
+  shuttleId: string,
+  bookerId: string,
+  participant: { user_id: string | null; is_guest: boolean; guest_label: string | null },
+): Promise<{ bookingId: string } | { error: string }> {
+  const { error: bookError } = await supabaseAdmin.rpc('book_seats', {
+    p_shuttle_id: shuttleId,
+    p_count: 1,
+  })
 
   if (bookError) {
-    console.error('[createBooking] book_seats error:', bookError)
-    if (bookError.message.includes('non prenotabile')) {
-      redirect(`/base/navette/${shuttleId}?error=navetta-non-prenotabile`)
-    }
-    if (bookError.message.includes('Posti insufficienti')) {
-      redirect(`/base/navette/${shuttleId}?error=posti-insufficienti`)
-    }
-    redirect(`/base/navette/${shuttleId}?error=errore-prenotazione`)
+    if (bookError.message.includes('non prenotabile')) return { error: 'navetta-non-prenotabile' }
+    if (bookError.message.includes('Posti insufficienti')) return { error: 'posti-insufficienti' }
+    return { error: 'errore-prenotazione' }
   }
 
   const { data: booking, error: insertError } = await supabaseAdmin
     .from('bookings')
-    .insert({ shuttle_id: shuttleId, booker_id: user.id })
+    .insert({ shuttle_id: shuttleId, booker_id: bookerId })
     .select('id')
     .single()
 
   if (insertError || !booking) {
-    await supabaseAdmin.rpc('release_seats', { p_shuttle_id: shuttleId, p_count: totalCount })
-    redirect(`/base/navette/${shuttleId}?error=errore-prenotazione`)
+    await supabaseAdmin.rpc('release_seats', { p_shuttle_id: shuttleId, p_count: 1 })
+    return { error: 'errore-prenotazione' }
   }
 
-  const rows = [
-    ...allUserIds.map(uid => ({ booking_id: booking.id, user_id: uid, is_guest: false, guest_label: null })),
-    ...guestNames.map(name => ({ booking_id: booking.id, user_id: null, guest_label: name, is_guest: true })),
-  ]
-
-  const { error: participantsError } = await supabaseAdmin
+  const { error: partError } = await supabaseAdmin
     .from('booking_participants')
-    .insert(rows)
+    .insert({ booking_id: booking.id, ...participant })
 
-  if (participantsError) {
-    console.error('[createBooking] participants error:', participantsError)
+  if (partError) {
     await supabaseAdmin.from('bookings').delete().eq('id', booking.id)
-    await supabaseAdmin.rpc('release_seats', { p_shuttle_id: shuttleId, p_count: totalCount })
-    redirect(`/base/navette/${shuttleId}?error=errore-prenotazione`)
+    await supabaseAdmin.rpc('release_seats', { p_shuttle_id: shuttleId, p_count: 1 })
+    return { error: 'errore-prenotazione' }
   }
+
+  return { bookingId: booking.id }
+}
+
+// ─── Azioni pubbliche ────────────────────────────────────────────────────────
+
+/**
+ * Prenota per sé — crea un booking con booker_id = current_user e participant = current_user.
+ * Bloccato se l'utente è già partecipante su questa navetta (anche se prenotato da qualcun altro).
+ */
+export async function bookSelf(formData: FormData) {
+  const { user } = await getCurrentUser()
+  const shuttleId = formData.get('shuttle_id') as string
+
+  const [shuttleBefore, participantIds] = await Promise.all([
+    getShuttleSnapshot(shuttleId),
+    getParticipantUserIds(shuttleId),
+  ])
+
+  if (participantIds.has(user.id)) {
+    redirect(`/base/navette/${shuttleId}?error=prenotazione-esistente`)
+  }
+
+  const result = await createSingleBooking(shuttleId, user.id, {
+    user_id: user.id,
+    is_guest: false,
+    guest_label: null,
+  })
+
+  if ('error' in result) redirect(`/base/navette/${shuttleId}?error=${result.error}`)
 
   const shuttleAfter = await getShuttleSnapshot(shuttleId)
   if (shuttleBefore && shuttleAfter) {
@@ -188,95 +207,146 @@ export async function createBooking(formData: FormData) {
   redirect(`/base/navette/${shuttleId}?ok=1`)
 }
 
-export async function updateBooking(formData: FormData) {
+/**
+ * Prenota un altro utente registrato.
+ * Bloccato se il target è già booker o partecipante su questa navetta, o se è master.
+ */
+export async function bookOtherUser(formData: FormData) {
   const { user } = await getCurrentUser()
-
-  const bookingId = formData.get('booking_id') as string
   const shuttleId = formData.get('shuttle_id') as string
-  const includeBooker = formData.get('include_booker') === 'on'
-  const newParticipantIds = (formData.getAll('participant_ids') as string[])
-    .filter(id => id && id !== user.id)
-  const newGuestNames = (formData.getAll('guest_names') as string[])
-    .map(g => g.trim()).filter(Boolean).slice(0, 20)
+  const targetUserId = formData.get('user_id') as string
 
-  if (newParticipantIds.length > 0) {
-    const { data: masterCheck } = await supabaseAdmin
-      .from('profiles')
-      .select('id')
-      .in('id', newParticipantIds)
-      .eq('role', 'master')
-    if (masterCheck && masterCheck.length > 0) {
-      redirect(`/base/navette/${shuttleId}?error=partecipante-non-valido`)
-    }
+  if (!targetUserId || targetUserId === user.id) {
+    redirect(`/base/navette/${shuttleId}?error=partecipante-non-valido`)
   }
 
-  const [{ data: booking }, shuttleBefore] = await Promise.all([
-    supabaseAdmin
-      .from('bookings')
-      .select('id, booker_id, shuttle_id')
-      .eq('id', bookingId)
-      .eq('booker_id', user.id)
-      .single(),
+  // Il target non può essere master
+  const { data: masterCheck } = await supabaseAdmin
+    .from('profiles')
+    .select('id')
+    .eq('id', targetUserId)
+    .eq('role', 'master')
+  if (masterCheck && masterCheck.length > 0) {
+    redirect(`/base/navette/${shuttleId}?error=partecipante-non-valido`)
+  }
+
+  const [shuttleBefore, bookedIds] = await Promise.all([
     getShuttleSnapshot(shuttleId),
+    getBookedUserIds(shuttleId),
   ])
 
-  if (!booking) redirect(`/base/navette/${shuttleId}?error=non-autorizzato`)
-
-  const { data: currentParticipants } = await supabaseAdmin
-    .from('booking_participants')
-    .select('id')
-    .eq('booking_id', bookingId)
-
-  const oldCount = currentParticipants?.length ?? 0
-  const allNewUserIds = includeBooker ? [user.id, ...newParticipantIds] : newParticipantIds
-  const newCount = allNewUserIds.length + newGuestNames.length
-  const delta = newCount - oldCount
-
-  if (delta > 0) {
-    const { error } = await supabaseAdmin.rpc('book_seats', {
-      p_shuttle_id: booking.shuttle_id,
-      p_count: delta,
-    })
-    if (error) {
-      if (error.message.includes('Posti insufficienti')) {
-        redirect(`/base/navette/${shuttleId}?error=posti-insufficienti`)
-      }
-      redirect(`/base/navette/${shuttleId}?error=errore-prenotazione`)
-    }
+  if (bookedIds.has(targetUserId)) {
+    redirect(`/base/navette/${shuttleId}?error=partecipante-già-prenotato`)
   }
 
-  await supabaseAdmin.from('booking_participants').delete().eq('booking_id', bookingId)
+  const result = await createSingleBooking(shuttleId, user.id, {
+    user_id: targetUserId,
+    is_guest: false,
+    guest_label: null,
+  })
 
-  const rows = [
-    ...allNewUserIds.map(uid => ({ booking_id: bookingId, user_id: uid, is_guest: false, guest_label: null })),
-    ...newGuestNames.map(name => ({ booking_id: bookingId, user_id: null, guest_label: name, is_guest: true })),
-  ]
-
-  const { error: insertError } = await supabaseAdmin.from('booking_participants').insert(rows)
-
-  if (insertError) {
-    if (delta > 0) {
-      await supabaseAdmin.rpc('release_seats', { p_shuttle_id: booking.shuttle_id, p_count: delta })
-    }
-    redirect(`/base/navette/${shuttleId}?error=errore-prenotazione`)
-  }
-
-  if (delta < 0) {
-    await supabaseAdmin.rpc('release_seats', {
-      p_shuttle_id: booking.shuttle_id,
-      p_count: Math.abs(delta),
-    })
-  }
+  if ('error' in result) redirect(`/base/navette/${shuttleId}?error=${result.error}`)
 
   const shuttleAfter = await getShuttleSnapshot(shuttleId)
   if (shuttleBefore && shuttleAfter) {
-    after(() => sendBookingNotifications(shuttleId, shuttleBefore, shuttleAfter, user.id, 'Prenotazione modificata', 'notif_m3'))
+    after(() => sendBookingNotifications(shuttleId, shuttleBefore, shuttleAfter, user.id, 'Nuova prenotazione', 'notif_m2'))
   }
 
   revalidatePath(`/base/navette/${shuttleId}`)
-  redirect(`/base/navette/${shuttleId}?ok=modifica`)
+  redirect(`/base/navette/${shuttleId}?ok=1`)
 }
 
+/**
+ * Prenota un ospite esterno.
+ * Nessun controllo di unicità (gli ospiti non hanno profilo).
+ */
+export async function bookGuest(formData: FormData) {
+  const { user } = await getCurrentUser()
+  const shuttleId = formData.get('shuttle_id') as string
+  const guestName = (formData.get('guest_name') as string ?? '').trim()
+
+  if (!guestName) redirect(`/base/navette/${shuttleId}?error=nome-ospite-mancante`)
+
+  const shuttleBefore = await getShuttleSnapshot(shuttleId)
+
+  const result = await createSingleBooking(shuttleId, user.id, {
+    user_id: null,
+    is_guest: true,
+    guest_label: guestName,
+  })
+
+  if ('error' in result) redirect(`/base/navette/${shuttleId}?error=${result.error}`)
+
+  const shuttleAfter = await getShuttleSnapshot(shuttleId)
+  if (shuttleBefore && shuttleAfter) {
+    after(() => sendBookingNotifications(shuttleId, shuttleBefore, shuttleAfter, user.id, 'Nuova prenotazione', 'notif_m2'))
+  }
+
+  revalidatePath(`/base/navette/${shuttleId}`)
+  redirect(`/base/navette/${shuttleId}?ok=1`)
+}
+
+/**
+ * Rimuovi te stesso da una prenotazione creata da qualcun altro.
+ * Se la prenotazione rimane senza partecipanti, viene eliminata.
+ */
+export async function leaveBookingAsParticipant(formData: FormData) {
+  const { user } = await getCurrentUser()
+  const shuttleId = formData.get('shuttle_id') as string
+
+  // Trova le prenotazioni di questa navetta dove il booker è qualcun altro
+  const { data: othersBookings } = await supabaseAdmin
+    .from('bookings')
+    .select('id')
+    .eq('shuttle_id', shuttleId)
+    .neq('booker_id', user.id)
+
+  const otherBookingIds = (othersBookings ?? []).map(b => b.id)
+  if (!otherBookingIds.length) redirect(`/base/navette/${shuttleId}?error=non-autorizzato`)
+
+  // Trova il record partecipante dell'utente corrente
+  const { data: participantEntry } = await supabaseAdmin
+    .from('booking_participants')
+    .select('id, booking_id')
+    .in('booking_id', otherBookingIds)
+    .eq('user_id', user.id)
+    .maybeSingle()
+
+  if (!participantEntry) redirect(`/base/navette/${shuttleId}?error=non-autorizzato`)
+
+  const shuttleBefore = await getShuttleSnapshot(shuttleId)
+
+  // Rimuovi il partecipante
+  await supabaseAdmin
+    .from('booking_participants')
+    .delete()
+    .eq('id', participantEntry.id)
+
+  // Se il booking è rimasto senza partecipanti, eliminalo
+  const { count } = await supabaseAdmin
+    .from('booking_participants')
+    .select('id', { count: 'exact', head: true })
+    .eq('booking_id', participantEntry.booking_id)
+
+  if (count === 0) {
+    await supabaseAdmin.from('bookings').delete().eq('id', participantEntry.booking_id)
+  }
+
+  // Libera il posto
+  await supabaseAdmin.rpc('release_seats', { p_shuttle_id: shuttleId, p_count: 1 })
+
+  const shuttleAfter = await getShuttleSnapshot(shuttleId)
+  if (shuttleBefore && shuttleAfter) {
+    after(() => sendBookingNotifications(shuttleId, shuttleBefore, shuttleAfter, user.id, 'Prenotazione rimossa', 'notif_m4'))
+  }
+
+  revalidatePath(`/base/navette/${shuttleId}`)
+  redirect(`/base/navette/${shuttleId}`)
+}
+
+/**
+ * Cancella una tua prenotazione (dove sei il booker).
+ */
 export async function cancelBooking(formData: FormData) {
   const { user } = await getCurrentUser()
 
