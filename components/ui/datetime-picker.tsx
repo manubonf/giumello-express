@@ -18,6 +18,13 @@ function localDateStr(d: Date): string {
   ].join('-')
 }
 
+/** Converte una stringa ISO UTC nei componenti locali da pre-riempire nel picker */
+function localFromISO(iso: string): { date: string; time: string } {
+  const d = new Date(iso)
+  const hhmm = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
+  return { date: localDateStr(d), time: roundTo15(hhmm) }
+}
+
 /** Primo slot da :00/:15/:30/:45 >= ora corrente, nel fuso locale */
 function minTimeStr(d: Date): string {
   const h = d.getHours()
@@ -41,10 +48,9 @@ export function DateTimePicker({
   required?: boolean
   defaultValue?: string
 }) {
-  const [date, setDate] = useState(defaultValue?.slice(0, 10) ?? '')
-  const [time, setTime] = useState(
-    defaultValue ? roundTo15(defaultValue.slice(11, 16)) : ''
-  )
+  const { date: initDate, time: initTime } = defaultValue ? localFromISO(defaultValue) : { date: '', time: '' }
+  const [date, setDate] = useState(initDate)
+  const [time, setTime] = useState(initTime)
 
   const now = new Date()
   const today = localDateStr(now)

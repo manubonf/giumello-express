@@ -11,11 +11,6 @@ import { supabaseAdmin } from '@/lib/supabase'
 import { acceptProposal, rejectProposal } from '@/app/master/proposte/actions'
 import { formatFull, formatMediumTime } from '@/lib/date'
 
-function toLocalDatetimeValue(iso: string) {
-  const d = new Date(iso)
-  const pad = (n: number) => String(n).padStart(2, '0')
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
-}
 
 const ERROR_MSG: Record<string, string> = {
   'dati-non-validi':  'Controlla i dati inseriti.',
@@ -100,7 +95,7 @@ export default async function PropostaDetailPage({
                 <DateTimePicker
                   name="departure_time"
                   required
-                  defaultValue={toLocalDatetimeValue(proposal.departure_time)}
+                  defaultValue={proposal.departure_time}
                 />
               </FormField>
 

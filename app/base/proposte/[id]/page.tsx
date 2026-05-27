@@ -11,11 +11,6 @@ import { supabaseAdmin } from '@/lib/supabase'
 import { formatFull } from '@/lib/date'
 import { updateProposal, deleteProposal } from './actions'
 
-function toLocalDatetimeValue(iso: string) {
-  const d = new Date(iso)
-  const pad = (n: number) => String(n).padStart(2, '0')
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
-}
 
 const ERROR_MSG: Record<string, string> = {
   'non-autorizzato':    'Non sei autorizzato a modificare questa proposta.',
@@ -87,7 +82,7 @@ export default async function PropostaDetailPage({
               <DateTimePicker
                 name="departure_time"
                 required
-                defaultValue={toLocalDatetimeValue(proposal.departure_time)}
+                defaultValue={proposal.departure_time}
               />
             </FormField>
 
