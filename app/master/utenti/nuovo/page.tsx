@@ -54,7 +54,7 @@ export default async function NuovoUtentePage({
           <div className="flex gap-3 mt-2">
             <SubmitButton
               className="rounded-sm border px-5 py-2.5 font-mono text-xs uppercase tracking-wide transition-colors"
-              style={{ background: 'var(--red)', borderColor: 'var(--red)', color: 'white' }}
+              style={{ background: '#22c55e', borderColor: '#22c55e', color: 'white' }}
             >
               Crea utente
             </SubmitButton>
@@ -74,7 +74,7 @@ export default async function NuovoUtentePage({
           <Link
             href="/master/utenti/nuovo"
             className="rounded-sm border px-5 py-2.5 font-mono text-xs uppercase tracking-wide no-underline transition-colors active:scale-95"
-            style={{ background: 'var(--red)', borderColor: 'var(--red)', color: 'white' }}
+            style={{ background: '#22c55e', borderColor: '#22c55e', color: 'white' }}
           >
             + Altro utente
           </Link>

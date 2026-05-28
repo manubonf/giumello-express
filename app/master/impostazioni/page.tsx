@@ -101,8 +101,8 @@ export default async function ImpostazioniPage() {
 
       <form action={logout}>
         <SubmitButton
-          className="w-full rounded-sm border px-4 py-3 text-sm text-left transition-colors hover:border-[--red] hover:text-[--red]"
-          style={{ background: 'var(--bg-panel)', borderColor: 'var(--border)', color: 'var(--text-dim)' }}
+          className="w-full rounded-sm border px-4 py-3 text-sm text-left transition-colors"
+          style={{ background: 'var(--red)', borderColor: 'var(--red)', color: 'white' }}
         >
           Esci dall&apos;account
         </SubmitButton>

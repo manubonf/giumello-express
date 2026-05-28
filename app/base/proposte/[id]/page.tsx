@@ -104,7 +104,7 @@ export default async function PropostaDetailPage({
             <div className="mt-2">
               <SubmitButton
                 className="rounded-sm border px-5 py-2.5 font-mono text-xs uppercase tracking-wide transition-colors"
-                style={{ background: 'var(--red)', borderColor: 'var(--red)', color: 'white' }}
+                style={{ background: '#22c55e', borderColor: '#22c55e', color: 'white' }}
               >
                 Salva modifiche
               </SubmitButton>
@@ -119,8 +119,8 @@ export default async function PropostaDetailPage({
             <form action={deleteProposal}>
               <input type="hidden" name="proposal_id" value={proposal.id} />
               <SubmitButton
-                className="rounded-sm border px-4 py-2 font-mono text-xs uppercase tracking-wide transition-colors hover:border-[--red] hover:text-[--red]"
-                style={{ background: 'none', borderColor: 'var(--border-muted)', color: 'var(--text-dim)' }}
+                className="rounded-sm border px-4 py-2 font-mono text-xs uppercase tracking-wide transition-colors"
+                style={{ background: 'var(--red)', borderColor: 'var(--red)', color: 'white' }}
               >
                 Cancella
               </SubmitButton>

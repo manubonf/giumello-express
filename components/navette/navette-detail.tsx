@@ -261,8 +261,8 @@ export function NavettaDetail({
             <form action={leaveBookingAsParticipant}>
               <input type="hidden" name="shuttle_id" value={shuttleInfo.id} />
               <SubmitButton
-                className="rounded-sm border px-3 py-1.5 font-mono text-xs uppercase tracking-wide transition-colors hover:border-[--red] hover:text-[--red]"
-                style={{ background: 'none', borderColor: 'var(--border-muted)', color: 'var(--text-dim)' }}
+                className="rounded-sm border px-3 py-1.5 font-mono text-xs uppercase tracking-wide transition-colors"
+                style={{ background: 'var(--red)', borderColor: 'var(--red)', color: 'white' }}
               >
                 Rimuovimi
               </SubmitButton>
@@ -306,8 +306,8 @@ export function NavettaDetail({
                       <input type="hidden" name="booking_id" value={b.id} />
                       <input type="hidden" name="shuttle_id" value={shuttleInfo.id} />
                       <SubmitButton
-                        className="rounded-sm border px-2.5 py-1 font-mono text-xs uppercase tracking-wide transition-colors hover:border-[--red] hover:text-[--red]"
-                        style={{ background: 'none', borderColor: 'var(--border-muted)', color: 'var(--text-dim)' }}
+                        className="rounded-sm border px-2.5 py-1 font-mono text-xs uppercase tracking-wide transition-colors"
+                        style={{ background: 'var(--red)', borderColor: 'var(--red)', color: 'white' }}
                       >
                         Cancella
                       </SubmitButton>
@@ -338,7 +338,7 @@ export function NavettaDetail({
                   <input type="hidden" name="shuttle_id" value={shuttleInfo.id} />
                   <SubmitButton
                     className="rounded-sm border px-4 py-2 font-mono text-xs uppercase tracking-wide transition-colors"
-                    style={{ background: 'var(--red)', borderColor: 'var(--red)', color: 'white' }}
+                    style={{ background: '#22c55e', borderColor: '#22c55e', color: 'white' }}
                   >
                     Prenota per te
                   </SubmitButton>
@@ -380,7 +380,7 @@ export function NavettaDetail({
                     <input type="hidden" name="user_id" value={selectedUser.id} />
                     <SubmitButton
                       className="rounded-sm border px-4 py-2 font-mono text-xs uppercase tracking-wide"
-                      style={{ background: 'var(--red)', borderColor: 'var(--red)', color: 'white' }}
+                      style={{ background: '#22c55e', borderColor: '#22c55e', color: 'white' }}
                     >
                       Conferma prenotazione
                     </SubmitButton>
@@ -421,7 +421,7 @@ export function NavettaDetail({
               <div className="flex gap-2">
                 <SubmitButton
                   className="rounded-sm border px-4 py-2 font-mono text-xs uppercase tracking-wide"
-                  style={{ background: 'var(--red)', borderColor: 'var(--red)', color: 'white' }}
+                  style={{ background: '#22c55e', borderColor: '#22c55e', color: 'white' }}
                 >
                   Prenota ospite
                 </SubmitButton>

@@ -150,8 +150,8 @@ export default async function PropostaDetailPage({
             <form action={rejectProposal}>
               <input type="hidden" name="proposal_id" value={proposal.id} />
               <SubmitButton
-                className="rounded-sm border px-4 py-2 font-mono text-xs uppercase tracking-wide transition-colors hover:border-[--red] hover:text-[--red]"
-                style={{ background: 'none', borderColor: 'var(--border-muted)', color: 'var(--text-dim)' }}
+                className="rounded-sm border px-4 py-2 font-mono text-xs uppercase tracking-wide transition-colors"
+                style={{ background: 'var(--red)', borderColor: 'var(--red)', color: 'white' }}
               >
                 Rifiuta
               </SubmitButton>

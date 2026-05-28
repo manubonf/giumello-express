@@ -50,7 +50,7 @@ export default async function NuovaPropostaPage({
         <div className="flex gap-3 mt-2">
           <SubmitButton
             className="rounded-sm border px-5 py-2.5 font-mono text-xs uppercase tracking-wide transition-colors"
-            style={{ background: 'var(--red)', borderColor: 'var(--red)', color: 'white' }}
+            style={{ background: '#22c55e', borderColor: '#22c55e', color: 'white' }}
           >
             Invia proposta
           </SubmitButton>

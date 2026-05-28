@@ -374,8 +374,8 @@ export function MasterNavettaDetail({
                       <input type="hidden" name="booking_id" value={b.id} />
                       <input type="hidden" name="shuttle_id" value={shuttleInfo.id} />
                       <SubmitButton
-                        className="rounded-sm border px-2.5 py-1 font-mono text-[10px] uppercase tracking-wide transition-colors hover:border-[--red] hover:text-[--red]"
-                        style={{ background: 'none', borderColor: 'var(--border-muted)', color: 'var(--text-dim)' }}
+                        className="rounded-sm border px-2.5 py-1 font-mono text-[10px] uppercase tracking-wide transition-colors"
+                        style={{ background: 'var(--red)', borderColor: 'var(--red)', color: 'white' }}
                       >
                         Elimina
                       </SubmitButton>
@@ -421,7 +421,7 @@ export function MasterNavettaDetail({
               <input type="hidden" name="id" value={shuttleInfo.id} />
               <SubmitButton
                 className="rounded-sm border px-4 py-2 font-mono text-xs uppercase tracking-wide transition-colors"
-                style={{ background: 'var(--bg-panel)', borderColor: 'var(--border-muted)', color: 'var(--text-dim)' }}
+                style={{ background: '#22c55e', borderColor: '#22c55e', color: 'white' }}
               >
                 Segna effettuata
               </SubmitButton>
@@ -431,8 +431,8 @@ export function MasterNavettaDetail({
             <form action={cancelShuttle}>
               <input type="hidden" name="id" value={shuttleInfo.id} />
               <SubmitButton
-                className="rounded-sm border px-4 py-2 font-mono text-xs uppercase tracking-wide transition-colors hover:border-[--red] hover:text-[--red]"
-                style={{ background: 'none', borderColor: 'var(--border-muted)', color: 'var(--text-dim)' }}
+                className="rounded-sm border px-4 py-2 font-mono text-xs uppercase tracking-wide transition-colors"
+                style={{ background: 'var(--red)', borderColor: 'var(--red)', color: 'white' }}
               >
                 Annulla navetta
               </SubmitButton>
