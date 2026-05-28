@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { createBrowserClient } from '@supabase/ssr'
 import { StatusBadge, StatusDot, STATUS_LABEL } from '@/components/ui/status-badge'
-import { formatShort } from '@/lib/date'
+import { formatShort, dayLabel } from '@/lib/date'
 
 type Shuttle = {
   id: string
@@ -93,7 +93,9 @@ export function MasterNavetteList({
     <>
       {active.length > 0 && (
         <div className="flex flex-col gap-2 mb-8">
-          {active.map(s => (
+          {active.map(s => {
+            const label = dayLabel(s.departure_time)
+            return (
             <Link
               key={s.id}
               href={`/master/navette/${s.id}`}
@@ -102,6 +104,12 @@ export function MasterNavetteList({
             >
               <StatusDot status={s.status} />
               <span className="flex-1 min-w-0">
+                {label && (
+                  <span className="block font-mono text-[10px] uppercase tracking-widest mb-0.5"
+                    style={{ color: label === 'oggi' ? 'var(--red)' : 'var(--text-muted)' }}>
+                    {label}
+                  </span>
+                )}
                 <span className="block font-medium text-sm" style={{ color: 'var(--text)' }}>
                   {formatShort(s.departure_time)}
                 </span>
@@ -112,7 +120,7 @@ export function MasterNavetteList({
               <span className="font-mono text-sm transition-transform group-hover:translate-x-0.5"
                 style={{ color: 'var(--border)' }}>→</span>
             </Link>
-          ))}
+          )})}
         </div>
       )}
 

@@ -16,7 +16,7 @@ import {
   updateShuttleDepartureTime,
 } from '@/app/master/navette/actions'
 import { Button } from '@/components/ui/button'
-import { formatFull, formatMediumTime } from '@/lib/date'
+import { formatFull, formatMediumTime, dayLabel } from '@/lib/date'
 
 // ─── Tipi ────────────────────────────────────────────────────────────────────
 
@@ -167,6 +167,8 @@ export function MasterNavettaDetail({
 
   // ── Render ─────────────────────────────────────────────────────────────────
 
+  const departureDayLabel = dayLabel(shuttleInfo.departure_time)
+
   return (
     <>
       {/* Stato navetta */}
@@ -215,7 +217,18 @@ export function MasterNavettaDetail({
               </div>
             </form>
           ) : (
-            <DetailRow label="Partenza" value={formatFull(shuttleInfo.departure_time)} />
+            <DetailRow
+              label="Partenza"
+              value={departureDayLabel ? (
+                <span className="flex items-center gap-2">
+                  <span className="font-mono text-[10px] uppercase tracking-widest"
+                    style={{ color: departureDayLabel === 'oggi' ? 'var(--red)' : 'var(--text-muted)' }}>
+                    {departureDayLabel}
+                  </span>
+                  {formatFull(shuttleInfo.departure_time)}
+                </span>
+              ) : formatFull(shuttleInfo.departure_time)}
+            />
           )}
 
           {isEditingCapacity ? (

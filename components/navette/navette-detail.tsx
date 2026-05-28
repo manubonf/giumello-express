@@ -13,7 +13,7 @@ import {
   leaveBookingAsParticipant,
   cancelBooking,
 } from '@/app/base/navette/actions'
-import { formatFull } from '@/lib/date'
+import { formatFull, dayLabel } from '@/lib/date'
 
 // ─── Tipi ────────────────────────────────────────────────────────────────────
 
@@ -199,6 +199,10 @@ export function NavettaDetail({
         <StatusDot status={shuttleInfo.status} size="md" />
         <StatusBadge status={shuttleInfo.status} />
       </div>
+      {(() => { const lbl = dayLabel(shuttleInfo.departure_time); return lbl ? (
+        <span className="block font-mono text-[10px] uppercase tracking-widest mb-0.5"
+          style={{ color: lbl === 'oggi' ? 'var(--red)' : 'var(--text-muted)' }}>{lbl}</span>
+      ) : null })()}
       <h1 className="text-xl font-semibold mb-1">{formatFull(shuttleInfo.departure_time)}</h1>
       <p className="font-mono text-sm mb-8" style={{ color: 'var(--text-dim)' }}>
         {shuttleInfo.status === 'full'
