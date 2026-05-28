@@ -29,12 +29,12 @@ export function CredentialBox({ username, password }: { username: string; passwo
         )}
         <div className="flex items-center justify-between">
           <span className="font-mono text-xs" style={{ color: 'var(--text-dim)' }}>Username</span>
-          <span className="font-mono text-sm font-semibold" style={{ color: 'var(--text)' }}>{username}</span>
+          <span className="font-mono text-sm font-semibold selectable" style={{ color: 'var(--text)' }}>{username}</span>
         </div>
         <div style={{ borderTop: '1px solid var(--border-subtle)' }} />
         <div className="flex items-center justify-between">
           <span className="font-mono text-xs" style={{ color: 'var(--text-dim)' }}>Password</span>
-          <span className="font-mono text-sm font-semibold tracking-wide" style={{ color: 'var(--text)' }}>{password}</span>
+          <span className="font-mono text-sm font-semibold tracking-wide selectable" style={{ color: 'var(--text)' }}>{password}</span>
         </div>
       </div>
       <p className="font-mono text-[11px] mt-4" style={{ color: 'var(--text-dim)' }}>
