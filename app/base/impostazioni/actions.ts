@@ -5,7 +5,7 @@ import { supabaseAdmin } from '@/lib/supabase'
 
 const ALLOWED_PREFS = new Set([
   'notif_u1', 'notif_u2', 'notif_u3', 'notif_u4', 'notif_u5',
-  'notif_u6', 'notif_u7', 'notif_u8', 'notif_u9', 'notif_u10',
+  'notif_u6', 'notif_u7', 'notif_u8', 'notif_u9', 'notif_u10', 'notif_u11', 'notif_u12',
 ])
 
 export async function updateBaseNotifPref(pref: string, enabled: boolean): Promise<void> {

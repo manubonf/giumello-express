@@ -6,6 +6,7 @@ import { sendPush } from '@/lib/push'
 import {
   baseIdsWithPref,
   sendStateChangePush,
+  sendTimeChangePush,
   sendCancelledPush,
   sendAddedToShuttlePush,
   sendRemovedFromShuttlePush,
@@ -361,7 +362,7 @@ export async function updateShuttleDepartureTime(formData: FormData) {
     .eq('id', shuttleId)
 
   const body = shuttleBody(newDepartureTime, shuttle.available_seats, shuttle.max_seats)
-  after(() => sendStateChangePush(shuttleId, 'Orario navetta aggiornato', body))
+  after(() => sendTimeChangePush(shuttleId, body))
 
   revalidatePath('/master/navette')
   revalidatePath(`/master/navette/${shuttleId}`)

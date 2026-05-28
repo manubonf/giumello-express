@@ -3,7 +3,7 @@ import { sendPush } from './push'
 import { formatShort } from './date'
 
 export type MasterPref = 'notif_m1' | 'notif_m2' | 'notif_m3' | 'notif_m4' | 'notif_m5' | 'notif_m6'
-export type BasePref = 'notif_u1' | 'notif_u2' | 'notif_u3' | 'notif_u4' | 'notif_u5' | 'notif_u6' | 'notif_u7' | 'notif_u8' | 'notif_u9' | 'notif_u10'
+export type BasePref = 'notif_u1' | 'notif_u2' | 'notif_u3' | 'notif_u4' | 'notif_u5' | 'notif_u6' | 'notif_u7' | 'notif_u8' | 'notif_u9' | 'notif_u10' | 'notif_u11' | 'notif_u12'
 
 export function shuttleBody(departure_time: string, available_seats: number, max_seats: number): string {
   return `Navetta ${formatShort(departure_time)} — ${available_seats}/${max_seats} posti`
@@ -134,6 +134,24 @@ export async function sendRemovedFromShuttlePush(
   if (!hasPref) return
   const body = shuttleBody(departure_time, available_seats, max_seats)
   await sendPush([userId], { title: 'Sei stato rimosso dalla navetta', body, url: `/base/navette/${shuttleId}` })
+}
+
+// Sends U11 + U12 (deduped) for departure time changes
+export async function sendTimeChangePush(
+  shuttleId: string,
+  body: string,
+  excludeId?: string,
+) {
+  const title = 'Orario navetta aggiornato'
+  const [u11Ids, bookedU12Ids] = await Promise.all([
+    baseIdsWithPref('notif_u11', excludeId),
+    bookedBaseIdsWithPref(shuttleId, 'notif_u12', excludeId),
+  ])
+  const u11Set = new Set(u11Ids)
+  const recipients = [...u11Ids, ...bookedU12Ids.filter(id => !u11Set.has(id))]
+  if (recipients.length) {
+    await sendPush(recipients, { title, body, url: `/base/navette/${shuttleId}` })
+  }
 }
 
 // Sends U6 + U7 (deduped) for seat count changes without state change
