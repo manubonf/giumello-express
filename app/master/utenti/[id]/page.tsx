@@ -6,11 +6,16 @@ import { DetailRow } from '@/components/ui/detail-row'
 import { ErrorAlert } from '@/components/ui/alert'
 import { CredentialBox } from '@/components/ui/credential-box'
 import { supabaseAdmin } from '@/lib/supabase'
-import { resetPassword, deleteUser } from '@/app/master/utenti/actions'
+import { updateUsername, resetPassword, deleteUser } from '@/app/master/utenti/actions'
+import { SuccessAlert } from '@/components/ui/alert'
+import { FormField } from '@/components/ui/form-field'
 import { formatLongTime } from '@/lib/date'
 
 const ERROR_MSG: Record<string, string> = {
-  'errore-reset': 'Errore durante il reset della password. Riprova.',
+  'errore-reset':       'Errore durante il reset della password. Riprova.',
+  'errore-salvataggio': 'Errore durante il salvataggio. Riprova.',
+  'username-non-valido': 'Username non valido. Usa solo lettere minuscole, numeri e underscore (2–30 caratteri).',
+  'username-esistente':  'Username già in uso.',
 }
 
 export default async function UtenteDetailPage({
@@ -18,7 +23,8 @@ export default async function UtenteDetailPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>
-  searchParams: Promise<{ ok?: string; u?: string; pw?: string; error?: string }>
+  searchParams: Promise<{ ok?: string; u?: string; pw?: string; error?: string; }>
+
 }) {
   const [{ id }, { ok, u, pw, error }] = await Promise.all([params, searchParams])
 
@@ -52,6 +58,7 @@ export default async function UtenteDetailPage({
       {ok === '1' && u && pw && (
         <CredentialBox username={u} password={pw} />
       )}
+      {ok === 'username' && <SuccessAlert message="Username aggiornato." />}
 
       {error && <ErrorAlert message={ERROR_MSG[error] ?? 'Errore sconosciuto.'} />}
 
@@ -64,28 +71,62 @@ export default async function UtenteDetailPage({
       </div>
 
       {!isMaster && (
-        <div className="flex flex-wrap gap-3">
-          <form action={resetPassword}>
+        <>
+          <p className="font-mono text-[10px] uppercase tracking-widest mb-3"
+            style={{ color: 'var(--text-muted)' }}>
+            Modifica username
+          </p>
+          <form action={updateUsername} className="flex flex-col gap-4 mb-8">
             <input type="hidden" name="id" value={profile.id} />
-            <input type="hidden" name="username" value={profile.username} />
-            <SubmitButton
-              className="rounded-sm border px-4 py-2 font-mono text-xs uppercase tracking-wide transition-colors"
-              style={{ background: 'none', borderColor: 'var(--border-muted)', color: 'var(--text-dim)' }}
-            >
-              Reimposta password
-            </SubmitButton>
+            <FormField label="Nuovo username" description="Solo lettere minuscole, numeri e underscore (2–30 caratteri).">
+              <input
+                type="text"
+                name="username"
+                required
+                autoComplete="off"
+                defaultValue={profile.username}
+                placeholder="es. mario_rossi"
+                className="w-full rounded-sm border px-3 py-2.5 font-mono text-sm"
+                style={{
+                  background: 'var(--bg-panel)',
+                  borderColor: 'var(--border-muted)',
+                  color: 'var(--text)',
+                }}
+              />
+            </FormField>
+            <div>
+              <SubmitButton
+                className="rounded-sm border px-4 py-2 font-mono text-xs uppercase tracking-wide transition-colors"
+                style={{ background: '#22c55e', borderColor: '#22c55e', color: 'white' }}
+              >
+                Salva username
+              </SubmitButton>
+            </div>
           </form>
 
-          <form action={deleteUser}>
-            <input type="hidden" name="id" value={profile.id} />
-            <SubmitButton
-              className="rounded-sm border px-4 py-2 font-mono text-xs uppercase tracking-wide transition-colors hover:border-[--red] hover:text-[--red]"
-              style={{ background: 'none', borderColor: 'var(--border-muted)', color: 'var(--text-dim)' }}
-            >
-              Rimuovi utente
-            </SubmitButton>
-          </form>
-        </div>
+          <div className="flex flex-wrap gap-3">
+            <form action={resetPassword}>
+              <input type="hidden" name="id" value={profile.id} />
+              <input type="hidden" name="username" value={profile.username} />
+              <SubmitButton
+                className="rounded-sm border px-4 py-2 font-mono text-xs uppercase tracking-wide transition-colors"
+                style={{ background: 'none', borderColor: 'var(--border-muted)', color: 'var(--text-dim)' }}
+              >
+                Reimposta password
+              </SubmitButton>
+            </form>
+
+            <form action={deleteUser}>
+              <input type="hidden" name="id" value={profile.id} />
+              <SubmitButton
+                className="rounded-sm border px-4 py-2 font-mono text-xs uppercase tracking-wide transition-colors"
+                style={{ background: 'var(--red)', borderColor: 'var(--red)', color: 'white' }}
+              >
+                Rimuovi utente
+              </SubmitButton>
+            </form>
+          </div>
+        </>
       )}
     </PageLayout>
   )

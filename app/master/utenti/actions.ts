@@ -47,6 +47,51 @@ export async function createUser(formData: FormData) {
   redirect(`/master/utenti/nuovo?ok=1&u=${encodeURIComponent(username)}&pw=${encodeURIComponent(password)}`)
 }
 
+export async function updateUsername(formData: FormData) {
+  await getMasterUser()
+
+  const id = formData.get('id') as string
+  const newUsername = (formData.get('username') as string ?? '').trim().toLowerCase()
+
+  if (!newUsername || !/^[a-z0-9_]{2,30}$/.test(newUsername)) {
+    redirect(`/master/utenti/${id}?error=username-non-valido`)
+  }
+
+  const { data: profile } = await supabaseAdmin
+    .from('profiles')
+    .select('role')
+    .eq('id', id)
+    .single()
+
+  if (!profile || profile.role === 'master') redirect(`/master/utenti/${id}`)
+
+  const { data: existing } = await supabaseAdmin
+    .from('profiles')
+    .select('id')
+    .eq('username', newUsername)
+    .neq('id', id)
+    .maybeSingle()
+
+  if (existing) redirect(`/master/utenti/${id}?error=username-esistente`)
+
+  const { error: authError } = await supabaseAdmin.auth.admin.updateUserById(id, {
+    email: `${newUsername}@navette.internal`,
+  })
+  if (authError) {
+    console.error('[updateUsername] Auth error:', authError)
+    redirect(`/master/utenti/${id}?error=errore-salvataggio`)
+  }
+
+  await supabaseAdmin
+    .from('profiles')
+    .update({ username: newUsername })
+    .eq('id', id)
+
+  revalidatePath('/master/utenti')
+  revalidatePath(`/master/utenti/${id}`)
+  redirect(`/master/utenti/${id}?ok=username`)
+}
+
 export async function resetPassword(formData: FormData) {
   await getMasterUser()
 
