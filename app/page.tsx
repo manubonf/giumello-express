@@ -52,7 +52,7 @@ export default async function HomePage() {
       />
 
       <h1 className="text-2xl font-semibold mb-8">
-        {isMaster ? 'Pannello master' : <>Ciao, <span style={{ color: 'var(--red)' }}>{profile?.username}</span></>}
+        {<>Ciao, <span style={{ color: 'var(--red)' }}>{profile?.username}</span></>}
       </h1>
 
       <nav className="flex flex-col gap-3">
