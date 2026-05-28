@@ -1,4 +1,4 @@
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import { PageLayout } from '@/components/ui/page-layout'
 import { PageHeader } from '@/components/ui/page-header'
 import { SubmitButton } from '@/components/ui/submit-button'
@@ -36,7 +36,7 @@ export default async function PropostaDetailPage({
     .eq('proposer_id', user.id)
     .single()
 
-  if (!proposal) notFound()
+  if (!proposal) redirect('/base/proposte')
 
   const isPending = proposal.status === 'pending'
 

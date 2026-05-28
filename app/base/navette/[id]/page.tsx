@@ -1,4 +1,4 @@
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import { PageLayout } from '@/components/ui/page-layout'
 import { PageHeader } from '@/components/ui/page-header'
 import { getCurrentUser } from '@/lib/auth'
@@ -27,7 +27,7 @@ export default async function NavettaDetailPage({
     .eq('id', id)
     .single()
 
-  if (!shuttle) notFound()
+  if (!shuttle) redirect('/base/navette')
 
   const { bookings: allBookings, profileById, participantsByBooking } =
     await getBookingsWithParticipants(id)
