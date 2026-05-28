@@ -17,7 +17,7 @@ export default async function HomePage() {
       .in('status', ['draft', 'confirmed', 'full']),
     isMaster
       ? supabaseAdmin.from('proposals').select('id', { count: 'exact', head: true }).eq('status', 'pending')
-      : supabaseAdmin.from('proposals').select('id', { count: 'exact', head: true }).eq('proposer_id', user.id).eq('status', 'pending'),
+      : supabaseAdmin.from('proposals').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
   ])
 
   const navItems: NavItem[] = isMaster
