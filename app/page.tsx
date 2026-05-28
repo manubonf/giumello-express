@@ -23,8 +23,8 @@ export default async function HomePage() {
   const navItems: NavItem[] = isMaster
     ? [
         { href: '/master/navette',      icon: '🚐', title: 'Navette',      desc: 'Crea e gestisci il ciclo di vita delle navette', badge: shuttleCount ?? 0 },
-        { href: '/master/utenti',       icon: '👤', title: 'Utenti',       desc: 'Crea e rimuovi utenti base' },
         { href: '/master/proposte',     icon: '💡', title: 'Proposte',     desc: 'Valuta le proposte degli utenti',                badge: proposalCount ?? 0 },
+        { href: '/master/utenti',       icon: '👤', title: 'Utenti',       desc: 'Crea e rimuovi utenti base' },
         { href: '/master/impostazioni', icon: '⚙️', title: 'Impostazioni', desc: 'Soglia minima prenotazioni e parametri globali' },
       ]
     : [
