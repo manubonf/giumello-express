@@ -38,7 +38,7 @@ export async function createProposal(formData: FormData) {
   after(async () => {
     const [masterIds, otherBaseIds] = await Promise.all([
       masterIdsWithPref('notif_m1'),
-      baseIdsWithPref('notif_u1', userId),
+      baseIdsWithPref('notif_u1', [userId]),
     ])
     await Promise.all([
       masterIds.length
