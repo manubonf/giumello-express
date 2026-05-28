@@ -9,7 +9,6 @@ import { ErrorAlert, SuccessAlert } from '@/components/ui/alert'
 import { DateTimePicker } from '@/components/ui/datetime-picker'
 import { MasterBookingPanel } from '@/components/navette/master-booking-panel'
 import {
-  confirmShuttle,
   markShuttleDone,
   cancelShuttle,
   masterCancelBooking,
@@ -149,7 +148,6 @@ export function MasterNavettaDetail({
 
   // ── Stato derivato ─────────────────────────────────────────────────────────
 
-  const canConfirm = shuttleInfo.status === 'draft'
   const canMarkDone = shuttleInfo.status === 'confirmed' || shuttleInfo.status === 'full'
   const canCancel = shuttleInfo.status !== 'done' && shuttleInfo.status !== 'cancelled'
   const canBook = shuttleInfo.status !== 'done' && shuttleInfo.status !== 'cancelled' && shuttleInfo.status !== 'full'
@@ -416,19 +414,8 @@ export function MasterNavettaDetail({
       )}
 
       {/* Azioni stato navetta */}
-      {(canConfirm || canMarkDone || canCancel) && (
+      {(canMarkDone || canCancel) && (
         <div className="flex flex-wrap gap-3">
-          {canConfirm && (
-            <form action={confirmShuttle}>
-              <input type="hidden" name="id" value={shuttleInfo.id} />
-              <SubmitButton
-                className="rounded-sm border px-4 py-2 font-mono text-xs uppercase tracking-wide transition-colors"
-                style={{ background: '#22c55e', borderColor: '#22c55e', color: 'white' }}
-              >
-                Conferma
-              </SubmitButton>
-            </form>
-          )}
           {canMarkDone && (
             <form action={markShuttleDone}>
               <input type="hidden" name="id" value={shuttleInfo.id} />
