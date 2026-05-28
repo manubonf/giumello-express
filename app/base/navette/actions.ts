@@ -38,10 +38,12 @@ async function sendBookingNotifications(
   actorId: string,
   masterTitle: string,
   masterPref: 'notif_m2' | 'notif_m3' | 'notif_m4',
+  additionalExcludes: string[] = [],
 ) {
   const body = shuttleBody(before.departure_time, after.available_seats, before.max_seats)
   const masterUrl = `/master/navette/${shuttleId}`
   const stateChanged = before.status !== after.status
+  const excludeIds = [actorId, ...additionalExcludes]
 
   const tasks: Promise<unknown>[] = []
 
@@ -73,9 +75,9 @@ async function sendBookingNotifications(
     else if (after.status === 'full') stateTitle = 'Navetta al completo'
     else if (after.status === 'draft') stateTitle = 'Navetta tornata in bozza'
     else stateTitle = 'Aggiornamento navetta'
-    tasks.push(sendStateChangePush(shuttleId, stateTitle, body, actorId))
+    tasks.push(sendStateChangePush(shuttleId, stateTitle, body, excludeIds))
   } else {
-    tasks.push(sendSeatUpdatePush(shuttleId, masterTitle, body, actorId))
+    tasks.push(sendSeatUpdatePush(shuttleId, masterTitle, body, excludeIds))
   }
 
   await Promise.all(tasks)
@@ -255,7 +257,7 @@ export async function bookOtherUser(formData: FormData) {
     const sid = shuttleId
     const target = targetUserId
     after(async () => {
-      await sendBookingNotifications(sid, shuttleBefore, snapshot, user.id, 'Nuova prenotazione', 'notif_m2')
+      await sendBookingNotifications(sid, shuttleBefore, snapshot, user.id, 'Nuova prenotazione', 'notif_m2', [target])
       // U10: notifica il target che è stato prenotato da un altro utente
       await sendAddedToShuttlePush(target, sid, snapshot.departure_time, snapshot.available_seats, snapshot.max_seats)
     })
@@ -401,7 +403,7 @@ export async function cancelBooking(formData: FormData) {
     const snapshot = shuttleAfter
     const sid = shuttleId
     after(async () => {
-      await sendBookingNotifications(sid, shuttleBefore, snapshot, user.id, 'Prenotazione cancellata', 'notif_m4')
+      await sendBookingNotifications(sid, shuttleBefore, snapshot, user.id, 'Prenotazione cancellata', 'notif_m4', removedOthers)
       // U10: notifica gli utenti prenotati da questo booker che sono stati rimossi
       await Promise.all(
         removedOthers.map(uid =>

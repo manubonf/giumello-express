@@ -18,18 +18,18 @@ export async function masterIdsWithPref(pref: MasterPref): Promise<string[]> {
   return (data ?? []).map((p: { id: string }) => p.id)
 }
 
-export async function baseIdsWithPref(pref: BasePref, excludeId?: string): Promise<string[]> {
+export async function baseIdsWithPref(pref: BasePref, excludeIds: string[] = []): Promise<string[]> {
   let query = supabaseAdmin
     .from('profiles')
     .select('id')
     .eq('role', 'base')
     .eq(pref, true)
-  if (excludeId) query = query.neq('id', excludeId)
+  for (const id of excludeIds) query = query.neq('id', id)
   const { data } = await query
   return (data ?? []).map((p: { id: string }) => p.id)
 }
 
-export async function bookedBaseIdsWithPref(shuttleId: string, pref: BasePref, excludeId?: string): Promise<string[]> {
+export async function bookedBaseIdsWithPref(shuttleId: string, pref: BasePref, excludeIds: string[] = []): Promise<string[]> {
   const { data: bookings } = await supabaseAdmin
     .from('bookings')
     .select('booker_id')
@@ -43,7 +43,7 @@ export async function bookedBaseIdsWithPref(shuttleId: string, pref: BasePref, e
     .select('id')
     .in('id', bookerIds)
     .eq(pref, true)
-  if (excludeId) query = query.neq('id', excludeId)
+  for (const id of excludeIds) query = query.neq('id', id)
 
   const { data } = await query
   return (data ?? []).map((p: { id: string }) => p.id)
@@ -64,11 +64,11 @@ export async function sendStateChangePush(
   shuttleId: string,
   title: string,
   body: string,
-  excludeId?: string,
+  excludeIds: string[] = [],
 ) {
   const [u4Ids, bookedU5Ids] = await Promise.all([
-    baseIdsWithPref('notif_u4', excludeId),
-    bookedBaseIdsWithPref(shuttleId, 'notif_u5', excludeId),
+    baseIdsWithPref('notif_u4', excludeIds),
+    bookedBaseIdsWithPref(shuttleId, 'notif_u5', excludeIds),
   ])
   const u4Set = new Set(u4Ids)
   const recipients = [...u4Ids, ...bookedU5Ids.filter(id => !u4Set.has(id))]
@@ -82,7 +82,7 @@ export async function sendStateChangePush(
 export async function sendCancelledPush(
   shuttleId: string,
   departure_time: string,
-  excludeId?: string,
+  excludeIds: string[] = [],
 ) {
   const title = 'Navetta annullata'
   const wideBody = `Navetta ${formatShort(departure_time)}`
@@ -90,9 +90,9 @@ export async function sendCancelledPush(
   const url = '/base/navette'
 
   const [u4Ids, bookedU5Ids, bookedU9Ids] = await Promise.all([
-    baseIdsWithPref('notif_u4', excludeId),
-    bookedBaseIdsWithPref(shuttleId, 'notif_u5', excludeId),
-    bookedBaseIdsWithPref(shuttleId, 'notif_u9', excludeId),
+    baseIdsWithPref('notif_u4', excludeIds),
+    bookedBaseIdsWithPref(shuttleId, 'notif_u5', excludeIds),
+    bookedBaseIdsWithPref(shuttleId, 'notif_u9', excludeIds),
   ])
 
   const u4Set = new Set(u4Ids)
@@ -140,12 +140,12 @@ export async function sendRemovedFromShuttlePush(
 export async function sendTimeChangePush(
   shuttleId: string,
   body: string,
-  excludeId?: string,
+  excludeIds: string[] = [],
 ) {
   const title = 'Orario navetta aggiornato'
   const [u11Ids, bookedU12Ids] = await Promise.all([
-    baseIdsWithPref('notif_u11', excludeId),
-    bookedBaseIdsWithPref(shuttleId, 'notif_u12', excludeId),
+    baseIdsWithPref('notif_u11', excludeIds),
+    bookedBaseIdsWithPref(shuttleId, 'notif_u12', excludeIds),
   ])
   const u11Set = new Set(u11Ids)
   const recipients = [...u11Ids, ...bookedU12Ids.filter(id => !u11Set.has(id))]
@@ -159,11 +159,11 @@ export async function sendSeatUpdatePush(
   shuttleId: string,
   title: string,
   body: string,
-  excludeId?: string,
+  excludeIds: string[] = [],
 ) {
   const [u6Ids, bookedU7Ids] = await Promise.all([
-    baseIdsWithPref('notif_u6', excludeId),
-    bookedBaseIdsWithPref(shuttleId, 'notif_u7', excludeId),
+    baseIdsWithPref('notif_u6', excludeIds),
+    bookedBaseIdsWithPref(shuttleId, 'notif_u7', excludeIds),
   ])
   const u6Set = new Set(u6Ids)
   const recipients = [...u6Ids, ...bookedU7Ids.filter(id => !u6Set.has(id))]
