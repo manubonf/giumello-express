@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { PageLayout } from '@/components/ui/page-layout'
 import { PageHeader, MasterBadge } from '@/components/ui/page-header'
+import { RealtimeRefresher } from '@/components/ui/realtime-refresher'
 import { getCurrentUser } from '@/lib/auth'
 import { supabaseAdmin } from '@/lib/supabase'
 
@@ -35,6 +36,7 @@ export default async function HomePage() {
 
   return (
     <PageLayout>
+      <RealtimeRefresher tables={['proposals', 'shuttles']} />
       <PageHeader
         logoHeight={28}
         right={
