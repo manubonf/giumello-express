@@ -344,7 +344,7 @@ export async function confirmShuttle(formData: FormData) {
 
   await supabaseAdmin
     .from('shuttles')
-    .update({ status: 'confirmed' })
+    .update({ status: 'confirmed', min_seats: 0 })
     .eq('id', id)
     .eq('status', 'draft')
 
