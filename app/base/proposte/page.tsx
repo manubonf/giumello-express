@@ -3,6 +3,7 @@ import { PageLayout } from '@/components/ui/page-layout'
 import { PageHeader } from '@/components/ui/page-header'
 import { StatusBadge } from '@/components/ui/status-badge'
 import { SuccessAlert } from '@/components/ui/alert'
+import { RealtimeRefresher } from '@/components/ui/realtime-refresher'
 import { getCurrentUser } from '@/lib/auth'
 import { supabaseAdmin } from '@/lib/supabase'
 import { formatShort } from '@/lib/date'
@@ -68,6 +69,7 @@ export default async function PropostePage({
 
   return (
     <PageLayout>
+      <RealtimeRefresher tables={['proposals']} />
       <PageHeader
         backHref="/"
         right={

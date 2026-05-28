@@ -3,6 +3,7 @@ import { PageLayout } from '@/components/ui/page-layout'
 import { PageHeader, MasterBadge } from '@/components/ui/page-header'
 import { StatusBadge } from '@/components/ui/status-badge'
 import { ErrorAlert } from '@/components/ui/alert'
+import { RealtimeRefresher } from '@/components/ui/realtime-refresher'
 import { supabaseAdmin } from '@/lib/supabase'
 import { formatShort } from '@/lib/date'
 
@@ -37,6 +38,7 @@ export default async function MasterPropostePage({
 
   return (
     <PageLayout>
+      <RealtimeRefresher tables={['proposals']} />
       <PageHeader backHref="/" right={<MasterBadge />} />
 
       <h1 className="text-xl font-semibold mb-8">Proposte</h1>
