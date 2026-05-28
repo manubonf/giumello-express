@@ -32,16 +32,31 @@ export async function baseIdsWithPref(pref: BasePref, excludeIds: string[] = [])
 export async function bookedBaseIdsWithPref(shuttleId: string, pref: BasePref, excludeIds: string[] = []): Promise<string[]> {
   const { data: bookings } = await supabaseAdmin
     .from('bookings')
-    .select('booker_id')
+    .select('id, booker_id')
     .eq('shuttle_id', shuttleId)
 
-  const bookerIds = (bookings ?? []).map((b: { booker_id: string }) => b.booker_id)
-  if (!bookerIds.length) return []
+  const rows = bookings ?? []
+  if (!rows.length) return []
+
+  const bookingIds = rows.map((b: { id: string }) => b.id)
+  const bookerIds = rows.map((b: { booker_id: string }) => b.booker_id)
+
+  const { data: participants } = await supabaseAdmin
+    .from('booking_participants')
+    .select('user_id')
+    .in('booking_id', bookingIds)
+    .eq('is_guest', false)
+
+  const participantUserIds = (participants ?? [])
+    .map((p: { user_id: string | null }) => p.user_id)
+    .filter((id): id is string => !!id)
+
+  const allUserIds = [...new Set([...bookerIds, ...participantUserIds])]
 
   let query = supabaseAdmin
     .from('profiles')
     .select('id')
-    .in('id', bookerIds)
+    .in('id', allUserIds)
     .eq(pref, true)
   for (const id of excludeIds) query = query.neq('id', id)
 

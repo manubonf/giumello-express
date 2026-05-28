@@ -376,13 +376,19 @@ export async function cancelBooking(formData: FormData) {
 
   if (!booking) redirect(`/base/navette/${shuttleId}?error=non-autorizzato`)
 
-  const { data: participants, count } = await supabaseAdmin
-    .from('booking_participants')
-    .select('user_id', { count: 'exact' })
-    .eq('booking_id', bookingId)
-    .eq('is_guest', false)
+  const [{ count: totalCount }, { data: registeredParticipants }] = await Promise.all([
+    supabaseAdmin
+      .from('booking_participants')
+      .select('id', { count: 'exact', head: true })
+      .eq('booking_id', bookingId),
+    supabaseAdmin
+      .from('booking_participants')
+      .select('user_id')
+      .eq('booking_id', bookingId)
+      .eq('is_guest', false),
+  ])
 
-  const participantCount = count ?? 0
+  const participantCount = totalCount ?? 0
 
   await supabaseAdmin.from('bookings').delete().eq('id', bookingId)
 
@@ -394,7 +400,7 @@ export async function cancelBooking(formData: FormData) {
   }
 
   // Utenti registrati rimossi che non sono il booker stesso (prenotati da bookOtherUser)
-  const removedOthers = (participants ?? [])
+  const removedOthers = (registeredParticipants ?? [])
     .map(p => p.user_id)
     .filter((uid): uid is string => !!uid && uid !== user.id)
 

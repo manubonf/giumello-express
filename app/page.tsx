@@ -16,9 +16,10 @@ export default async function HomePage() {
       .from('shuttles')
       .select('id', { count: 'exact', head: true })
       .in('status', ['draft', 'confirmed', 'full']),
-    isMaster
-      ? supabaseAdmin.from('proposals').select('id', { count: 'exact', head: true }).eq('status', 'pending')
-      : supabaseAdmin.from('proposals').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
+    supabaseAdmin
+      .from('proposals')
+      .select('id', { count: 'exact', head: true })
+      .eq('status', 'pending'),
   ])
 
   const navItems: NavItem[] = isMaster

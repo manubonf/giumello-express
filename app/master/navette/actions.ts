@@ -171,18 +171,24 @@ export async function masterCancelBooking(formData: FormData) {
 
   if (!booking) redirect(`/master/navette/${shuttleId}?error=non-trovato`)
 
-  const { data: participants, count } = await supabaseAdmin
-    .from('booking_participants')
-    .select('user_id', { count: 'exact' })
-    .eq('booking_id', bookingId)
-    .eq('is_guest', false)
+  const [{ count: totalCount }, { data: participants }] = await Promise.all([
+    supabaseAdmin
+      .from('booking_participants')
+      .select('id', { count: 'exact', head: true })
+      .eq('booking_id', bookingId),
+    supabaseAdmin
+      .from('booking_participants')
+      .select('user_id')
+      .eq('booking_id', bookingId)
+      .eq('is_guest', false),
+  ])
 
   await supabaseAdmin.from('bookings').delete().eq('id', bookingId)
 
-  if ((count ?? 0) > 0) {
+  if ((totalCount ?? 0) > 0) {
     await supabaseAdmin.rpc('release_seats', {
       p_shuttle_id: booking.shuttle_id,
-      p_count: count!,
+      p_count: totalCount!,
     })
   }
 

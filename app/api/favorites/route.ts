@@ -27,10 +27,11 @@ export async function POST(req: NextRequest) {
   const { profile_id } = await req.json() as { profile_id?: string }
   if (!profile_id) return NextResponse.json({ error: 'Missing profile_id' }, { status: 400 })
 
-  await supabase
+  const { error } = await supabase
     .from('user_favorites')
     .upsert({ user_id: user.id, favorite_profile_id: profile_id })
 
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json({ ok: true })
 }
 

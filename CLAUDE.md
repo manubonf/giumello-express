@@ -118,7 +118,6 @@ Non aggiungere controlli di autenticazione ridondanti nei Server Components se `
 | `bookings` | SELECT proprie | SELECT tutto |
 | `booking_participants` | SELECT proprie | SELECT tutto |
 | `proposals` | SELECT proprie | SELECT tutto |
-| `app_settings` | SELECT | SELECT + UPDATE (via service_role) |
 | `push_subscriptions` | ALL proprie | ALL proprie |
 
 INSERT/UPDATE/DELETE su `profiles` e `auth.users`: solo `service_role`.
@@ -139,7 +138,7 @@ Le transizioni automatiche (`draft → confirmed` al raggiungimento di `min_seat
 
 Il master può promuovere manualmente `draft → confirmed` in qualsiasi momento. Può annullare in qualsiasi stato tranne `done`.
 
-`min_seats` è uno snapshot al momento della creazione della navetta (copiato da `app_settings.min_interest_threshold`). Non rileggere `app_settings` per valutare navette già esistenti.
+`min_seats` è uno snapshot al momento della creazione della navetta. Non modificarne il valore dopo la creazione per rivalutare navette già esistenti.
 
 ---
 

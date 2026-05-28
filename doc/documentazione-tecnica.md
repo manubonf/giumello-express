@@ -37,30 +37,24 @@ L'app è una web app Next.js + Supabase costruita per gestire navette, prenotazi
 - trigger `on_auth_user_created` popola automaticamente il profilo quando Supabase crea un utente
 - RLS: lettura consentita agli autenticati, scrittura gestita dal backend
 
-### 5.2 `app_settings`
-- `id INT PRIMARY KEY DEFAULT 1`
-- `min_interest_threshold INT`
-- mantiene uno snapshot globale per impostazioni
-- RLS: lettura pubblica, update solo service role
-
-### 5.3 `push_subscriptions`
+### 5.2 `push_subscriptions`
 - `id UUID`, `user_id UUID`, `endpoint`, `p256dh`, `auth_key`
 - RLS: solo il proprietario può gestire le proprie subscription
 
-### 5.4 `shuttles`
+### 5.3 `shuttles`
 - `status` in `draft|confirmed|full|done|cancelled`
 - `departure_time`, `max_seats`, `available_seats`, `min_seats`
 - `created_by` e `proposal_id`
 - `min_seats` snapshot al momento della creazione
 - `available_seats` gestito atomico tramite funzioni SQL
 
-### 5.5 `bookings` e `booking_participants`
+### 5.4 `bookings` e `booking_participants`
 - `bookings`: `shuttle_id`, `booker_id`, `created_at`, uniqueness su `(shuttle_id, booker_id)`
 - `booking_participants`: partecipanti registrati o ospiti, con `participant_xor`
 - `user_id` fa FK su `profiles` per permettere join PostgREST
 - RLS: utenza base vede prenotazioni proprie, master vede tutto
 
-### 5.6 `proposals`
+### 5.5 `proposals`
 - `proposer_id`, `departure_time`, `notes`, `status` in `pending|accepted|rejected`
 - tutti gli utenti autenticati leggono tutte le proposte
 - le transizioni di stato sono gestite da Server Actions con `supabaseAdmin`
@@ -88,6 +82,7 @@ Transizioni automatiche:
 - il master può prenotare utenti registrati e ospiti esterni, ma non se stesso come partecipante base
 - `book_seats` e `release_seats` gestiscono i posti con lock SQL e aggiornamenti atomici
 - se la prenotazione fallisce a metà, il codice ripristina `available_seats`
+- alla cancellazione di una prenotazione, il conteggio posti rilasciati include tutti i partecipanti (registrati e ospiti); la lista utenti registrati viene estratta separatamente solo per le notifiche U10
 
 ## 9. Notifiche push
 ### Implementazione reale verificata
@@ -98,15 +93,33 @@ Transizioni automatiche:
 - `components/ui/push-subscribe.tsx`: registrazione service worker, subscribe/unsubscribe, UI pulsante
 - `app/base/impostazioni/page.tsx` e `app/master/impostazioni/page.tsx`: pagine impostazioni con toggle preferenze
 
-### Eventi supportati
-- proposta creata
-- proposta rifiutata
-- creazione navetta in bozza
-- creazione navetta confermata direttamente
-- cambio di stato navetta
-- aggiornamento posti
-- annullamento navetta
-- cambi stato automatici/automatici di conferma
+### Deduplica notifiche
+- U4 (cambio stato, tutte le navette) ha priorità su U5 (cambio stato, navette prenotate)
+- U6 (aggiornamento posti, tutte) ha priorità su U7 (aggiornamento posti, prenotate)
+- U11 (orario modificato, tutte) ha priorità su U12 (orario modificato, prenotate)
+- `bookedBaseIdsWithPref` include sia i booker che i partecipanti registrati delle prenotazioni
+
+### Eventi supportati (U*)
+- U1: nuova proposta di altro utente
+- U2: nuova navetta in bozza
+- U3: nuova navetta confermata direttamente
+- U4: cambio stato navetta — tutte le navette
+- U5: cambio stato navetta — solo navette prenotate
+- U6: aggiornamento posti — tutte le navette
+- U7: aggiornamento posti — solo navette prenotate
+- U8: navetta annullata — tutte
+- U9: navetta annullata con prenotazione attiva — personale
+- U10: sei stato aggiunto/rimosso da una navetta da qualcun altro — personale
+- U11: orario navetta modificato — tutte le navette
+- U12: orario navetta modificato — solo navette prenotate
+
+### Eventi supportati (M*)
+- M1: nuova proposta ricevuta
+- M2: nuova prenotazione su una navetta
+- M3: prenotazione modificata
+- M4: prenotazione cancellata
+- M5: navetta confermata automaticamente (bozza raggiunge min_seats)
+- M6: navetta tornata in bozza (partecipanti scesi sotto min_seats)
 
 ## 10. Stato di coerenza con i documenti
 - Tutte le fasi principali (1–4, 6) sono implementate nel codice
