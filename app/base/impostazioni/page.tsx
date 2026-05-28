@@ -13,13 +13,13 @@ export default async function ImpostazioniPage() {
 
   const { data: prefs } = await supabaseAdmin
     .from('profiles')
-    .select('notif_u1, notif_u2, notif_u3, notif_u4, notif_u5, notif_u6, notif_u7, notif_u8, notif_u9')
+    .select('notif_u1, notif_u2, notif_u3, notif_u4, notif_u5, notif_u6, notif_u7, notif_u8, notif_u9, notif_u10')
     .eq('id', user.id)
     .single()
 
   const p = prefs ?? {
     notif_u1: true, notif_u2: true, notif_u3: true, notif_u4: true, notif_u5: true,
-    notif_u6: true, notif_u7: true, notif_u8: true, notif_u9: true,
+    notif_u6: true, notif_u7: true, notif_u8: true, notif_u9: true, notif_u10: true,
   }
 
   const divider = <div className="border-t mx-0" style={{ borderColor: 'var(--border-subtle)' }} />
@@ -117,6 +117,15 @@ export default async function ImpostazioniPage() {
             description="Ricevi notifica quando il master annulla una navetta su cui sei prenotato"
             enabled={p.notif_u9}
             action={updateBaseNotifPref.bind(null, 'notif_u9')}
+          />
+        </div>
+        {divider}
+        <div className="px-4">
+          <NotifToggle
+            label="Sei stato aggiunto o rimosso da una navetta"
+            description="Qualcun altro ti ha prenotato, o la prenotazione che ti includeva è stata cancellata"
+            enabled={p.notif_u10}
+            action={updateBaseNotifPref.bind(null, 'notif_u10')}
           />
         </div>
       </div>

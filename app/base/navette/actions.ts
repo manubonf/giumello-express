@@ -7,6 +7,8 @@ import {
   masterIdsWithPref,
   sendStateChangePush,
   sendSeatUpdatePush,
+  sendAddedToShuttlePush,
+  sendRemovedFromShuttlePush,
   shuttleBody,
 } from '@/lib/notif'
 import { revalidatePath } from 'next/cache'
@@ -249,7 +251,14 @@ export async function bookOtherUser(formData: FormData) {
 
   const shuttleAfter = await getShuttleSnapshot(shuttleId)
   if (shuttleBefore && shuttleAfter) {
-    after(() => sendBookingNotifications(shuttleId, shuttleBefore, shuttleAfter, user.id, 'Nuova prenotazione', 'notif_m2'))
+    const snapshot = shuttleAfter
+    const sid = shuttleId
+    const target = targetUserId
+    after(async () => {
+      await sendBookingNotifications(sid, shuttleBefore, snapshot, user.id, 'Nuova prenotazione', 'notif_m2')
+      // U10: notifica il target che è stato prenotato da un altro utente
+      await sendAddedToShuttlePush(target, sid, snapshot.departure_time, snapshot.available_seats, snapshot.max_seats)
+    })
   }
 
   revalidatePath(`/base/navette/${shuttleId}`)
@@ -365,10 +374,11 @@ export async function cancelBooking(formData: FormData) {
 
   if (!booking) redirect(`/base/navette/${shuttleId}?error=non-autorizzato`)
 
-  const { count } = await supabaseAdmin
+  const { data: participants, count } = await supabaseAdmin
     .from('booking_participants')
-    .select('id', { count: 'exact', head: true })
+    .select('user_id', { count: 'exact' })
     .eq('booking_id', bookingId)
+    .eq('is_guest', false)
 
   const participantCount = count ?? 0
 
@@ -381,9 +391,24 @@ export async function cancelBooking(formData: FormData) {
     })
   }
 
+  // Utenti registrati rimossi che non sono il booker stesso (prenotati da bookOtherUser)
+  const removedOthers = (participants ?? [])
+    .map(p => p.user_id)
+    .filter((uid): uid is string => !!uid && uid !== user.id)
+
   const shuttleAfter = await getShuttleSnapshot(shuttleId)
   if (shuttleBefore && shuttleAfter) {
-    after(() => sendBookingNotifications(shuttleId, shuttleBefore, shuttleAfter, user.id, 'Prenotazione cancellata', 'notif_m4'))
+    const snapshot = shuttleAfter
+    const sid = shuttleId
+    after(async () => {
+      await sendBookingNotifications(sid, shuttleBefore, snapshot, user.id, 'Prenotazione cancellata', 'notif_m4')
+      // U10: notifica gli utenti prenotati da questo booker che sono stati rimossi
+      await Promise.all(
+        removedOthers.map(uid =>
+          sendRemovedFromShuttlePush(uid, sid, snapshot.departure_time, snapshot.available_seats, snapshot.max_seats)
+        )
+      )
+    })
   }
 
   revalidatePath(`/base/navette/${booking.shuttle_id}`)

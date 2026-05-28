@@ -7,6 +7,8 @@ import {
   baseIdsWithPref,
   sendStateChangePush,
   sendCancelledPush,
+  sendAddedToShuttlePush,
+  sendRemovedFromShuttlePush,
   shuttleBody,
 } from '@/lib/notif'
 import { revalidatePath } from 'next/cache'
@@ -91,6 +93,19 @@ export async function masterBookUser(formData: FormData) {
     redirect(`/master/navette/${shuttleId}?error=errore-prenotazione`)
   }
 
+  // U10: notifica il target che è stato prenotato
+  const shuttleId_ = shuttleId
+  after(async () => {
+    const { data: shuttle } = await supabaseAdmin
+      .from('shuttles')
+      .select('departure_time, available_seats, max_seats')
+      .eq('id', shuttleId_)
+      .single()
+    if (shuttle) {
+      await sendAddedToShuttlePush(targetUserId, shuttleId_, shuttle.departure_time, shuttle.available_seats, shuttle.max_seats)
+    }
+  })
+
   revalidatePath(`/master/navette/${shuttleId}`)
   redirect(`/master/navette/${shuttleId}?ok=prenotazione`)
 }
@@ -155,10 +170,11 @@ export async function masterCancelBooking(formData: FormData) {
 
   if (!booking) redirect(`/master/navette/${shuttleId}?error=non-trovato`)
 
-  const { count } = await supabaseAdmin
+  const { data: participants, count } = await supabaseAdmin
     .from('booking_participants')
-    .select('id', { count: 'exact', head: true })
+    .select('user_id', { count: 'exact' })
     .eq('booking_id', bookingId)
+    .eq('is_guest', false)
 
   await supabaseAdmin.from('bookings').delete().eq('id', bookingId)
 
@@ -166,6 +182,26 @@ export async function masterCancelBooking(formData: FormData) {
     await supabaseAdmin.rpc('release_seats', {
       p_shuttle_id: booking.shuttle_id,
       p_count: count!,
+    })
+  }
+
+  // U10: notifica i partecipanti registrati rimossi
+  const removedUserIds = (participants ?? []).map(p => p.user_id).filter(Boolean) as string[]
+  if (removedUserIds.length) {
+    const sid = booking.shuttle_id
+    after(async () => {
+      const { data: shuttle } = await supabaseAdmin
+        .from('shuttles')
+        .select('departure_time, available_seats, max_seats')
+        .eq('id', sid)
+        .single()
+      if (shuttle) {
+        await Promise.all(
+          removedUserIds.map(uid =>
+            sendRemovedFromShuttlePush(uid, sid, shuttle.departure_time, shuttle.available_seats, shuttle.max_seats)
+          )
+        )
+      }
     })
   }
 
