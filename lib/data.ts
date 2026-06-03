@@ -18,6 +18,15 @@ export async function markExpiredShuttlesDone(shuttleId?: string) {
   }
 }
 
+export async function markExpiredProposalsCancelled() {
+  const now = new Date().toISOString()
+  await supabaseAdmin
+    .from('proposals')
+    .update({ status: 'cancelled' })
+    .eq('status', 'pending')
+    .lt('departure_time', now)
+}
+
 export async function getProfileIdsByRole(role: 'master' | 'base'): Promise<string[]> {
   const { data } = await supabaseAdmin.from('profiles').select('id').eq('role', role)
   return (data ?? []).map(p => p.id)

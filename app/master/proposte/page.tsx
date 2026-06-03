@@ -5,6 +5,7 @@ import { StatusBadge } from '@/components/ui/status-badge'
 import { ErrorAlert } from '@/components/ui/alert'
 import { RealtimeRefresher } from '@/components/ui/realtime-refresher'
 import { supabaseAdmin } from '@/lib/supabase'
+import { markExpiredProposalsCancelled } from '@/lib/data'
 import { formatShort } from '@/lib/date'
 
 const ERROR_MSG: Record<string, string> = {
@@ -17,6 +18,8 @@ export default async function MasterPropostePage({
   searchParams: Promise<{ error?: string }>
 }) {
   const { error } = await searchParams
+
+  await markExpiredProposalsCancelled()
 
   const { data: proposals } = await supabaseAdmin
     .from('proposals')

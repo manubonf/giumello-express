@@ -6,6 +6,7 @@ import { SuccessAlert } from '@/components/ui/alert'
 import { RealtimeRefresher } from '@/components/ui/realtime-refresher'
 import { getCurrentUser } from '@/lib/auth'
 import { supabaseAdmin } from '@/lib/supabase'
+import { markExpiredProposalsCancelled } from '@/lib/data'
 import { formatShort } from '@/lib/date'
 
 export default async function PropostePage({
@@ -15,6 +16,8 @@ export default async function PropostePage({
 }) {
   const { ok } = await searchParams
   const { user, profile } = await getCurrentUser()
+
+  await markExpiredProposalsCancelled()
 
   const twoDaysAgo = new Date()
   twoDaysAgo.setDate(twoDaysAgo.getDate() - 2)
