@@ -66,7 +66,11 @@ export function DateTimePicker({
   }
 
   const combined = date && time
-    ? new Date(`${date}T${time}`).toISOString().slice(0, 16)
+    ? (() => {
+        const [y, mo, d] = date.split('-').map(Number)
+        const [h, mi] = time.split(':').map(Number)
+        return new Date(y, mo - 1, d, h, mi).toISOString().slice(0, 16)
+      })()
     : ''
 
   return (
