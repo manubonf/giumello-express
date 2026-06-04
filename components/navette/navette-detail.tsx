@@ -50,7 +50,7 @@ const ERROR_MSG: Record<string, string> = {
   'navetta-non-prenotabile':      'Questa navetta non è più prenotabile.',
   'prenotazione-esistente':       'Sei già presente come passeggero su questa navetta.',
   'partecipante-già-prenotato':   'Questo utente è già presente su questa navetta.',
-  'partecipante-non-valido':      'Non è possibile prenotare per un utente master.',
+  'partecipante-non-valido':      'Non è possibile prenotare per questo utente.',
   'nome-ospite-mancante':         'Inserisci il nome dell\'ospite.',
   'errore-prenotazione':          'Errore durante la prenotazione. Riprova.',
   'non-autorizzato':              'Operazione non autorizzata.',
