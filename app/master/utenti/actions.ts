@@ -130,6 +130,21 @@ export async function deleteUser(formData: FormData) {
 
   if (profile?.role === 'master') redirect('/master/utenti')
 
+  // GoTrue non gestisce le cascade cross-schema che passano per profiles.
+  // Le due FK interessate sono gestite manualmente prima della chiamata auth.
+  await Promise.all([
+    // booking_participants.user_id → profiles.id ON DELETE SET NULL
+    supabaseAdmin
+      .from('booking_participants')
+      .update({ user_id: null })
+      .eq('user_id', id),
+    // user_favorites.favorite_profile_id → profiles.id ON DELETE CASCADE
+    supabaseAdmin
+      .from('user_favorites')
+      .delete()
+      .eq('favorite_profile_id', id),
+  ])
+
   const { error } = await supabaseAdmin.auth.admin.deleteUser(id)
   if (error) {
     console.error('[deleteUser] Supabase error:', error)
