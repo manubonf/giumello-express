@@ -131,7 +131,10 @@ export async function deleteUser(formData: FormData) {
   if (profile?.role === 'master') redirect('/master/utenti')
 
   const { error } = await supabaseAdmin.auth.admin.deleteUser(id)
-  if (error) console.error('[deleteUser] Supabase error:', error)
+  if (error) {
+    console.error('[deleteUser] Supabase error:', error)
+    redirect(`/master/utenti/${id}?error=errore-eliminazione`)
+  }
 
   revalidatePath('/master/utenti')
   redirect('/master/utenti')

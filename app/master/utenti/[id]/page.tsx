@@ -12,8 +12,9 @@ import { FormField } from '@/components/ui/form-field'
 import { formatLongTime } from '@/lib/date'
 
 const ERROR_MSG: Record<string, string> = {
-  'errore-reset':       'Errore durante il reset della password. Riprova.',
-  'errore-salvataggio': 'Errore durante il salvataggio. Riprova.',
+  'errore-reset':        'Errore durante il reset della password. Riprova.',
+  'errore-salvataggio':  'Errore durante il salvataggio. Riprova.',
+  'errore-eliminazione': 'Errore durante l\'eliminazione. Riprova.',
   'username-non-valido': 'Username non valido. Usa solo lettere minuscole, numeri e underscore (2–30 caratteri).',
   'username-esistente':  'Username già in uso.',
 }
