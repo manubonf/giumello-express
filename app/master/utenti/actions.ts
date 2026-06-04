@@ -130,25 +130,49 @@ export async function deleteUser(formData: FormData) {
 
   if (profile?.role === 'master') redirect('/master/utenti')
 
-  // GoTrue non gestisce le cascade cross-schema che passano per profiles.
-  // Le due FK interessate sono gestite manualmente prima della chiamata auth.
-  await Promise.all([
-    // booking_participants.user_id → profiles.id ON DELETE SET NULL
-    supabaseAdmin
+  // ── 1. Libera i posti delle prenotazioni di cui l'utente è booker ──────────
+  // auth.users → bookings CASCADE eliminerà queste righe, ma available_seats
+  // va aggiornato prima che ciò avvenga.
+  const { data: ownBookings } = await supabaseAdmin
+    .from('bookings')
+    .select('id, shuttle_id')
+    .eq('booker_id', id)
+
+  for (const booking of ownBookings ?? []) {
+    const { count } = await supabaseAdmin
       .from('booking_participants')
-      .update({ user_id: null })
-      .eq('user_id', id),
-    // user_favorites.favorite_profile_id → profiles.id ON DELETE CASCADE
-    supabaseAdmin
-      .from('user_favorites')
-      .delete()
-      .eq('favorite_profile_id', id),
-  ])
+      .select('*', { count: 'exact', head: true })
+      .eq('booking_id', booking.id)
+    if (count) {
+      await supabaseAdmin.rpc('release_seats', { p_shuttle_id: booking.shuttle_id, p_count: count })
+    }
+  }
+
+  // ── 2. Libera i posti delle prenotazioni altrui in cui l'utente è partecipante
+  // profiles → booking_participants CASCADE (dopo migration) eliminerà queste
+  // righe, ma available_seats va aggiornato prima. Le eliminiamo esplicitamente
+  // per controllare l'ordine.
+  const { data: otherParticipations } = await supabaseAdmin
+    .from('booking_participants')
+    .select('id, bookings!inner(shuttle_id, booker_id)')
+    .eq('user_id', id)
+
+  for (const p of otherParticipations ?? []) {
+    const booking = p.bookings as unknown as { shuttle_id: string; booker_id: string }
+    if (booking.booker_id !== id) {
+      await supabaseAdmin.rpc('release_seats', { p_shuttle_id: booking.shuttle_id, p_count: 1 })
+    }
+    await supabaseAdmin.from('booking_participants').delete().eq('id', p.id)
+  }
+
+  // ── 3. Pre-elimina user_favorites (cascade cross-schema su profiles) ────────
+  await supabaseAdmin.from('user_favorites').delete().eq('favorite_profile_id', id)
 
   const { error } = await supabaseAdmin.auth.admin.deleteUser(id)
   if (error) {
-    console.error('[deleteUser] Supabase error:', error)
-    redirect(`/master/utenti/${id}?error=errore-eliminazione`)
+    console.error('[deleteUser] Supabase error:', JSON.stringify(error))
+    const msg = encodeURIComponent(error.message ?? 'sconosciuto')
+    redirect(`/master/utenti/${id}?error=errore-eliminazione&detail=${msg}`)
   }
 
   revalidatePath('/master/utenti')

@@ -24,10 +24,10 @@ export default async function UtenteDetailPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>
-  searchParams: Promise<{ ok?: string; u?: string; pw?: string; error?: string; }>
+  searchParams: Promise<{ ok?: string; u?: string; pw?: string; error?: string; detail?: string }>
 
 }) {
-  const [{ id }, { ok, u, pw, error }] = await Promise.all([params, searchParams])
+  const [{ id }, { ok, u, pw, error, detail }] = await Promise.all([params, searchParams])
 
   const { data: profile } = await supabaseAdmin
     .from('profiles')
@@ -61,7 +61,7 @@ export default async function UtenteDetailPage({
       )}
       {ok === 'username' && <SuccessAlert message="Username aggiornato." />}
 
-      {error && <ErrorAlert message={ERROR_MSG[error] ?? 'Errore sconosciuto.'} />}
+      {error && <ErrorAlert message={`${ERROR_MSG[error] ?? 'Errore sconosciuto.'}${detail ? ` — ${detail}` : ''}`} />}
 
       <div className="rounded-sm border mb-8" style={{ borderColor: 'var(--border)' }}>
         <div className="px-4">
