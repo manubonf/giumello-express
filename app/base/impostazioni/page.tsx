@@ -46,7 +46,7 @@ export default async function ImpostazioniPage() {
       <div className="rounded-sm border" style={{ borderColor: 'var(--border)', background: 'var(--bg-panel)' }}>
         <div className="px-4">
           <NotifToggle
-            label="Nuova proposta da un altro utente"
+            label="Nuova proposta da un altro pilota"
             enabled={p.notif_u1}
             action={updateBaseNotifPref.bind(null, 'notif_u1')}
           />
@@ -62,7 +62,7 @@ export default async function ImpostazioniPage() {
         {divider}
         <div className="px-4">
           <NotifToggle
-            label="Nuova navetta confermata direttamente"
+            label="Nuova navetta confermata"
             enabled={p.notif_u3}
             action={updateBaseNotifPref.bind(null, 'notif_u3')}
           />
@@ -88,8 +88,16 @@ export default async function ImpostazioniPage() {
         {divider}
         <div className="px-4">
           <NotifToggle
-            label="Aggiornamento posti — tutte le navette"
-            description="Frequenza potenzialmente alta in un gruppo attivo"
+            label="Navetta annullata - a cui sei prenotato"
+            enabled={p.notif_u9}
+            action={updateBaseNotifPref.bind(null, 'notif_u9')}
+          />
+        </div>
+        {divider}
+        <div className="px-4">
+          <NotifToggle
+            label="Aggiornamento prenotazioni — tutte le navette"
+            description="Ricevi una notifica ogni volta che qualcuno si prenota su qualsiasi navetta"
             enabled={p.notif_u6}
             action={updateBaseNotifPref.bind(null, 'notif_u6')}
           />
@@ -105,18 +113,9 @@ export default async function ImpostazioniPage() {
         {divider}
         <div className="px-4">
           <NotifToggle
-            label="Proposta rifiutata dal master"
+            label="Proposta rifiutata"
             enabled={p.notif_u8}
             action={updateBaseNotifPref.bind(null, 'notif_u8')}
-          />
-        </div>
-        {divider}
-        <div className="px-4">
-          <NotifToggle
-            label="Navetta annullata (solo prenotate)"
-            description="Ricevi notifica quando il master annulla una navetta su cui sei prenotato"
-            enabled={p.notif_u9}
-            action={updateBaseNotifPref.bind(null, 'notif_u9')}
           />
         </div>
         {divider}
