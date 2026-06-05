@@ -36,7 +36,7 @@ export default async function NavettePage() {
   const bookedIds = [...new Set(myBookings?.map(b => b.shuttle_id) ?? [])]
 
   const twoDaysAgo = new Date()
-  twoDaysAgo.setDate(twoDaysAgo.getDate() - 2)
+  twoDaysAgo.setDate(twoDaysAgo.getDate() - 1)
   const cutoff = twoDaysAgo.toISOString()
 
   const active  = (shuttles ?? []).filter(s => ACTIVE_STATUSES.includes(s.status))
