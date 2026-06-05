@@ -12,8 +12,9 @@ import { FormField } from '@/components/ui/form-field'
 import { formatLongTime } from '@/lib/date'
 
 const ERROR_MSG: Record<string, string> = {
-  'errore-reset':       'Errore durante il reset della password. Riprova.',
-  'errore-salvataggio': 'Errore durante il salvataggio. Riprova.',
+  'errore-reset':        'Errore durante il reset della password. Riprova.',
+  'errore-salvataggio':  'Errore durante il salvataggio. Riprova.',
+  'errore-eliminazione': 'Errore durante l\'eliminazione. Riprova.',
   'username-non-valido': 'Username non valido. Usa solo lettere minuscole, numeri e underscore (2–30 caratteri).',
   'username-esistente':  'Username già in uso.',
 }
@@ -23,10 +24,10 @@ export default async function UtenteDetailPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>
-  searchParams: Promise<{ ok?: string; u?: string; pw?: string; error?: string; }>
+  searchParams: Promise<{ ok?: string; u?: string; pw?: string; error?: string; detail?: string }>
 
 }) {
-  const [{ id }, { ok, u, pw, error }] = await Promise.all([params, searchParams])
+  const [{ id }, { ok, u, pw, error, detail }] = await Promise.all([params, searchParams])
 
   const { data: profile } = await supabaseAdmin
     .from('profiles')
@@ -60,7 +61,7 @@ export default async function UtenteDetailPage({
       )}
       {ok === 'username' && <SuccessAlert message="Username aggiornato." />}
 
-      {error && <ErrorAlert message={ERROR_MSG[error] ?? 'Errore sconosciuto.'} />}
+      {error && <ErrorAlert message={`${ERROR_MSG[error] ?? 'Errore sconosciuto.'}${detail ? ` — ${detail}` : ''}`} />}
 
       <div className="rounded-sm border mb-8" style={{ borderColor: 'var(--border)' }}>
         <div className="px-4">

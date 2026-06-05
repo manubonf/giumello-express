@@ -93,7 +93,7 @@ export default async function PropostePage({
         </Link>
       </div>
 
-      {ok === '1' && <SuccessAlert message="Proposta inviata. Il master la valuterà a breve." />}
+      {ok === '1' && <SuccessAlert message="Proposta inviata. Verrà valutata a breve." />}
 
       {!pending.length && !storico.length ? (
         <p className="font-mono text-sm" style={{ color: 'var(--text-muted)' }}>

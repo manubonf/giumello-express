@@ -37,7 +37,7 @@ export default async function NuovaPropostaPage({
           <textarea
             name="notes"
             rows={3}
-            placeholder="Eventuali note o motivazioni per la proposta..."
+            placeholder="Eventuali note: Siamo in 4... Mi va bene anche più tardi/presto..."
             className="w-full rounded-sm border px-3 py-2.5 font-mono text-sm resize-none"
             style={{
               background: 'var(--bg-panel)',
