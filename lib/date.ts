@@ -43,3 +43,7 @@ export function formatMediumTime(iso: string) {
 export function formatLongTime(iso: string) {
   return new Intl.DateTimeFormat('it-IT', { dateStyle: 'long', timeStyle: 'short', timeZone: TZ }).format(new Date(iso))
 }
+
+export function formatTime(iso: string) {
+  return new Intl.DateTimeFormat('it-IT', { hour: '2-digit', minute: '2-digit', timeZone: TZ }).format(new Date(iso))
+}

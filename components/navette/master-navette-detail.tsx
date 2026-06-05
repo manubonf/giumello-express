@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
 import { SubmitButton } from '@/components/ui/submit-button'
 import { StatusDot, STATUS_LABEL } from '@/components/ui/status-badge'
@@ -16,7 +16,8 @@ import {
   updateShuttleDepartureTime,
 } from '@/app/master/navette/actions'
 import { Button } from '@/components/ui/button'
-import { formatFull, formatMediumTime, dayLabel } from '@/lib/date'
+import { formatFull, formatMediumTime, formatTime, dayLabel } from '@/lib/date'
+import type { BookingCancellation } from '@/lib/data'
 
 // ─── Tipi ────────────────────────────────────────────────────────────────────
 
@@ -32,6 +33,7 @@ type BookingEntry = {
   id: string
   booker_id: string
   bookerUsername: string
+  created_at: string
   participants: ParticipantEntry[]
 }
 
@@ -66,16 +68,22 @@ const MASTER_ERROR_MSG: Record<string, string> = {
 export function MasterNavettaDetail({
   shuttle: initialShuttle,
   initialBookings,
+  initialCancellations,
   error,
   ok,
 }: {
   shuttle: ShuttleInfo
   initialBookings: BookingEntry[]
+  initialCancellations: BookingCancellation[]
   error?: string
   ok?: string
 }) {
   const [shuttleInfo, setShuttleInfo] = useState(initialShuttle)
   const [bookings, setBookings] = useState(initialBookings)
+  const bookingsRef = useRef(bookings)
+  useEffect(() => { bookingsRef.current = bookings }, [bookings])
+  const [cancellations, setCancellations] = useState(initialCancellations)
+  const [showCancellations, setShowCancellations] = useState(false)
   const [isEditingCapacity, setIsEditingCapacity] = useState(false)
   const [isEditingDeparture, setIsEditingDeparture] = useState(false)
 
@@ -110,7 +118,7 @@ export function MasterNavettaDetail({
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'bookings', filter: `shuttle_id=eq.${initialShuttle.id}` },
         async (payload) => {
-          const nb = payload.new as { id: string; booker_id: string }
+          const nb = payload.new as { id: string; booker_id: string; created_at: string }
           const { data: bookerProfile } = await supabase
             .from('profiles').select('username').eq('id', nb.booker_id).single()
           const { data: parts } = await supabase
@@ -128,7 +136,7 @@ export function MasterNavettaDetail({
             if (prev.some(b => b.id === nb.id)) return prev
             return [
               ...prev,
-              { id: nb.id, booker_id: nb.booker_id, bookerUsername: bookerProfile?.username ?? '—', participants },
+              { id: nb.id, booker_id: nb.booker_id, bookerUsername: bookerProfile?.username ?? '—', created_at: nb.created_at, participants },
             ]
           })
         },
@@ -138,6 +146,22 @@ export function MasterNavettaDetail({
         { event: 'DELETE', schema: 'public', table: 'bookings' },
         (payload) => {
           const deleted = payload.old as { id: string }
+          const cancelled = bookingsRef.current.find(b => b.id === deleted.id)
+          if (cancelled) {
+            const entry: BookingCancellation = {
+              id: deleted.id,
+              booker_id: cancelled.booker_id,
+              booker_username: cancelled.bookerUsername,
+              participant_labels: cancelled.participants.map(p =>
+                p.is_guest
+                  ? `${p.guest_label ?? 'Ospite'} (ospite)`
+                  : (p.username ?? '—')
+              ),
+              booked_at: cancelled.created_at,
+              cancelled_at: new Date().toISOString(),
+            }
+            setCancellations(c => [entry, ...c])
+          }
           setBookings(prev => prev.filter(b => b.id !== deleted.id))
         },
       )
@@ -368,18 +392,24 @@ export function MasterNavettaDetail({
                 className="rounded-sm border px-4 py-3"
                 style={{ borderColor: 'var(--border)', background: 'var(--bg-panel)' }}
               >
-                {/* Riga booker + numero + pulsante elimina */}
+                {/* Riga booker + numero ordine + pulsante elimina */}
                 <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2.5">
                     <span
-                      className="font-mono text-[10px] w-4 text-right flex-shrink-0"
-                      style={{ color: 'var(--text-dim)' }}
+                      className="font-mono text-[10px] font-bold rounded-sm px-1.5 py-0.5 flex-shrink-0 tabular-nums"
+                      style={{ background: 'var(--border)', color: 'var(--text-muted)' }}
                     >
-                      {i + 1}.
+                      #{i + 1}
                     </span>
                     <span className="font-mono text-xs font-medium" style={{ color: 'var(--text-dim)' }}>
                       da{' '}
                       <span style={{ color: 'var(--text)' }}>{b.bookerUsername}</span>
+                    </span>
+                    <span
+                      className="font-mono text-[10px] tabular-nums"
+                      style={{ color: 'var(--text-dim)' }}
+                    >
+                      {formatTime(b.created_at)}
                     </span>
                   </div>
                   {canCancel && (
@@ -412,6 +442,62 @@ export function MasterNavettaDetail({
                 )}
               </div>
             ))}
+          </div>
+        )}
+
+        {/* Storico cancellazioni (a scomparsa) */}
+        {cancellations.length > 0 && (
+          <div className="mt-4">
+            <button
+              type="button"
+              onClick={() => setShowCancellations(v => !v)}
+              className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-widest transition-opacity hover:opacity-70"
+              style={{ color: 'var(--text-dim)', background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
+            >
+              <span style={{ display: 'inline-block', transform: showCancellations ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 150ms' }}>▶</span>
+              Rinunce ({cancellations.length})
+            </button>
+
+            {showCancellations && (
+              <div className="flex flex-col gap-2 mt-2">
+                {cancellations.map(c => (
+                  <div
+                    key={c.id}
+                    className="rounded-sm border px-4 py-3 opacity-70"
+                    style={{ borderColor: 'var(--border-muted)', background: 'var(--bg-panel)', borderStyle: 'dashed' }}
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex items-center gap-2.5 flex-wrap">
+                        <span className="font-mono text-xs font-medium" style={{ color: 'var(--text-dim)' }}>
+                          <span style={{ color: 'var(--text)' }}>{c.booker_username}</span>
+                        </span>
+                        {c.participant_labels.length > 0 && (
+                          <div className="flex flex-wrap gap-1">
+                            {c.participant_labels.map((label, idx) => (
+                              <span
+                                key={idx}
+                                className="font-mono text-xs rounded-sm border px-1.5 py-0.5"
+                                style={{ borderColor: 'var(--border-muted)', color: 'var(--text-dim)' }}
+                              >
+                                {label}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex flex-col items-end gap-0.5 flex-shrink-0">
+                        <span className="font-mono text-[10px] tabular-nums" style={{ color: 'var(--text-dim)' }}>
+                          prenotato {formatTime(c.booked_at)}
+                        </span>
+                        <span className="font-mono text-[10px] tabular-nums" style={{ color: 'var(--red)', opacity: 0.8 }}>
+                          rimosso {formatMediumTime(c.cancelled_at)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
       </div>

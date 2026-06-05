@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation'
 import { PageLayout } from '@/components/ui/page-layout'
 import { PageHeader, MasterBadge } from '@/components/ui/page-header'
 import { supabaseAdmin } from '@/lib/supabase'
-import { markExpiredShuttlesDone, getBookingsWithParticipants } from '@/lib/data'
+import { markExpiredShuttlesDone, getBookingsWithParticipants, getBookingCancellations } from '@/lib/data'
 import { MasterNavettaDetail } from '@/components/navette/master-navette-detail'
 
 export default async function NavettaDetailPage({
@@ -16,9 +16,10 @@ export default async function NavettaDetailPage({
 
   await markExpiredShuttlesDone(id)
 
-  const [{ data: shuttle }, { bookings, profileById, participantsByBooking }] = await Promise.all([
+  const [{ data: shuttle }, { bookings, profileById, participantsByBooking }, cancellations] = await Promise.all([
     supabaseAdmin.from('shuttles').select('*').eq('id', id).single(),
     getBookingsWithParticipants(id),
+    getBookingCancellations(id),
   ])
 
   if (!shuttle) notFound()
@@ -27,6 +28,7 @@ export default async function NavettaDetailPage({
     id: b.id,
     booker_id: b.booker_id,
     bookerUsername: profileById[b.booker_id]?.username ?? '—',
+    created_at: b.created_at,
     participants: (participantsByBooking[b.id] ?? []).map(p => ({
       id: p.id,
       is_guest: p.is_guest,
@@ -42,6 +44,7 @@ export default async function NavettaDetailPage({
       <MasterNavettaDetail
         shuttle={shuttle}
         initialBookings={initialBookings}
+        initialCancellations={cancellations}
         error={error}
         ok={ok}
       />

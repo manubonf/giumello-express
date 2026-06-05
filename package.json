@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "db:reset": "supabase db reset && npx tsx scripts/seed-master.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.10.3",

@@ -80,3 +80,21 @@ export async function getBookingsWithParticipants(shuttleId: string): Promise<Bo
 
   return { bookings: rows, profileById, participantsByBooking }
 }
+
+export type BookingCancellation = {
+  id: string
+  booker_id: string
+  booker_username: string
+  participant_labels: string[]
+  booked_at: string
+  cancelled_at: string
+}
+
+export async function getBookingCancellations(shuttleId: string): Promise<BookingCancellation[]> {
+  const { data } = await supabaseAdmin
+    .from('booking_cancellations')
+    .select('id, booker_id, booker_username, participant_labels, booked_at, cancelled_at')
+    .eq('shuttle_id', shuttleId)
+    .order('cancelled_at', { ascending: false })
+  return data ?? []
+}
