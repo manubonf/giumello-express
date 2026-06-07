@@ -27,28 +27,29 @@ export async function proxy(request: NextRequest) {
 
   const { pathname } = request.nextUrl
 
+  // Copia i cookie di sessione aggiornati nel redirect — senza questo, Safari
+  // perde i token appena rinnovati ogni volta che il middleware fa un redirect
+  // (es. / → /master) e alla richiesta successiva risulta sloggato.
+  function redirect(url: string): NextResponse {
+    const res = NextResponse.redirect(new URL(url, request.url))
+    response.cookies.getAll().forEach(c => res.cookies.set(c.name, c.value, c))
+    return res
+  }
+
   // Route pubbliche (login)
   if (pathname === '/login') {
-    if (user) {
-      return NextResponse.redirect(new URL('/', request.url))
-    }
+    if (user) return redirect('/')
     return response
   }
 
   // Tutto il resto richiede autenticazione
-  if (!user) {
-    return NextResponse.redirect(new URL('/login', request.url))
-  }
+  if (!user) return redirect('/login')
 
   if (pathname.startsWith('/master') || pathname.startsWith('/base')) {
     const role = await fetchUserRole(supabase, user.id)
 
-    if (pathname.startsWith('/master') && role !== 'master') {
-      return NextResponse.redirect(new URL('/', request.url))
-    }
-    if (pathname.startsWith('/base') && role !== 'base') {
-      return NextResponse.redirect(new URL('/master', request.url))
-    }
+    if (pathname.startsWith('/master') && role !== 'master') return redirect('/')
+    if (pathname.startsWith('/base') && role !== 'base') return redirect('/master')
   }
 
   return response

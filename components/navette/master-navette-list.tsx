@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createBrowserClient } from '@supabase/ssr'
 import { StatusBadge, StatusDot, STATUS_LABEL } from '@/components/ui/status-badge'
@@ -28,8 +29,13 @@ export function MasterNavetteList({
   initialActive: Shuttle[]
   initialStorico: Shuttle[]
 }) {
+  const router = useRouter()
   const [active, setActive] = useState(initialActive)
   const [storico, setStorico] = useState(initialStorico)
+
+  // Sincronizza stato con dati server freschi (dopo router.refresh())
+  useEffect(() => { setActive(initialActive) }, [initialActive])
+  useEffect(() => { setStorico(initialStorico) }, [initialStorico])
 
   useEffect(() => {
     const supabase = createBrowserClient(
@@ -37,49 +43,70 @@ export function MasterNavetteList({
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     )
 
-    const channel = supabase
-      .channel('master-navette-list')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'shuttles' },
-        (payload) => {
-          if (payload.eventType === 'INSERT') {
-            const s = payload.new as Shuttle
-            if (ACTIVE_STATUSES.includes(s.status)) {
-              setActive(prev => [...prev, s].sort(byDeparture))
-            }
-          } else if (payload.eventType === 'UPDATE') {
-            const s = payload.new as Shuttle
-            if (ACTIVE_STATUSES.includes(s.status)) {
-              setStorico(prev => prev.filter(x => x.id !== s.id))
-              setActive(prev => {
-                const exists = prev.some(x => x.id === s.id)
-                if (exists) return prev.map(x => x.id === s.id ? s : x)
-                return [...prev, s].sort(byDeparture)
-              })
-            } else if (HISTORY_STATUSES.includes(s.status)) {
-              setActive(prev => prev.filter(x => x.id !== s.id))
-              const twoDaysAgo = new Date()
-              twoDaysAgo.setDate(twoDaysAgo.getDate() - 2)
-              if (s.departure_time >= twoDaysAgo.toISOString()) {
-                setStorico(prev => {
+    let channel: ReturnType<typeof supabase.channel>
+
+    function subscribe() {
+      channel = supabase
+        .channel('master-navette-list')
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'shuttles' },
+          (payload) => {
+            if (payload.eventType === 'INSERT') {
+              const s = payload.new as Shuttle
+              if (ACTIVE_STATUSES.includes(s.status)) {
+                setActive(prev => [...prev, s].sort(byDeparture))
+              }
+            } else if (payload.eventType === 'UPDATE') {
+              const s = payload.new as Shuttle
+              if (ACTIVE_STATUSES.includes(s.status)) {
+                setStorico(prev => prev.filter(x => x.id !== s.id))
+                setActive(prev => {
                   const exists = prev.some(x => x.id === s.id)
                   if (exists) return prev.map(x => x.id === s.id ? s : x)
-                  return [s, ...prev].sort((a, b) => byDeparture(b, a))
+                  return [...prev, s].sort(byDeparture)
                 })
+              } else if (HISTORY_STATUSES.includes(s.status)) {
+                setActive(prev => prev.filter(x => x.id !== s.id))
+                const twoDaysAgo = new Date()
+                twoDaysAgo.setDate(twoDaysAgo.getDate() - 2)
+                if (s.departure_time >= twoDaysAgo.toISOString()) {
+                  setStorico(prev => {
+                    const exists = prev.some(x => x.id === s.id)
+                    if (exists) return prev.map(x => x.id === s.id ? s : x)
+                    return [s, ...prev].sort((a, b) => byDeparture(b, a))
+                  })
+                }
               }
+            } else if (payload.eventType === 'DELETE') {
+              const id = (payload.old as { id: string }).id
+              setActive(prev => prev.filter(x => x.id !== id))
+              setStorico(prev => prev.filter(x => x.id !== id))
             }
-          } else if (payload.eventType === 'DELETE') {
-            const id = (payload.old as { id: string }).id
-            setActive(prev => prev.filter(x => x.id !== id))
-            setStorico(prev => prev.filter(x => x.id !== id))
-          }
-        },
-      )
-      .subscribe()
+          },
+        )
+        .subscribe()
+    }
 
-    return () => { supabase.removeChannel(channel) }
-  }, [])
+    subscribe()
+
+    // Su mobile (Safari) il WebSocket cade quando l'app va in background.
+    // Al ritorno in foreground: ri-fetch dati server + riconnette il canale.
+    function onVisible() {
+      if (!document.hidden) {
+        supabase.removeChannel(channel)
+        router.refresh()
+        subscribe()
+      }
+    }
+
+    document.addEventListener('visibilitychange', onVisible)
+
+    return () => {
+      document.removeEventListener('visibilitychange', onVisible)
+      supabase.removeChannel(channel)
+    }
+  }, [router])
 
   if (!active.length && !storico.length) {
     return (
