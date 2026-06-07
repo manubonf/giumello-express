@@ -6,7 +6,7 @@ import { DateTimePicker } from '@/components/ui/datetime-picker'
 import { StatusBadge } from '@/components/ui/status-badge'
 import { ErrorAlert, SuccessAlert } from '@/components/ui/alert'
 import { FormField } from '@/components/ui/form-field'
-import { getCurrentUser } from '@/lib/auth'
+import { getSessionFromHeaders } from '@/lib/auth'
 import { supabaseAdmin } from '@/lib/supabase'
 import { formatFull } from '@/lib/date'
 import { updateProposal, deleteProposal } from './actions'
@@ -27,13 +27,13 @@ export default async function PropostaDetailPage({
   searchParams: Promise<{ error?: string; ok?: string }>
 }) {
   const [{ id }, { error, ok }] = await Promise.all([params, searchParams])
-  const { user, profile } = await getCurrentUser()
+  const { userId, username } = await getSessionFromHeaders()
 
   const { data: proposal } = await supabaseAdmin
     .from('proposals')
     .select('id, departure_time, notes, status, created_at, proposer_id')
     .eq('id', id)
-    .eq('proposer_id', user.id)
+    .eq('proposer_id', userId)
     .single()
 
   if (!proposal) redirect('/base/proposte')
@@ -46,7 +46,7 @@ export default async function PropostaDetailPage({
         backHref="/base/proposte"
         right={
           <span className="font-mono text-xs" style={{ color: 'var(--text-muted)' }}>
-            {profile?.username}
+            {username}
           </span>
         }
       />

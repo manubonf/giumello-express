@@ -1,10 +1,11 @@
+import { after } from 'next/server'
 import Link from 'next/link'
 import { PageLayout } from '@/components/ui/page-layout'
 import { PageHeader } from '@/components/ui/page-header'
 import { StatusBadge } from '@/components/ui/status-badge'
 import { SuccessAlert } from '@/components/ui/alert'
 import { RealtimeRefresher } from '@/components/ui/realtime-refresher'
-import { getCurrentUser } from '@/lib/auth'
+import { getSessionFromHeaders } from '@/lib/auth'
 import { supabaseAdmin } from '@/lib/supabase'
 import { markExpiredProposalsCancelled } from '@/lib/data'
 import { formatShort } from '@/lib/date'
@@ -15,9 +16,9 @@ export default async function PropostePage({
   searchParams: Promise<{ ok?: string }>
 }) {
   const { ok } = await searchParams
-  const { user, profile } = await getCurrentUser()
+  const { userId, username } = await getSessionFromHeaders()
 
-  await markExpiredProposalsCancelled()
+  after(() => markExpiredProposalsCancelled())
 
   const twoDaysAgo = new Date()
   twoDaysAgo.setDate(twoDaysAgo.getDate() - 2)
@@ -77,7 +78,7 @@ export default async function PropostePage({
         backHref="/"
         right={
           <span className="font-mono text-xs" style={{ color: 'var(--text-muted)' }}>
-            {profile?.username}
+            {username}
           </span>
         }
       />
@@ -108,7 +109,7 @@ export default async function PropostePage({
                   <PropostaCard
                     key={p.id}
                     p={p}
-                    href={p.proposer_id === user.id ? `/base/proposte/${p.id}` : undefined}
+                    href={p.proposer_id === userId ? `/base/proposte/${p.id}` : undefined}
                   />
                 ))}
               </div>

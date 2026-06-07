@@ -2,14 +2,14 @@ import Link from 'next/link'
 import { PageLayout } from '@/components/ui/page-layout'
 import { PageHeader, MasterBadge } from '@/components/ui/page-header'
 import { RealtimeRefresher } from '@/components/ui/realtime-refresher'
-import { getCurrentUser } from '@/lib/auth'
+import { getSessionFromHeaders } from '@/lib/auth'
 import { supabaseAdmin } from '@/lib/supabase'
 
 type NavItem = { href: string; icon: string; title: string; desc: string; badge?: number }
 
 export default async function HomePage() {
-  const { user, profile } = await getCurrentUser()
-  const isMaster = profile?.role === 'master'
+  const { username, role } = await getSessionFromHeaders()
+  const isMaster = role === 'master'
 
   const [{ count: shuttleCount }, { count: proposalCount }] = await Promise.all([
     supabaseAdmin
@@ -47,7 +47,7 @@ export default async function HomePage() {
                 className="w-1.5 h-1.5 rounded-full flex-shrink-0"
                 style={{ background: isMaster ? 'var(--red)' : 'var(--text-dim)' }}
               />
-              {profile?.username ?? '—'}
+              {username || '—'}
             </span>
             {isMaster && <MasterBadge />}
           </div>
@@ -55,7 +55,7 @@ export default async function HomePage() {
       />
 
       <h1 className="text-2xl font-semibold mb-8">
-        {<>Ciao, <span style={{ color: 'var(--red)' }}>{profile?.username}</span></>}
+        {<>Ciao, <span style={{ color: 'var(--red)' }}>{username}</span></>}
       </h1>
 
       <nav className="flex flex-col gap-3">

@@ -1,3 +1,4 @@
+import { after } from 'next/server'
 import { notFound } from 'next/navigation'
 import { PageLayout } from '@/components/ui/page-layout'
 import { PageHeader, MasterBadge } from '@/components/ui/page-header'
@@ -14,7 +15,7 @@ export default async function NavettaDetailPage({
 }) {
   const [{ id }, { error, ok }] = await Promise.all([params, searchParams])
 
-  await markExpiredShuttlesDone(id)
+  after(() => markExpiredShuttlesDone(id))
 
   const [{ data: shuttle }, { bookings, profileById, participantsByBooking }, cancellations] = await Promise.all([
     supabaseAdmin.from('shuttles').select('*').eq('id', id).single(),

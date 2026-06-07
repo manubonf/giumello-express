@@ -3,18 +3,18 @@ import { PageHeader, MasterBadge } from '@/components/ui/page-header'
 import { NotifToggle } from '@/components/ui/notif-toggle'
 import { PushSubscribe } from '@/components/ui/push-subscribe'
 import { SubmitButton } from '@/components/ui/submit-button'
-import { getMasterUser } from '@/lib/auth'
+import { getSessionFromHeaders } from '@/lib/auth'
 import { supabaseAdmin } from '@/lib/supabase'
 import { updateMasterNotifPref } from './actions'
 import { logout } from '@/app/login/actions'
 
 export default async function ImpostazioniPage() {
-  const user = await getMasterUser()
+  const { userId } = await getSessionFromHeaders()
 
   const { data: prefs } = await supabaseAdmin
     .from('profiles')
     .select('notif_m1, notif_m2, notif_m3, notif_m4, notif_m5, notif_m6')
-    .eq('id', user.id)
+    .eq('id', userId)
     .single()
 
   const p = prefs ?? {

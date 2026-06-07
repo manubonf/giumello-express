@@ -1,3 +1,4 @@
+import { after } from 'next/server'
 import Link from 'next/link'
 import { PageLayout } from '@/components/ui/page-layout'
 import { PageHeader, MasterBadge } from '@/components/ui/page-header'
@@ -19,7 +20,7 @@ export default async function MasterPropostePage({
 }) {
   const { error } = await searchParams
 
-  await markExpiredProposalsCancelled()
+  after(() => markExpiredProposalsCancelled())
 
   const { data: proposals } = await supabaseAdmin
     .from('proposals')

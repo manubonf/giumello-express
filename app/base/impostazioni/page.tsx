@@ -3,18 +3,18 @@ import { PageHeader } from '@/components/ui/page-header'
 import { NotifToggle } from '@/components/ui/notif-toggle'
 import { PushSubscribe } from '@/components/ui/push-subscribe'
 import { SubmitButton } from '@/components/ui/submit-button'
-import { getCurrentUser } from '@/lib/auth'
+import { getSessionFromHeaders } from '@/lib/auth'
 import { supabaseAdmin } from '@/lib/supabase'
 import { updateBaseNotifPref } from './actions'
 import { logout } from '@/app/login/actions'
 
 export default async function ImpostazioniPage() {
-  const { user } = await getCurrentUser()
+  const { userId } = await getSessionFromHeaders()
 
   const { data: prefs } = await supabaseAdmin
     .from('profiles')
     .select('notif_u1, notif_u2, notif_u3, notif_u4, notif_u5, notif_u6, notif_u7, notif_u8, notif_u9, notif_u10, notif_u11, notif_u12')
-    .eq('id', user.id)
+    .eq('id', userId)
     .single()
 
   const p = prefs ?? {

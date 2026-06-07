@@ -1,3 +1,4 @@
+import { after } from 'next/server'
 import Link from 'next/link'
 import { PageLayout } from '@/components/ui/page-layout'
 import { PageHeader, MasterBadge } from '@/components/ui/page-header'
@@ -9,7 +10,7 @@ const ACTIVE_STATUSES = ['draft', 'confirmed', 'full']
 const HISTORY_STATUSES = ['done', 'cancelled']
 
 export default async function MasterNavettePage() {
-  await markExpiredShuttlesDone()
+  after(() => markExpiredShuttlesDone())
 
   const { data: shuttles } = await supabaseAdmin
     .from('shuttles')

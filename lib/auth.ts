@@ -1,6 +1,18 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { createSupabaseServerClient } from '@/lib/supabase-server'
 import { redirect } from 'next/navigation'
+import { headers } from 'next/headers'
+
+// Legge i dati utente iniettati dal middleware via header HTTP.
+// Zero query DB — usare al posto di getCurrentUser() nei Server Component.
+export async function getSessionFromHeaders() {
+  const h = await headers()
+  return {
+    userId:   h.get('x-user-id')       ?? '',
+    role:     h.get('x-user-role')     ?? '',
+    username: h.get('x-user-username') ?? '',
+  }
+}
 
 export async function fetchUserRole(supabase: SupabaseClient, userId: string): Promise<string | null> {
   const { data } = await supabase

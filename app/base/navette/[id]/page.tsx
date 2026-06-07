@@ -1,7 +1,8 @@
+import { after } from 'next/server'
 import { notFound, redirect } from 'next/navigation'
 import { PageLayout } from '@/components/ui/page-layout'
 import { PageHeader } from '@/components/ui/page-header'
-import { getCurrentUser } from '@/lib/auth'
+import { getSessionFromHeaders } from '@/lib/auth'
 import { createSupabaseServerClient } from '@/lib/supabase-server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { markExpiredShuttlesDone, getBookingsWithParticipants } from '@/lib/data'
@@ -15,9 +16,9 @@ export default async function NavettaDetailPage({
   searchParams: Promise<{ error?: string; ok?: string }>
 }) {
   const [{ id }, { error, ok }] = await Promise.all([params, searchParams])
-  const { user, profile } = await getCurrentUser()
+  const { userId, username } = await getSessionFromHeaders()
 
-  await markExpiredShuttlesDone(id)
+  after(() => markExpiredShuttlesDone(id))
 
   const supabase = await createSupabaseServerClient()
 
@@ -51,14 +52,14 @@ export default async function NavettaDetailPage({
         backHref="/base/navette"
         right={
           <span className="font-mono text-xs" style={{ color: 'var(--text-muted)' }}>
-            {profile?.username}
+            {username}
           </span>
         }
       />
       <NavettaDetail
         shuttle={shuttle}
-        userId={user.id}
-        username={profile?.username ?? ''}
+        userId={userId}
+        username={username}
         initialBookings={initialBookings}
         error={error}
         ok={ok}

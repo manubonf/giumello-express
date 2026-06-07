@@ -1,8 +1,7 @@
+import { after } from 'next/server'
 import { PageLayout } from '@/components/ui/page-layout'
 import { PageHeader } from '@/components/ui/page-header'
-import { SubmitButton } from '@/components/ui/submit-button'
-import { logout } from '@/app/login/actions'
-import { getCurrentUser } from '@/lib/auth'
+import { getSessionFromHeaders } from '@/lib/auth'
 import { createSupabaseServerClient } from '@/lib/supabase-server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { markExpiredShuttlesDone } from '@/lib/data'
@@ -12,9 +11,9 @@ const ACTIVE_STATUSES  = ['draft', 'confirmed', 'full']
 const HISTORY_STATUSES = ['done', 'cancelled']
 
 export default async function NavettePage() {
-  const { user, profile } = await getCurrentUser()
+  const { userId, username } = await getSessionFromHeaders()
 
-  await markExpiredShuttlesDone()
+  after(() => markExpiredShuttlesDone())
 
   const supabase = await createSupabaseServerClient()
   const [{ data: shuttles }, { data: participations }] = await Promise.all([
@@ -25,7 +24,7 @@ export default async function NavettePage() {
     supabaseAdmin
       .from('booking_participants')
       .select('booking_id')
-      .eq('user_id', user.id)
+      .eq('user_id', userId)
       .eq('is_guest', false),
   ])
 
@@ -50,7 +49,7 @@ export default async function NavettePage() {
           <div className="flex items-center gap-4">
             <span className="flex items-center gap-1.5 font-mono text-xs"
               style={{ color: 'var(--text-muted)' }}>
-              {profile?.username ?? '—'}
+              {username || '—'}
             </span>
           </div>
         }
