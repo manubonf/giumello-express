@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createBrowserClient } from '@supabase/ssr'
 import { StatusBadge, StatusDot, STATUS_LABEL } from '@/components/ui/status-badge'
+import { CollapsibleSection } from '@/components/ui/collapsible-section'
 import { formatShort, dayLabel } from '@/lib/date'
 
 type Shuttle = {
@@ -152,11 +153,7 @@ export function MasterNavetteList({
       )}
 
       {storico.length > 0 && (
-        <section>
-          <p className="font-mono text-[10px] uppercase tracking-widest mb-3"
-            style={{ color: 'var(--text-muted)' }}>
-            Storico
-          </p>
+        <CollapsibleSection label="Storico" count={storico.length}>
           <div className="flex flex-col gap-2" style={{ opacity: 0.6 }}>
             {storico.map(s => (
               <Link
@@ -182,7 +179,7 @@ export function MasterNavetteList({
               </Link>
             ))}
           </div>
-        </section>
+        </CollapsibleSection>
       )}
     </>
   )

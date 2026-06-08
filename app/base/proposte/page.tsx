@@ -5,6 +5,7 @@ import { PageHeader } from '@/components/ui/page-header'
 import { StatusBadge } from '@/components/ui/status-badge'
 import { SuccessAlert } from '@/components/ui/alert'
 import { RealtimeRefresher } from '@/components/ui/realtime-refresher'
+import { CollapsibleSection } from '@/components/ui/collapsible-section'
 import { getSessionFromHeaders } from '@/lib/auth'
 import { supabaseAdmin } from '@/lib/supabase'
 import { markExpiredProposalsCancelled } from '@/lib/data'
@@ -117,15 +118,11 @@ export default async function PropostePage({
           )}
 
           {storico.length > 0 && (
-            <section>
-              <p className="font-mono text-[10px] uppercase tracking-widest mb-3"
-                style={{ color: 'var(--text-muted)' }}>
-                Storico
-              </p>
+            <CollapsibleSection label="Storico" count={storico.length}>
               <div className="flex flex-col gap-2" style={{ opacity: 0.7 }}>
                 {storico.map(p => <PropostaCard key={p.id} p={p} dim />)}
               </div>
-            </section>
+            </CollapsibleSection>
           )}
         </>
       )}

@@ -5,6 +5,7 @@ import { PageHeader, MasterBadge } from '@/components/ui/page-header'
 import { StatusBadge } from '@/components/ui/status-badge'
 import { ErrorAlert } from '@/components/ui/alert'
 import { RealtimeRefresher } from '@/components/ui/realtime-refresher'
+import { CollapsibleSection } from '@/components/ui/collapsible-section'
 import { supabaseAdmin } from '@/lib/supabase'
 import { markExpiredProposalsCancelled } from '@/lib/data'
 import { formatShort } from '@/lib/date'
@@ -85,11 +86,7 @@ export default async function MasterPropostePage({
       )}
 
       {others.length > 0 && (
-        <section>
-          <p className="font-mono text-[10px] uppercase tracking-widest mb-3"
-            style={{ color: 'var(--text-muted)' }}>
-            Storico
-          </p>
+        <CollapsibleSection label="Storico" count={others.length}>
           <div className="flex flex-col gap-2">
             {others.map(p => {
               const proposerUsername = profileById[p.proposer_id]?.username ?? '—'
@@ -109,7 +106,7 @@ export default async function MasterPropostePage({
               )
             })}
           </div>
-        </section>
+        </CollapsibleSection>
       )}
 
       {!pending.length && !others.length && (

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { createBrowserClient } from '@supabase/ssr'
 import { StatusBadge, StatusDot } from '@/components/ui/status-badge'
+import { CollapsibleSection } from '@/components/ui/collapsible-section'
 import { formatShort, dayLabel } from '@/lib/date'
 
 type Shuttle = {
@@ -121,13 +122,7 @@ export function NavetteList({
       )}
 
       {initialStorico.length > 0 && (
-        <section>
-          <p
-            className="font-mono text-[10px] uppercase tracking-widest mb-3"
-            style={{ color: 'var(--text-muted)' }}
-          >
-            Storico
-          </p>
+        <CollapsibleSection label="Storico" count={initialStorico.length}>
           <div className="flex flex-col gap-2" style={{ opacity: 0.6 }}>
             {initialStorico.map(s => (
               <Link
@@ -158,7 +153,7 @@ export function NavetteList({
               </Link>
             ))}
           </div>
-        </section>
+        </CollapsibleSection>
       )}
     </>
   )
