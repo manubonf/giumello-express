@@ -66,9 +66,12 @@ const { user, profile } = await getCurrentUser()
 
 // Come sopra, ma redirect a / se non è master
 const profile = await requireMaster()
+
+// Versione leggera per Server Actions master-only (non restituisce profilo completo)
+await getMasterUser()
 ```
 
-Entrambi sono in `lib/auth.ts`. Usali sempre invece di chiamare `supabase.auth.getUser()` direttamente nelle route.
+Tutti e tre sono in `lib/auth.ts`. Usali sempre invece di chiamare `supabase.auth.getUser()` direttamente nelle route.
 
 ---
 
@@ -94,16 +97,18 @@ Non aggiungere controlli di autenticazione ridondanti nei Server Components se `
 /login                     → login username+password
 /base/navette              → lista navette (utenti base)
 /base/navette/[id]         → dettaglio + prenotazione
-/base/proposte             → proposte utente
+/base/proposte             → lista proposte utente
+/base/proposte/nuova       → crea proposta
 /base/proposte/[id]        → modifica/cancellazione proposta
 /base/impostazioni         → impostazioni (notifiche personalizzate)
 /master/navette            → lista navette (master)
 /master/navette/nuova      → crea navetta
 /master/navette/[id]       → dettaglio + azioni master
-/master/utenti             → lista utenti
+/master/utenti             → lista utenti (con badge ammonizioni)
 /master/utenti/nuovo       → crea utente
-/master/impostazioni       → impostazioni (soglie default e notifiche personalizzate)
-/master/proposte           → lista proposte da utente base 
+/master/utenti/[id]        → dettaglio utente + ammonizioni
+/master/impostazioni       → impostazioni notifiche master
+/master/proposte           → lista proposte da utente base
 /master/proposte/[id]      → pannello di creazione navetta o rifiuto proposta
 ```
 
@@ -117,8 +122,11 @@ Non aggiungere controlli di autenticazione ridondanti nei Server Components se `
 | `shuttles` | SELECT (escluse `cancelled`) | SELECT tutto |
 | `bookings` | SELECT proprie | SELECT tutto |
 | `booking_participants` | SELECT proprie | SELECT tutto |
+| `booking_cancellations` | nessun accesso | SELECT tutto |
 | `proposals` | SELECT proprie | SELECT tutto |
 | `push_subscriptions` | ALL proprie | ALL proprie |
+| `user_favorites` | ALL propri | ALL propri |
+| `ammonizioni` | nessun accesso | ALL |
 
 INSERT/UPDATE/DELETE su `profiles` e `auth.users`: solo `service_role`.
 
@@ -173,9 +181,41 @@ git push origin develop               # → Preview deploy + migrations DEV
 NEXT_PUBLIC_SUPABASE_URL          URL del progetto Supabase
 NEXT_PUBLIC_SUPABASE_ANON_KEY     Chiave pubblica anon
 SUPABASE_SERVICE_ROLE_KEY         Chiave admin — MAI esporre al client
+NEXT_PUBLIC_VAPID_PUBLIC_KEY      Chiave pubblica VAPID per Web Push
+VAPID_PRIVATE_KEY                 Chiave privata VAPID — MAI esporre al client
+VAPID_SUBJECT                     Contatto VAPID (es. mailto:admin@navette.internal)
 ```
 
 `.env.local` non va mai committato. È già in `.gitignore`.
+
+---
+
+## Scadenza automatica navette e proposte
+
+Non esistono cron job. Le funzioni di pulizia vengono chiamate tramite `after()` all'inizio di ogni pagina che le usa:
+
+```typescript
+after(() => markExpiredShuttlesDone())        // navette con departure_time passato → done
+after(() => markExpiredProposalsCancelled())   // proposte scadute → cancelled
+```
+
+`after()` esegue in background dopo che la risposta è stata inviata al client, senza rallentare il caricamento. Lo svantaggio è che se nessuno visita le pagine per un periodo prolungato, lo stato resta obsoleto — accettabile per l'uso previsto (team piccolo, accesso quotidiano).
+
+Non aggiungere cron job Vercel per questo: `after()` è sufficiente e introduce meno complessità operativa.
+
+---
+
+## Notifiche Push
+
+Le preferenze sono colonne booleane su `profiles` (`notif_m1`–`notif_m6` per il master, `notif_u1`–`notif_u12` per gli utenti base). Default `true` per tutte.
+
+Il flusso è:
+1. Il browser si iscrive via `/api/push/subscribe` → salva endpoint in `push_subscriptions`
+2. Le Server Actions triggherano le notifiche con `after()` (non bloccante)
+3. `lib/notif.ts` raccoglie i destinatari filtrando per preferenza
+4. `lib/push.ts` invia via Web Push e pulisce automaticamente gli endpoint scaduti (410/404)
+
+Non inviare notifiche direttamente da Server Components o Client Components. Usare sempre `after()` nelle Server Actions.
 
 ---
 
