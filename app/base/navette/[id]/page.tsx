@@ -30,8 +30,16 @@ export default async function NavettaDetailPage({
 
   if (!shuttle) redirect('/base/navette')
 
-  const { bookings: allBookings, profileById, participantsByBooking } =
-    await getBookingsWithParticipants(id)
+  const [
+    { bookings: allBookings, profileById, participantsByBooking },
+    { count: ammonizioniCount },
+  ] = await Promise.all([
+    getBookingsWithParticipants(id),
+    supabaseAdmin
+      .from('ammonizioni')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', userId),
+  ])
 
   const initialBookings = allBookings.map(b => ({
     id: b.id,
@@ -63,6 +71,7 @@ export default async function NavettaDetailPage({
         initialBookings={initialBookings}
         error={error}
         ok={ok}
+        ammonizioniCount={ammonizioniCount ?? 0}
       />
     </PageLayout>
   )

@@ -8,6 +8,7 @@ type Utente = {
   id: string
   username: string
   created_at: string
+  ammonizioni: number
 }
 
 function fuzzyMatch(text: string, query: string): boolean {
@@ -82,6 +83,14 @@ export function UtentiList({ utenti }: { utenti: Utente[] }) {
                   {formatDate(u.created_at)}
                 </span>
               </span>
+              {u.ammonizioni > 0 && (
+                <span
+                  className="font-mono text-[11px] font-semibold rounded-full px-1.5 py-0.5 min-w-[20px] text-center"
+                  style={{ background: 'var(--red)', color: 'white' }}
+                >
+                  {u.ammonizioni}
+                </span>
+              )}
               <span className="font-mono text-sm transition-transform group-hover:translate-x-0.5"
                 style={{ color: 'var(--border)' }}>→</span>
             </Link>

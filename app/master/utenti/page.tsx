@@ -5,11 +5,26 @@ import { supabaseAdmin } from '@/lib/supabase'
 import { UtentiList } from './_components/utenti-list'
 
 export default async function MasterUtentiPage() {
-  const { data: utenti } = await supabaseAdmin
-    .from('profiles')
-    .select('id, username, created_at')
-    .eq('role', 'base')
-    .order('username', { ascending: true })
+  const [{ data: utenti }, { data: allAmmonizioni }] = await Promise.all([
+    supabaseAdmin
+      .from('profiles')
+      .select('id, username, created_at')
+      .eq('role', 'base')
+      .order('username', { ascending: true }),
+    supabaseAdmin
+      .from('ammonizioni')
+      .select('user_id'),
+  ])
+
+  const ammonizioniCount = (allAmmonizioni ?? []).reduce<Record<string, number>>((acc, a) => {
+    acc[a.user_id] = (acc[a.user_id] ?? 0) + 1
+    return acc
+  }, {})
+
+  const utentiWithCount = (utenti ?? []).map(u => ({
+    ...u,
+    ammonizioni: ammonizioniCount[u.id] ?? 0,
+  }))
 
   return (
     <PageLayout>
@@ -26,7 +41,7 @@ export default async function MasterUtentiPage() {
         </Link>
       </div>
 
-      <UtentiList utenti={utenti ?? []} />
+      <UtentiList utenti={utentiWithCount} />
     </PageLayout>
   )
 }

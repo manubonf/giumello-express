@@ -332,7 +332,7 @@ export function MasterNavettaDetail({
             </form>
           ) : (
             <>
-              <DetailRow label="Posti disponibili" value={`${shuttleInfo.available_seats} / ${shuttleInfo.max_seats}`} />
+              <DetailRow label="Posti disponibili" value={`${shuttleInfo.available_seats}`} />
               <DetailRow label="Soglia conferma" value={`${shuttleInfo.min_seats} prenotazioni`} />
             </>
           )}
@@ -378,7 +378,7 @@ export function MasterNavettaDetail({
           className="font-mono text-[10px] uppercase tracking-widest mb-3"
           style={{ color: 'var(--text-muted)' }}
         >
-          Prenotazioni ({booked} / {shuttleInfo.max_seats})
+          Prenotazioni ({booked} prenotati su {shuttleInfo.max_seats})
         </p>
         {!bookings.length ? (
           <p className="font-mono text-sm" style={{ color: 'var(--text-muted)' }}>

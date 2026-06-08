@@ -116,6 +116,39 @@ export async function resetPassword(formData: FormData) {
   redirect(`/master/utenti/${id}?ok=1&u=${encodeURIComponent(username)}&pw=${encodeURIComponent(password)}`)
 }
 
+export async function addAmmonizione(formData: FormData) {
+  await getMasterUser()
+
+  const userId = formData.get('user_id') as string
+  const nota = (formData.get('nota') as string ?? '').trim()
+
+  if (!nota) redirect(`/master/utenti/${userId}?error=nota-vuota`)
+
+  const { error } = await supabaseAdmin
+    .from('ammonizioni')
+    .insert({ user_id: userId, nota })
+
+  if (error) {
+    console.error('[addAmmonizione] Supabase error:', error)
+    redirect(`/master/utenti/${userId}?error=errore-salvataggio`)
+  }
+
+  revalidatePath(`/master/utenti/${userId}`)
+  redirect(`/master/utenti/${userId}`)
+}
+
+export async function removeAmmonizione(formData: FormData) {
+  await getMasterUser()
+
+  const id = formData.get('id') as string
+  const userId = formData.get('user_id') as string
+
+  await supabaseAdmin.from('ammonizioni').delete().eq('id', id)
+
+  revalidatePath(`/master/utenti/${userId}`)
+  redirect(`/master/utenti/${userId}`)
+}
+
 export async function deleteUser(formData: FormData) {
   await getMasterUser()
 

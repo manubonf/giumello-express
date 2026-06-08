@@ -67,6 +67,7 @@ export function NavettaDetail({
   initialBookings,
   error,
   ok,
+  ammonizioniCount = 0,
 }: {
   shuttle: ShuttleInfo
   userId: string
@@ -74,6 +75,7 @@ export function NavettaDetail({
   initialBookings: BookingEntry[]
   error?: string
   ok?: string
+  ammonizioniCount?: number
 }) {
   const [shuttleInfo, setShuttleInfo] = useState(initialShuttle)
   const [bookings, setBookings] = useState(initialBookings)
@@ -207,7 +209,7 @@ export function NavettaDetail({
       <p className="font-mono text-sm mb-8" style={{ color: 'var(--text-dim)' }}>
         {shuttleInfo.status === 'full'
           ? 'Posti esauriti'
-          : `${shuttleInfo.available_seats} / ${shuttleInfo.max_seats} posti disponibili`}
+          : `posti disponibili ${shuttleInfo.available_seats}`}
       </p>
 
       {shuttleInfo.status === 'draft' && (
@@ -328,11 +330,18 @@ export function NavettaDetail({
       {canBook && (
         <div className="mb-8">
           <p
-            className="font-mono text-[10px] uppercase tracking-widest mb-3"
+            className="font-mono text-[10px] uppercase tracking-widest mb-1"
             style={{ color: 'var(--text-muted)' }}
           >
             Nuova prenotazione
           </p>
+          {ammonizioniCount > 0 && (
+            <p className="font-mono text-xs mb-3" style={{ color: 'var(--red)' }}>
+              Attenzione: sei già stato ammonito {ammonizioniCount}{' '}
+              {ammonizioniCount === 1 ? 'volta' : 'volte'}.
+            </p>
+          )}
+          {ammonizioniCount === 0 && <div className="mb-3" />}
 
           {/* Selezione modalità */}
           {activePanel === null && (

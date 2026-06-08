@@ -141,7 +141,7 @@ export function MasterNavetteList({
                   {formatShort(s.departure_time)}
                 </span>
                 <span className="block font-mono text-xs mt-0.5" style={{ color: 'var(--text-dim)' }}>
-                  {STATUS_LABEL[s.status] ?? s.status} · {s.available_seats}/{s.max_seats} posti
+                  {STATUS_LABEL[s.status] ?? s.status} · Posti disponibili {s.available_seats}
                 </span>
               </span>
               <span className="font-mono text-sm transition-transform group-hover:translate-x-0.5"
@@ -173,7 +173,7 @@ export function MasterNavetteList({
                   <span className="flex items-center gap-2 mt-0.5">
                     <StatusBadge status={s.status} />
                     <span className="font-mono text-xs" style={{ color: 'var(--text-dim)' }}>
-                      {s.available_seats}/{s.max_seats} posti
+                      {s.max_seats - s.available_seats} prenotati su {s.max_seats}
                     </span>
                   </span>
                 </span>

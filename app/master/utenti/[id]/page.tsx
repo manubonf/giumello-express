@@ -6,7 +6,7 @@ import { DetailRow } from '@/components/ui/detail-row'
 import { ErrorAlert } from '@/components/ui/alert'
 import { CredentialBox } from '@/components/ui/credential-box'
 import { supabaseAdmin } from '@/lib/supabase'
-import { updateUsername, resetPassword, deleteUser } from '@/app/master/utenti/actions'
+import { updateUsername, resetPassword, deleteUser, addAmmonizione, removeAmmonizione } from '@/app/master/utenti/actions'
 import { SuccessAlert } from '@/components/ui/alert'
 import { FormField } from '@/components/ui/form-field'
 import { formatLongTime } from '@/lib/date'
@@ -17,6 +17,7 @@ const ERROR_MSG: Record<string, string> = {
   'errore-eliminazione': 'Errore durante l\'eliminazione. Riprova.',
   'username-non-valido': 'Username non valido. Usa solo lettere minuscole, numeri e underscore (2–30 caratteri).',
   'username-esistente':  'Username già in uso.',
+  'nota-vuota':          'La nota non può essere vuota.',
 }
 
 export default async function UtenteDetailPage({
@@ -29,11 +30,18 @@ export default async function UtenteDetailPage({
 }) {
   const [{ id }, { ok, u, pw, error, detail }] = await Promise.all([params, searchParams])
 
-  const { data: profile } = await supabaseAdmin
-    .from('profiles')
-    .select('id, username, role, created_at')
-    .eq('id', id)
-    .single()
+  const [{ data: profile }, { data: ammonizioni }] = await Promise.all([
+    supabaseAdmin
+      .from('profiles')
+      .select('id, username, role, created_at')
+      .eq('id', id)
+      .single(),
+    supabaseAdmin
+      .from('ammonizioni')
+      .select('id, nota, created_at')
+      .eq('user_id', id)
+      .order('created_at', { ascending: false }),
+  ])
 
   if (!profile) notFound()
 
@@ -105,7 +113,7 @@ export default async function UtenteDetailPage({
             </div>
           </form>
 
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap gap-3 mb-10">
             <form action={resetPassword}>
               <input type="hidden" name="id" value={profile.id} />
               <input type="hidden" name="username" value={profile.username} />
@@ -127,6 +135,74 @@ export default async function UtenteDetailPage({
               </SubmitButton>
             </form>
           </div>
+
+          <p className="font-mono text-[10px] uppercase tracking-widest mb-3"
+            style={{ color: 'var(--text-muted)' }}>
+            Ammonizioni
+          </p>
+
+          <div className="rounded-sm border mb-4" style={{ borderColor: 'var(--border)' }}>
+            {(ammonizioni ?? []).length === 0 ? (
+              <p className="px-4 py-3 text-sm" style={{ color: 'var(--text-muted)' }}>
+                Nessuna ammonizione registrata.
+              </p>
+            ) : (
+              <ul>
+                {(ammonizioni ?? []).map((a, i) => (
+                  <li
+                    key={a.id}
+                    className="flex items-start justify-between gap-3 px-4 py-3"
+                    style={{
+                      borderTop: i > 0 ? '1px solid var(--border)' : undefined,
+                    }}
+                  >
+                    <div className="flex flex-col gap-0.5 min-w-0">
+                      <span className="text-sm break-words" style={{ color: 'var(--text)' }}>{a.nota}</span>
+                      <span className="font-mono text-[11px]" style={{ color: 'var(--text-muted)' }}>
+                        {formatLongTime(a.created_at)}
+                      </span>
+                    </div>
+                    <form action={removeAmmonizione} className="shrink-0">
+                      <input type="hidden" name="id" value={a.id} />
+                      <input type="hidden" name="user_id" value={profile.id} />
+                      <SubmitButton
+                        className="rounded-sm border px-2.5 py-1 font-mono text-[11px] uppercase tracking-wide transition-colors"
+                        style={{ background: 'none', borderColor: 'var(--red-border)', color: 'var(--red)' }}
+                      >
+                        Rimuovi
+                      </SubmitButton>
+                    </form>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          <form action={addAmmonizione} className="flex flex-col gap-3">
+            <input type="hidden" name="user_id" value={profile.id} />
+            <FormField label="Nuova ammonizione">
+              <textarea
+                name="nota"
+                required
+                rows={2}
+                placeholder="Descrivi il comportamento scorretto…"
+                className="w-full rounded-sm border px-3 py-2.5 text-sm resize-none"
+                style={{
+                  background: 'var(--bg-panel)',
+                  borderColor: 'var(--border-muted)',
+                  color: 'var(--text)',
+                }}
+              />
+            </FormField>
+            <div>
+              <SubmitButton
+                className="rounded-sm border px-4 py-2 font-mono text-xs uppercase tracking-wide transition-colors"
+                style={{ background: 'var(--red)', borderColor: 'var(--red)', color: 'white' }}
+              >
+                Aggiungi ammonizione
+              </SubmitButton>
+            </div>
+          </form>
         </>
       )}
     </PageLayout>
