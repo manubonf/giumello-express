@@ -1,4 +1,4 @@
-import { notFound } from 'next/navigation'
+﻿import { notFound } from 'next/navigation'
 import { PageLayout } from '@/components/ui/page-layout'
 import { PageHeader, MasterBadge } from '@/components/ui/page-header'
 import { SubmitButton } from '@/components/ui/submit-button'
@@ -52,9 +52,9 @@ export default async function UtenteDetailPage({
       <PageHeader backHref="/master/utenti" right={<MasterBadge />} />
 
       <div className="flex items-center gap-3 mb-8">
-        <h1 className="text-xl font-semibold">{profile.username}</h1>
+        <h1 className="leading-none" style={{ fontFamily: "var(--font-display)", fontSize: "3rem", fontWeight: 400, color: "var(--text)" }}>{profile.username}</h1>
         <span
-          className="font-mono text-[10px] uppercase tracking-widest rounded-sm border px-1.5 py-0.5"
+          className="font-mono text-[10px] uppercase tracking-widest rounded-xl border px-1.5 py-0.5"
           style={{
             color: isMaster ? 'var(--red)' : 'var(--text-muted)',
             borderColor: isMaster ? 'var(--red-border)' : 'var(--border-muted)',
@@ -71,7 +71,7 @@ export default async function UtenteDetailPage({
 
       {error && <ErrorAlert message={`${ERROR_MSG[error] ?? 'Errore sconosciuto.'}${detail ? ` — ${detail}` : ''}`} />}
 
-      <div className="rounded-sm border mb-8" style={{ borderColor: 'var(--border)' }}>
+      <div className="rounded-xl border mb-8" style={{ borderColor: 'var(--border)' }}>
         <div className="px-4">
           <DetailRow label="Username" value={profile.username} />
           <DetailRow label="Ruolo" value={isMaster ? 'Master' : 'Utente base'} />
@@ -95,7 +95,7 @@ export default async function UtenteDetailPage({
                 autoComplete="off"
                 defaultValue={profile.username}
                 placeholder="es. mario_rossi"
-                className="w-full rounded-sm border px-3 py-2.5 font-mono text-sm"
+                className="w-full rounded-xl border px-4 py-2.5.5 font-mono text-sm"
                 style={{
                   background: 'var(--bg-panel)',
                   borderColor: 'var(--border-muted)',
@@ -105,7 +105,7 @@ export default async function UtenteDetailPage({
             </FormField>
             <div>
               <SubmitButton
-                className="rounded-sm border px-4 py-2 font-mono text-xs uppercase tracking-wide transition-colors"
+                className="rounded-xl border px-4 py-2 font-mono text-xs uppercase tracking-wide transition-colors"
                 style={{ background: '#22c55e', borderColor: '#22c55e', color: 'white' }}
               >
                 Salva username
@@ -118,7 +118,7 @@ export default async function UtenteDetailPage({
               <input type="hidden" name="id" value={profile.id} />
               <input type="hidden" name="username" value={profile.username} />
               <SubmitButton
-                className="rounded-sm border px-4 py-2 font-mono text-xs uppercase tracking-wide transition-colors"
+                className="rounded-xl border px-4 py-2 font-mono text-xs uppercase tracking-wide transition-colors"
                 style={{ background: 'none', borderColor: 'var(--border-muted)', color: 'var(--text-dim)' }}
               >
                 Reimposta password
@@ -128,7 +128,7 @@ export default async function UtenteDetailPage({
             <form action={deleteUser}>
               <input type="hidden" name="id" value={profile.id} />
               <SubmitButton
-                className="rounded-sm border px-4 py-2 font-mono text-xs uppercase tracking-wide transition-colors"
+                className="rounded-xl border px-4 py-2 font-mono text-xs uppercase tracking-wide transition-colors"
                 style={{ background: 'var(--red)', borderColor: 'var(--red)', color: 'white' }}
               >
                 Rimuovi utente
@@ -141,7 +141,7 @@ export default async function UtenteDetailPage({
             Ammonizioni
           </p>
 
-          <div className="rounded-sm border mb-4" style={{ borderColor: 'var(--border)' }}>
+          <div className="rounded-xl border mb-4" style={{ borderColor: 'var(--border)' }}>
             {(ammonizioni ?? []).length === 0 ? (
               <p className="px-4 py-3 text-sm" style={{ color: 'var(--text-muted)' }}>
                 Nessuna ammonizione registrata.
@@ -166,7 +166,7 @@ export default async function UtenteDetailPage({
                       <input type="hidden" name="id" value={a.id} />
                       <input type="hidden" name="user_id" value={profile.id} />
                       <SubmitButton
-                        className="rounded-sm border px-2.5 py-1 font-mono text-[11px] uppercase tracking-wide transition-colors"
+                        className="rounded-xl border px-2.5 py-1 font-mono text-[11px] uppercase tracking-wide transition-colors"
                         style={{ background: 'none', borderColor: 'var(--red-border)', color: 'var(--red)' }}
                       >
                         Rimuovi
@@ -186,7 +186,7 @@ export default async function UtenteDetailPage({
                 required
                 rows={2}
                 placeholder="Descrivi il comportamento scorretto…"
-                className="w-full rounded-sm border px-3 py-2.5 text-sm resize-none"
+                className="w-full rounded-xl border px-4 py-3 text-sm resize-none"
                 style={{
                   background: 'var(--bg-panel)',
                   borderColor: 'var(--border-muted)',
@@ -196,7 +196,7 @@ export default async function UtenteDetailPage({
             </FormField>
             <div>
               <SubmitButton
-                className="rounded-sm border px-4 py-2 font-mono text-xs uppercase tracking-wide transition-colors"
+                className="rounded-xl border px-4 py-2 font-mono text-xs uppercase tracking-wide transition-colors"
                 style={{ background: 'var(--red)', borderColor: 'var(--red)', color: 'white' }}
               >
                 Aggiungi ammonizione

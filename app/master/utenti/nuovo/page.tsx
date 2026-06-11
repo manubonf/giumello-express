@@ -1,4 +1,4 @@
-import Link from 'next/link'
+﻿import Link from 'next/link'
 import { PageLayout } from '@/components/ui/page-layout'
 import { PageHeader, MasterBadge } from '@/components/ui/page-header'
 import { SubmitButton } from '@/components/ui/submit-button'
@@ -24,7 +24,7 @@ export default async function NuovoUtentePage({
     <PageLayout>
       <PageHeader backHref="/master/utenti" right={<MasterBadge />} />
 
-      <h1 className="text-xl font-semibold mb-8">Nuovo utente</h1>
+      <h1 className="mb-8 leading-none" style={{ fontFamily: "var(--font-display)", fontSize: "3rem", fontWeight: 400, color: "var(--text)" }}>Nuovo utente</h1>
 
       {ok === '1' && u && pw && <CredentialBox username={u} password={pw} />}
 
@@ -42,7 +42,7 @@ export default async function NuovoUtentePage({
               required
               autoComplete="off"
               placeholder="es. mario_rossi"
-              className="w-full rounded-sm border px-3 py-2.5 font-mono text-sm"
+              className="w-full rounded-xl border px-4 py-2.5.5 font-mono text-sm"
               style={{
                 background: 'var(--bg-panel)',
                 borderColor: 'var(--border-muted)',
@@ -53,14 +53,14 @@ export default async function NuovoUtentePage({
 
           <div className="flex gap-3 mt-2">
             <SubmitButton
-              className="rounded-sm border px-5 py-2.5 font-mono text-xs uppercase tracking-wide transition-colors"
+              className="rounded-xl border px-5 py-2.5 font-mono text-xs uppercase tracking-wide transition-colors"
               style={{ background: '#22c55e', borderColor: '#22c55e', color: 'white' }}
             >
               Crea utente
             </SubmitButton>
             <Link
               href="/master/utenti"
-              className="rounded-sm border px-5 py-2.5 font-mono text-xs uppercase tracking-wide no-underline transition-colors hover:border-[--red] hover:text-[--red] active:scale-95"
+              className="rounded-xl border px-5 py-2.5 font-mono text-xs uppercase tracking-wide no-underline transition-colors hover:border-[--red] hover:text-[--red] active:scale-95"
               style={{ borderColor: 'var(--border-muted)', color: 'var(--text-dim)' }}
             >
               Annulla
@@ -73,14 +73,14 @@ export default async function NuovoUtentePage({
         <div className="flex gap-3">
           <Link
             href="/master/utenti/nuovo"
-            className="rounded-sm border px-5 py-2.5 font-mono text-xs uppercase tracking-wide no-underline transition-colors active:scale-95"
+            className="rounded-xl border px-5 py-2.5 font-mono text-xs uppercase tracking-wide no-underline transition-colors active:scale-95"
             style={{ background: '#22c55e', borderColor: '#22c55e', color: 'white' }}
           >
             + Altro utente
           </Link>
           <Link
             href="/master/utenti"
-            className="rounded-sm border px-5 py-2.5 font-mono text-xs uppercase tracking-wide no-underline transition-colors hover:border-[--red] hover:text-[--red] active:scale-95"
+            className="rounded-xl border px-5 py-2.5 font-mono text-xs uppercase tracking-wide no-underline transition-colors hover:border-[--red] hover:text-[--red] active:scale-95"
             style={{ borderColor: 'var(--border-muted)', color: 'var(--text-dim)' }}
           >
             Vai alla lista

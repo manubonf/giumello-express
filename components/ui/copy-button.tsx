@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
@@ -17,7 +17,7 @@ export function CopyButton({ text }: { text: string }) {
   return (
     <Button
       onClick={handleCopy}
-      className="rounded-sm border px-2 py-1 font-mono text-[10px] uppercase tracking-wide transition-colors"
+      className="rounded-lg border px-2.5 py-1 font-mono text-[10px] uppercase tracking-wide transition-colors"
       style={{
         background: 'none',
         borderColor: copied ? 'var(--red)' : 'var(--border-muted)',

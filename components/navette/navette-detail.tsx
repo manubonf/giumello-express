@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
@@ -214,7 +214,7 @@ export function NavettaDetail({
 
       {shuttleInfo.status === 'draft' && (
         <p
-          className="rounded-sm border px-4 py-3 font-mono text-sm mb-6"
+          className="rounded-2xl border px-4 py-3 font-mono text-sm mb-6"
           style={{ borderColor: 'var(--border)', color: 'var(--text-dim)', background: 'var(--bg-panel)' }}
         >
           Navetta in bozza — non ancora garantita. Verrà confermata al raggiungimento di{' '}
@@ -256,7 +256,7 @@ export function NavettaDetail({
       {/* Prenotato da qualcun altro → opzione per uscire */}
       {myParticipantInOtherBooking && (
         <div
-          className="rounded-sm border px-4 py-3 mb-6"
+          className="rounded-2xl border px-4 py-3 mb-6"
           style={{ borderColor: 'var(--border)', background: 'var(--bg-panel)' }}
         >
           <p className="font-mono text-xs mb-3" style={{ color: 'var(--text-dim)' }}>
@@ -267,7 +267,7 @@ export function NavettaDetail({
             <form action={leaveBookingAsParticipant}>
               <input type="hidden" name="shuttle_id" value={shuttleInfo.id} />
               <SubmitButton
-                className="rounded-sm border px-3 py-1.5 font-mono text-xs uppercase tracking-wide transition-colors"
+                className="rounded-xl border px-3 py-1.5 font-mono text-xs uppercase tracking-wide transition-colors"
                 style={{ background: 'var(--red)', borderColor: 'var(--red)', color: 'white' }}
               >
                 Rimuovimi
@@ -301,7 +301,7 @@ export function NavettaDetail({
               return (
                 <div
                   key={b.id}
-                  className="flex items-center justify-between rounded-sm border px-4 py-3"
+                  className="flex items-center justify-between rounded-2xl border px-4 py-3"
                   style={{ borderColor: 'var(--border)', background: 'var(--bg-panel)' }}
                 >
                   <span className="font-mono text-sm" style={{ color: 'var(--text)' }}>
@@ -312,7 +312,7 @@ export function NavettaDetail({
                       <input type="hidden" name="booking_id" value={b.id} />
                       <input type="hidden" name="shuttle_id" value={shuttleInfo.id} />
                       <SubmitButton
-                        className="rounded-sm border px-2.5 py-1 font-mono text-xs uppercase tracking-wide transition-colors"
+                        className="rounded-xl border px-2.5 py-1 font-mono text-xs uppercase tracking-wide transition-colors"
                         style={{ background: 'var(--red)', borderColor: 'var(--red)', color: 'white' }}
                       >
                         Cancella
@@ -350,7 +350,7 @@ export function NavettaDetail({
                 <form action={bookSelf}>
                   <input type="hidden" name="shuttle_id" value={shuttleInfo.id} />
                   <SubmitButton
-                    className="rounded-sm border px-4 py-2 font-mono text-xs uppercase tracking-wide transition-colors"
+                    className="rounded-xl border px-4 py-2 font-mono text-xs uppercase tracking-wide transition-colors"
                     style={{ background: '#22c55e', borderColor: '#22c55e', color: 'white' }}
                   >
                     Prenota per te
@@ -359,14 +359,14 @@ export function NavettaDetail({
               )}
               <Button
                 onClick={() => setActivePanel('user')}
-                className="rounded-sm border px-4 py-2 font-mono text-xs uppercase tracking-wide transition-colors hover:opacity-80"
+                className="rounded-xl border px-4 py-2 font-mono text-xs uppercase tracking-wide transition-colors hover:opacity-80"
                 style={{ background: 'none', borderColor: 'var(--border)', color: 'var(--text)' }}
               >
                 Prenota un utente
               </Button>
               <Button
                 onClick={() => setActivePanel('guest')}
-                className="rounded-sm border px-4 py-2 font-mono text-xs uppercase tracking-wide transition-colors hover:opacity-80"
+                className="rounded-xl border px-4 py-2 font-mono text-xs uppercase tracking-wide transition-colors hover:opacity-80"
                 style={{ background: 'none', borderColor: 'var(--border)', color: 'var(--text)' }}
               >
                 Prenota un ospite
@@ -392,7 +392,7 @@ export function NavettaDetail({
                     <input type="hidden" name="shuttle_id" value={shuttleInfo.id} />
                     <input type="hidden" name="user_id" value={selectedUser.id} />
                     <SubmitButton
-                      className="rounded-sm border px-4 py-2 font-mono text-xs uppercase tracking-wide"
+                      className="rounded-xl border px-4 py-2 font-mono text-xs uppercase tracking-wide"
                       style={{ background: '#22c55e', borderColor: '#22c55e', color: 'white' }}
                     >
                       Conferma prenotazione
@@ -401,7 +401,7 @@ export function NavettaDetail({
                 )}
                 <Button
                   onClick={closePanel}
-                  className="rounded-sm border px-4 py-2 font-mono text-xs uppercase tracking-wide transition-colors hover:border-[--red] hover:text-[--red]"
+                  className="rounded-xl border px-4 py-2 font-mono text-xs uppercase tracking-wide transition-colors hover:border-[--red] hover:text-[--red]"
                   style={{ background: 'none', borderColor: 'var(--border-muted)', color: 'var(--text-dim)' }}
                 >
                   Annulla
@@ -423,7 +423,7 @@ export function NavettaDetail({
                   type="text"
                   placeholder="Mario Rossi"
                   autoFocus
-                  className="flex-1 rounded-sm border px-3 py-2 font-mono text-sm outline-none"
+                  className="flex-1 rounded-xl border px-4 py-2.5 font-mono text-sm outline-none"
                   style={{
                     background: 'var(--bg-panel)',
                     borderColor: 'var(--border)',
@@ -433,14 +433,14 @@ export function NavettaDetail({
               </div>
               <div className="flex gap-2">
                 <SubmitButton
-                  className="rounded-sm border px-4 py-2 font-mono text-xs uppercase tracking-wide"
+                  className="rounded-xl border px-4 py-2 font-mono text-xs uppercase tracking-wide"
                   style={{ background: '#22c55e', borderColor: '#22c55e', color: 'white' }}
                 >
                   Prenota ospite
                 </SubmitButton>
                 <Button
                   onClick={closePanel}
-                  className="rounded-sm border px-4 py-2 font-mono text-xs uppercase tracking-wide transition-colors hover:border-[--red] hover:text-[--red]"
+                  className="rounded-xl border px-4 py-2 font-mono text-xs uppercase tracking-wide transition-colors hover:border-[--red] hover:text-[--red]"
                   style={{ background: 'none', borderColor: 'var(--border-muted)', color: 'var(--text-dim)' }}
                 >
                   Annulla
@@ -568,7 +568,7 @@ function UserSearchInput({
     return (
       <div className="flex items-center gap-2">
         <span
-          className="inline-flex items-center gap-1.5 rounded-sm border px-2.5 py-1.5 font-mono text-sm"
+          className="inline-flex items-center gap-1.5 rounded-xl border px-2.5 py-1.5 font-mono text-sm"
           style={{ borderColor: 'var(--border)', background: 'var(--bg-panel)', color: 'var(--text)' }}
         >
           {selectedUser.username}
@@ -598,7 +598,7 @@ function UserSearchInput({
             Preferiti
           </p>
           <div
-            className="rounded-sm border py-1"
+            className="rounded-xl border py-1"
             style={{ borderColor: 'var(--border)', background: 'var(--bg-panel)' }}
           >
             {favoritesSlice.map(f => (
@@ -640,7 +640,7 @@ function UserSearchInput({
       {/* Barra di ricerca con dropdown solo per i risultati */}
       <div className="relative">
         <div
-          className="flex items-center gap-2 rounded-sm border px-3"
+          className="flex items-center gap-2 rounded-xl border px-3"
           style={{ borderColor: 'var(--border)', background: 'var(--bg-panel)' }}
         >
           <svg
@@ -667,7 +667,7 @@ function UserSearchInput({
         {showDropdown && (
           <div
             ref={dropdownRef}
-            className="absolute left-0 right-0 top-full mt-1 z-10 rounded-sm border shadow-lg py-1"
+            className="absolute left-0 right-0 top-full mt-1 z-10 rounded-xl border shadow-lg py-1"
             style={{ borderColor: 'var(--border)', background: 'var(--bg-panel)' }}
           >
             {visibleResults.map(p => (

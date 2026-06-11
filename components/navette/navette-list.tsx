@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
@@ -67,14 +67,14 @@ export function NavetteList({
           Nessuna navetta disponibile al momento.
         </p>
       ) : (
-        <div className="flex flex-col gap-2 mb-8">
+        <div className="flex flex-col gap-3 mb-8">
           {active.map(s => {
             const label = dayLabel(s.departure_time)
             return (
             <Link
               key={s.id}
               href={`/base/navette/${s.id}`}
-              className="flex items-center gap-4 rounded-sm border px-4 py-4 no-underline transition-colors active:scale-95 group"
+              className="flex items-center gap-4 rounded-2xl border px-5 py-4 no-underline transition-all active:scale-95 group"
               style={{ background: 'var(--bg-panel)', borderColor: 'var(--border)', color: 'inherit' }}
             >
               <StatusDot status={s.status} />
@@ -85,10 +85,10 @@ export function NavetteList({
                     {label}
                   </span>
                 )}
-                <span className="block font-medium text-sm" style={{ color: 'var(--text)' }}>
+                <span className="block font-semibold text-sm" style={{ color: 'var(--text)' }}>
                   {formatShort(s.departure_time)}
                 </span>
-                <span className="flex items-center gap-2 mt-1">
+                <span className="flex items-center gap-2 mt-1.5">
                   <StatusBadge status={s.status} />
                   {s.status === 'full' ? (
                     <span className="font-mono text-xs" style={{ color: 'var(--text-dim)' }}>
@@ -100,8 +100,8 @@ export function NavetteList({
                     </span>
                   )}
                   {bookedSet.has(s.id) && (
-                    <span className="rounded-sm border px-1.5 py-0.5 font-mono text-[10px] leading-none"
-                      style={{ borderColor: '#22c55e60', color: '#22c55e', background: '#22c55e12' }}>
+                    <span className="rounded-lg border px-1.5 py-0.5 font-mono text-[10px] leading-none"
+                      style={{ borderColor: '#16a34a38', color: '#15803d', background: 'rgba(22,163,74,0.08)' }}>
                       Prenotato
                     </span>
                   )}
@@ -113,8 +113,8 @@ export function NavetteList({
                 )}
               </span>
               <span
-                className="font-mono text-sm transition-transform group-hover:translate-x-0.5"
-                style={{ color: 'var(--border)' }}
+                className="font-mono text-base transition-transform group-hover:translate-x-1"
+                style={{ color: 'var(--red)' }}
               >→</span>
             </Link>
           )})}
@@ -123,32 +123,32 @@ export function NavetteList({
 
       {initialStorico.length > 0 && (
         <CollapsibleSection label="Storico" count={initialStorico.length}>
-          <div className="flex flex-col gap-2" style={{ opacity: 0.6 }}>
+          <div className="flex flex-col gap-2" style={{ opacity: 0.55 }}>
             {initialStorico.map(s => (
               <Link
                 key={s.id}
                 href={`/base/navette/${s.id}`}
-                className="flex items-center gap-4 rounded-sm border px-4 py-3 no-underline transition-colors active:scale-95 group"
+                className="flex items-center gap-4 rounded-2xl border px-5 py-3 no-underline transition-all active:scale-95 group"
                 style={{ background: 'var(--bg-panel)', borderColor: 'var(--border-subtle)', color: 'inherit' }}
               >
                 <StatusDot status={s.status} />
                 <span className="flex-1 min-w-0">
-                  <span className="block font-medium text-sm" style={{ color: 'var(--text)' }}>
+                  <span className="block font-semibold text-sm" style={{ color: 'var(--text)' }}>
                     {formatShort(s.departure_time)}
                   </span>
-                  <span className="flex items-center gap-2">
+                  <span className="flex items-center gap-2 mt-1">
                     <StatusBadge status={s.status} />
                     {bookedSet.has(s.id) && (
-                      <span className="rounded-sm border px-1.5 py-0.5 font-mono text-[10px] leading-none"
-                        style={{ borderColor: '#22c55e60', color: '#22c55e', background: '#22c55e12' }}>
+                      <span className="rounded-lg border px-1.5 py-0.5 font-mono text-[10px] leading-none"
+                        style={{ borderColor: '#16a34a38', color: '#15803d', background: 'rgba(22,163,74,0.08)' }}>
                         Prenotato
                       </span>
                     )}
                   </span>
                 </span>
                 <span
-                  className="font-mono text-sm transition-transform group-hover:translate-x-0.5"
-                  style={{ color: 'var(--border)' }}
+                  className="font-mono text-base transition-transform group-hover:translate-x-1"
+                  style={{ color: 'var(--text-dim)' }}
                 >→</span>
               </Link>
             ))}

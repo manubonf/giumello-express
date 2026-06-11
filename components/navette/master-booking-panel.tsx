@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { SubmitButton } from '@/components/ui/submit-button'
@@ -40,14 +40,14 @@ export function MasterBookingPanel({
         <div className="flex flex-wrap gap-2">
           <Button
             onClick={() => setActivePanel('user')}
-            className="rounded-sm border px-4 py-2 font-mono text-xs uppercase tracking-wide transition-colors hover:opacity-80"
+            className="rounded-xl border px-4 py-2 font-mono text-xs uppercase tracking-wide transition-colors hover:opacity-80"
             style={{ background: 'none', borderColor: 'var(--border)', color: 'var(--text)' }}
           >
             Prenota utente
           </Button>
           <Button
             onClick={() => setActivePanel('guest')}
-            className="rounded-sm border px-4 py-2 font-mono text-xs uppercase tracking-wide transition-colors hover:opacity-80"
+            className="rounded-xl border px-4 py-2 font-mono text-xs uppercase tracking-wide transition-colors hover:opacity-80"
             style={{ background: 'none', borderColor: 'var(--border)', color: 'var(--text)' }}
           >
             Prenota ospite
@@ -71,7 +71,7 @@ export function MasterBookingPanel({
                 <input type="hidden" name="shuttle_id" value={shuttleId} />
                 <input type="hidden" name="user_id" value={selectedUser.id} />
                 <SubmitButton
-                  className="rounded-sm border px-4 py-2 font-mono text-xs uppercase tracking-wide"
+                  className="rounded-xl border px-4 py-2 font-mono text-xs uppercase tracking-wide"
                   style={{ background: '#22c55e', borderColor: '#22c55e', color: 'white' }}
                 >
                   Conferma
@@ -80,7 +80,7 @@ export function MasterBookingPanel({
             )}
             <Button
               onClick={closePanel}
-              className="rounded-sm border px-4 py-2 font-mono text-xs uppercase tracking-wide transition-colors hover:border-[--red] hover:text-[--red]"
+              className="rounded-xl border px-4 py-2 font-mono text-xs uppercase tracking-wide transition-colors hover:border-[--red] hover:text-[--red]"
               style={{ background: 'none', borderColor: 'var(--border-muted)', color: 'var(--text-dim)' }}
             >
               Annulla
@@ -101,20 +101,20 @@ export function MasterBookingPanel({
               type="text"
               placeholder="Mario Rossi"
               autoFocus
-              className="flex-1 rounded-sm border px-3 py-2 font-mono text-sm outline-none"
+              className="flex-1 rounded-xl border px-4 py-2.5 font-mono text-sm outline-none"
               style={{ background: 'var(--bg-panel)', borderColor: 'var(--border)', color: 'var(--text)' }}
             />
           </div>
           <div className="flex gap-2">
             <SubmitButton
-              className="rounded-sm border px-4 py-2 font-mono text-xs uppercase tracking-wide"
+              className="rounded-xl border px-4 py-2 font-mono text-xs uppercase tracking-wide"
               style={{ background: '#22c55e', borderColor: '#22c55e', color: 'white' }}
             >
               Prenota ospite
             </SubmitButton>
             <Button
               onClick={closePanel}
-              className="rounded-sm border px-4 py-2 font-mono text-xs uppercase tracking-wide transition-colors hover:border-[--red] hover:text-[--red]"
+              className="rounded-xl border px-4 py-2 font-mono text-xs uppercase tracking-wide transition-colors hover:border-[--red] hover:text-[--red]"
               style={{ background: 'none', borderColor: 'var(--border-muted)', color: 'var(--text-dim)' }}
             >
               Annulla
@@ -227,7 +227,7 @@ function MasterUserSearchInput({
     return (
       <div className="flex items-center gap-2">
         <span
-          className="inline-flex items-center gap-1.5 rounded-sm border px-2.5 py-1.5 font-mono text-sm"
+          className="inline-flex items-center gap-1.5 rounded-xl border px-2.5 py-1.5 font-mono text-sm"
           style={{ borderColor: 'var(--border)', background: 'var(--bg-panel)', color: 'var(--text)' }}
         >
           {selectedUser.username}
@@ -256,7 +256,7 @@ function MasterUserSearchInput({
             Preferiti
           </p>
           <div
-            className="rounded-sm border py-1"
+            className="rounded-xl border py-1"
             style={{ borderColor: 'var(--border)', background: 'var(--bg-panel)' }}
           >
             {favoritesSlice.map(f => (
@@ -298,7 +298,7 @@ function MasterUserSearchInput({
       {/* Barra di ricerca con dropdown solo per i risultati */}
       <div className="relative">
         <div
-          className="flex items-center gap-2 rounded-sm border px-3"
+          className="flex items-center gap-2 rounded-xl border px-3"
           style={{ borderColor: 'var(--border)', background: 'var(--bg-panel)' }}
         >
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -322,7 +322,7 @@ function MasterUserSearchInput({
         {showDropdown && (
           <div
             ref={dropdownRef}
-            className="absolute left-0 right-0 top-full mt-1 z-10 rounded-sm border shadow-lg py-1"
+            className="absolute left-0 right-0 top-full mt-1 z-10 rounded-xl border shadow-lg py-1"
             style={{ borderColor: 'var(--border)', background: 'var(--bg-panel)' }}
           >
             {visibleResults.map(p => (

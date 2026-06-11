@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useMemo } from 'react'
 import Link from 'next/link'
@@ -54,7 +54,7 @@ export function UtentiList({ utenti }: { utenti: Utente[] }) {
         placeholder="Cerca username…"
         autoComplete="off"
         autoFocus
-        className="w-full rounded-sm border px-3 py-2 font-mono text-sm mb-5"
+        className="w-full rounded-xl border px-4 py-2.5 font-mono text-sm mb-5"
         style={{
           background: 'var(--bg-panel)',
           borderColor: 'var(--border-muted)',
@@ -72,7 +72,7 @@ export function UtentiList({ utenti }: { utenti: Utente[] }) {
             <Link
               key={u.id}
               href={`/master/utenti/${u.id}`}
-              className="flex items-center gap-4 rounded-sm border px-4 py-3 no-underline transition-colors active:scale-95 group"
+              className="flex items-center gap-4 rounded-2xl border px-5 py-3 no-underline transition-colors active:scale-95 group"
               style={{ background: 'var(--bg-panel)', borderColor: 'var(--border)', color: 'inherit' }}
             >
               <span className="flex-1 min-w-0">

@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
@@ -204,7 +204,7 @@ export function MasterNavettaDetail({
       </div>
 
       {/* Dettagli */}
-      <div className="rounded-sm border mb-8" style={{ borderColor: 'var(--border)' }}>
+      <div className="rounded-xl border mb-8" style={{ borderColor: 'var(--border)' }}>
         <div className="px-4">
           {/* Riga partenza — statica o form modifica */}
           {isEditingDeparture ? (
@@ -225,7 +225,7 @@ export function MasterNavettaDetail({
               </div>
               <div className="flex gap-2 py-3" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
                 <SubmitButton
-                  className="rounded-sm border px-3 py-1.5 font-mono text-xs uppercase tracking-wide"
+                  className="rounded-xl border px-3 py-1.5 font-mono text-xs uppercase tracking-wide"
                   style={{ background: '#22c55e', borderColor: '#22c55e', color: 'white' }}
                 >
                   Salva
@@ -233,7 +233,7 @@ export function MasterNavettaDetail({
                 <Button
                   type="button"
                   onClick={() => setIsEditingDeparture(false)}
-                  className="rounded-sm border px-3 py-1.5 font-mono text-xs uppercase tracking-wide transition-colors hover:border-[--red] hover:text-[--red]"
+                  className="rounded-xl border px-3 py-1.5 font-mono text-xs uppercase tracking-wide transition-colors hover:border-[--red] hover:text-[--red]"
                   style={{ background: 'none', borderColor: 'var(--border-muted)', color: 'var(--text-dim)' }}
                 >
                   Annulla
@@ -278,7 +278,7 @@ export function MasterNavettaDetail({
                   min={booked}
                   defaultValue={shuttleInfo.max_seats}
                   required
-                  className="w-20 rounded-sm border px-2 py-1 font-mono text-sm text-right outline-none"
+                  className="w-20 rounded-lg border px-2.5 py-1 font-mono text-sm text-right outline-none"
                   style={{ background: 'var(--bg-panel)', borderColor: 'var(--border)', color: 'var(--text)' }}
                 />
               </div>
@@ -302,7 +302,7 @@ export function MasterNavettaDetail({
                   min={0}
                   defaultValue={shuttleInfo.min_seats}
                   required
-                  className="w-20 rounded-sm border px-2 py-1 font-mono text-sm text-right outline-none"
+                  className="w-20 rounded-lg border px-2.5 py-1 font-mono text-sm text-right outline-none"
                   style={{ background: 'var(--bg-panel)', borderColor: 'var(--border)', color: 'var(--text)' }}
                 />
               </div>
@@ -315,7 +315,7 @@ export function MasterNavettaDetail({
 
               <div className="flex gap-2 py-3">
                 <SubmitButton
-                  className="rounded-sm border px-3 py-1.5 font-mono text-xs uppercase tracking-wide"
+                  className="rounded-xl border px-3 py-1.5 font-mono text-xs uppercase tracking-wide"
                   style={{ background: '#22c55e', borderColor: '#22c55e', color: 'white' }}
                 >
                   Salva
@@ -323,7 +323,7 @@ export function MasterNavettaDetail({
                 <Button
                   type="button"
                   onClick={() => setIsEditingCapacity(false)}
-                  className="rounded-sm border px-3 py-1.5 font-mono text-xs uppercase tracking-wide transition-colors hover:border-[--red] hover:text-[--red]"
+                  className="rounded-xl border px-3 py-1.5 font-mono text-xs uppercase tracking-wide transition-colors hover:border-[--red] hover:text-[--red]"
                   style={{ background: 'none', borderColor: 'var(--border-muted)', color: 'var(--text-dim)' }}
                 >
                   Annulla
@@ -346,7 +346,7 @@ export function MasterNavettaDetail({
               <button
                 type="button"
                 onClick={() => setIsEditingDeparture(true)}
-                className="rounded-sm border px-3 py-1.5 font-mono text-xs uppercase tracking-wide transition-colors hover:opacity-80"
+                className="rounded-xl border px-3 py-1.5 font-mono text-xs uppercase tracking-wide transition-colors hover:opacity-80"
                 style={{ background: 'none', borderColor: 'var(--border)', color: 'var(--text)' }}
               >
                 Modifica orario
@@ -356,7 +356,7 @@ export function MasterNavettaDetail({
               <button
                 type="button"
                 onClick={() => setIsEditingCapacity(true)}
-                className="rounded-sm border px-3 py-1.5 font-mono text-xs uppercase tracking-wide transition-colors hover:opacity-80"
+                className="rounded-xl border px-3 py-1.5 font-mono text-xs uppercase tracking-wide transition-colors hover:opacity-80"
                 style={{ background: 'none', borderColor: 'var(--border)', color: 'var(--text)' }}
               >
                 Modifica capacità
@@ -389,14 +389,14 @@ export function MasterNavettaDetail({
             {bookings.map((b, i) => (
               <div
                 key={b.id}
-                className="rounded-sm border px-4 py-3"
+                className="rounded-2xl border px-4 py-3"
                 style={{ borderColor: 'var(--border)', background: 'var(--bg-panel)' }}
               >
                 {/* Riga booker + numero ordine + pulsante elimina */}
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2.5">
                     <span
-                      className="font-mono text-[10px] font-bold rounded-sm px-1.5 py-0.5 flex-shrink-0 tabular-nums"
+                      className="font-mono text-[10px] font-bold rounded-xl px-1.5 py-0.5 flex-shrink-0 tabular-nums"
                       style={{ background: 'var(--border)', color: 'var(--text-muted)' }}
                     >
                       #{i + 1}
@@ -417,7 +417,7 @@ export function MasterNavettaDetail({
                       <input type="hidden" name="booking_id" value={b.id} />
                       <input type="hidden" name="shuttle_id" value={shuttleInfo.id} />
                       <SubmitButton
-                        className="rounded-sm border px-2.5 py-1 font-mono text-[10px] uppercase tracking-wide transition-colors"
+                        className="rounded-xl border px-2.5 py-1 font-mono text-[10px] uppercase tracking-wide transition-colors"
                         style={{ background: 'var(--red)', borderColor: 'var(--red)', color: 'white' }}
                       >
                         Elimina
@@ -432,7 +432,7 @@ export function MasterNavettaDetail({
                     {b.participants.map(p => (
                       <span
                         key={p.id}
-                        className="font-mono text-xs rounded-sm border px-1.5 py-0.5"
+                        className="font-mono text-xs rounded-xl border px-1.5 py-0.5"
                         style={{ borderColor: 'var(--border-muted)', color: 'var(--text-dim)' }}
                       >
                         {p.is_guest ? `${p.guest_label} (ospite)` : (p.username ?? '—')}
@@ -463,7 +463,7 @@ export function MasterNavettaDetail({
                 {cancellations.map(c => (
                   <div
                     key={c.id}
-                    className="rounded-sm border px-4 py-3 opacity-70"
+                    className="rounded-2xl border px-4 py-3 opacity-70"
                     style={{ borderColor: 'var(--border-muted)', background: 'var(--bg-panel)', borderStyle: 'dashed' }}
                   >
                     <div className="flex items-start justify-between gap-2">
@@ -476,7 +476,7 @@ export function MasterNavettaDetail({
                             {c.participant_labels.map((label, idx) => (
                               <span
                                 key={idx}
-                                className="font-mono text-xs rounded-sm border px-1.5 py-0.5"
+                                className="font-mono text-xs rounded-xl border px-1.5 py-0.5"
                                 style={{ borderColor: 'var(--border-muted)', color: 'var(--text-dim)' }}
                               >
                                 {label}
@@ -519,7 +519,7 @@ export function MasterNavettaDetail({
             <form action={markShuttleDone}>
               <input type="hidden" name="id" value={shuttleInfo.id} />
               <SubmitButton
-                className="rounded-sm border px-4 py-2 font-mono text-xs uppercase tracking-wide transition-colors"
+                className="rounded-xl border px-4 py-2 font-mono text-xs uppercase tracking-wide transition-colors"
                 style={{ background: '#22c55e', borderColor: '#22c55e', color: 'white' }}
               >
                 Segna effettuata
@@ -530,7 +530,7 @@ export function MasterNavettaDetail({
             <form action={cancelShuttle}>
               <input type="hidden" name="id" value={shuttleInfo.id} />
               <SubmitButton
-                className="rounded-sm border px-4 py-2 font-mono text-xs uppercase tracking-wide transition-colors"
+                className="rounded-xl border px-4 py-2 font-mono text-xs uppercase tracking-wide transition-colors"
                 style={{ background: 'var(--red)', borderColor: 'var(--red)', color: 'white' }}
               >
                 Annulla navetta

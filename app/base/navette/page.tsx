@@ -1,4 +1,4 @@
-import { after } from 'next/server'
+﻿import { after } from 'next/server'
 import { PageLayout } from '@/components/ui/page-layout'
 import { PageHeader } from '@/components/ui/page-header'
 import { getSessionFromHeaders } from '@/lib/auth'
@@ -55,7 +55,7 @@ export default async function NavettePage() {
         }
       />
 
-      <h1 className="text-xl font-semibold mb-8">Navette disponibili</h1>
+      <h1 className="mb-8 leading-none" style={{ fontFamily: "var(--font-display)", fontSize: "3rem", fontWeight: 400, color: "var(--text)" }}>Navette disponibili</h1>
 
       <NavetteList initialActive={active} initialStorico={storico} bookedIds={bookedIds} />
     </PageLayout>

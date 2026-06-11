@@ -1,4 +1,4 @@
-import Link from 'next/link'
+﻿import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { PageLayout } from '@/components/ui/page-layout'
 import { PageHeader, MasterBadge } from '@/components/ui/page-header'
@@ -55,11 +55,11 @@ export default async function PropostaDetailPage({
     <PageLayout>
       <PageHeader backHref="/master/proposte" right={<MasterBadge />} />
 
-      <h1 className="text-xl font-semibold mb-8">Proposta</h1>
+      <h1 className="mb-8 leading-none" style={{ fontFamily: "var(--font-display)", fontSize: "3rem", fontWeight: 400, color: "var(--text)" }}>Proposta</h1>
 
       {error && <ErrorAlert message={ERROR_MSG[error] ?? 'Errore sconosciuto.'} />}
 
-      <div className="rounded-sm border mb-8" style={{ borderColor: 'var(--border)' }}>
+      <div className="rounded-xl border mb-8" style={{ borderColor: 'var(--border)' }}>
         <div className="px-4">
           <DetailRow label="Proposta da" value={proposerProfile?.username ?? '—'} />
           <DetailRow label="Data proposta" value={formatFull(proposal.departure_time)} />
@@ -107,7 +107,7 @@ export default async function PropostaDetailPage({
                     min={1}
                     required
                     placeholder="es. 10"
-                    className="w-full rounded-sm border px-3 py-2.5 font-mono text-sm"
+                    className="w-full rounded-xl border px-4 py-2.5.5 font-mono text-sm"
                     style={{
                       background: 'var(--bg-panel)',
                       borderColor: 'var(--border-muted)',
@@ -121,7 +121,7 @@ export default async function PropostaDetailPage({
                     name="min_seats"
                     min={0}
                     placeholder="Default Confermata"
-                    className="w-full rounded-sm border px-3 py-2.5 font-mono text-sm"
+                    className="w-full rounded-xl border px-4 py-2.5.5 font-mono text-sm"
                     style={{
                       background: 'var(--bg-panel)',
                       borderColor: 'var(--border-muted)',
@@ -133,7 +133,7 @@ export default async function PropostaDetailPage({
 
               <div>
                 <SubmitButton
-                  className="rounded-sm border px-5 py-2.5 font-mono text-xs uppercase tracking-wide transition-colors"
+                  className="rounded-xl border px-5 py-2.5 font-mono text-xs uppercase tracking-wide transition-colors"
                   style={{ background: '#22c55e', borderColor: '#22c55e', color: 'white' }}
                 >
                   Crea navetta
@@ -150,7 +150,7 @@ export default async function PropostaDetailPage({
             <form action={rejectProposal}>
               <input type="hidden" name="proposal_id" value={proposal.id} />
               <SubmitButton
-                className="rounded-sm border px-4 py-2 font-mono text-xs uppercase tracking-wide transition-colors"
+                className="rounded-xl border px-4 py-2 font-mono text-xs uppercase tracking-wide transition-colors"
                 style={{ background: 'var(--red)', borderColor: 'var(--red)', color: 'white' }}
               >
                 Rifiuta

@@ -1,4 +1,4 @@
-import { PageLayout } from '@/components/ui/page-layout'
+﻿import { PageLayout } from '@/components/ui/page-layout'
 import { PageHeader, MasterBadge } from '@/components/ui/page-header'
 import { NotifToggle } from '@/components/ui/notif-toggle'
 import { PushSubscribe } from '@/components/ui/push-subscribe'
@@ -28,13 +28,13 @@ export default async function ImpostazioniPage() {
     <PageLayout>
       <PageHeader backHref="/" right={<MasterBadge />} />
 
-      <h1 className="text-xl font-semibold mb-8">Impostazioni</h1>
+      <h1 className="mb-8 leading-none" style={{ fontFamily: "var(--font-display)", fontSize: "3rem", fontWeight: 400, color: "var(--text)" }}>Impostazioni</h1>
 
       <p className="font-mono text-[10px] uppercase tracking-widest mb-3" style={{ color: 'var(--text-muted)' }}>
         Questo dispositivo
       </p>
 
-      <div className="rounded-sm border flex items-center justify-between px-4 py-3 mb-8" style={{ borderColor: 'var(--border)', background: 'var(--bg-panel)' }}>
+      <div className="rounded-xl border flex items-center justify-between px-4 py-3 mb-8" style={{ borderColor: 'var(--border)', background: 'var(--bg-panel)' }}>
         <span className="text-sm" style={{ color: 'var(--text)' }}>Notifiche push</span>
         <PushSubscribe />
       </div>
@@ -43,7 +43,7 @@ export default async function ImpostazioniPage() {
         Notifiche push
       </p>
 
-      <div className="rounded-sm border" style={{ borderColor: 'var(--border)', background: 'var(--bg-panel)' }}>
+      <div className="rounded-xl border" style={{ borderColor: 'var(--border)', background: 'var(--bg-panel)' }}>
         <div className="px-4">
           <NotifToggle
             label="Nuova proposta ricevuta"
@@ -101,7 +101,7 @@ export default async function ImpostazioniPage() {
 
       <form action={logout}>
         <SubmitButton
-          className="w-full rounded-sm border px-4 py-3 text-sm text-left transition-colors"
+          className="w-full rounded-2xl border px-4 py-3 text-sm text-left transition-colors"
           style={{ background: 'var(--red)', borderColor: 'var(--red)', color: 'white' }}
         >
           Esci dall&apos;account

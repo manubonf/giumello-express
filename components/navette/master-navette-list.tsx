@@ -120,14 +120,14 @@ export function MasterNavetteList({
   return (
     <>
       {active.length > 0 && (
-        <div className="flex flex-col gap-2 mb-8">
+        <div className="flex flex-col gap-3 mb-8">
           {active.map(s => {
             const label = dayLabel(s.departure_time)
             return (
             <Link
               key={s.id}
               href={`/master/navette/${s.id}`}
-              className="flex items-center gap-4 rounded-sm border px-4 py-3 no-underline transition-colors active:scale-95 group"
+              className="flex items-center gap-4 rounded-2xl border px-5 py-4 no-underline transition-all active:scale-95 group"
               style={{ background: 'var(--bg-panel)', borderColor: 'var(--border)', color: 'inherit' }}
             >
               <StatusDot status={s.status} />
@@ -138,15 +138,15 @@ export function MasterNavetteList({
                     {label}
                   </span>
                 )}
-                <span className="block font-medium text-sm" style={{ color: 'var(--text)' }}>
+                <span className="block font-semibold text-sm" style={{ color: 'var(--text)' }}>
                   {formatShort(s.departure_time)}
                 </span>
                 <span className="block font-mono text-xs mt-0.5" style={{ color: 'var(--text-dim)' }}>
                   {STATUS_LABEL[s.status] ?? s.status} · Posti disponibili {s.available_seats}
                 </span>
               </span>
-              <span className="font-mono text-sm transition-transform group-hover:translate-x-0.5"
-                style={{ color: 'var(--border)' }}>→</span>
+              <span className="font-mono text-base transition-transform group-hover:translate-x-1"
+                style={{ color: 'var(--red)' }}>→</span>
             </Link>
           )})}
         </div>
@@ -154,28 +154,28 @@ export function MasterNavetteList({
 
       {storico.length > 0 && (
         <CollapsibleSection label="Storico" count={storico.length}>
-          <div className="flex flex-col gap-2" style={{ opacity: 0.6 }}>
+          <div className="flex flex-col gap-2" style={{ opacity: 0.55 }}>
             {storico.map(s => (
               <Link
                 key={s.id}
                 href={`/master/navette/${s.id}`}
-                className="flex items-center gap-4 rounded-sm border px-4 py-3 no-underline transition-colors active:scale-95 group"
+                className="flex items-center gap-4 rounded-2xl border px-5 py-3 no-underline transition-all active:scale-95 group"
                 style={{ background: 'var(--bg-panel)', borderColor: 'var(--border-subtle)', color: 'inherit' }}
               >
                 <StatusDot status={s.status} />
                 <span className="flex-1 min-w-0">
-                  <span className="block font-medium text-sm" style={{ color: 'var(--text)' }}>
+                  <span className="block font-semibold text-sm" style={{ color: 'var(--text)' }}>
                     {formatShort(s.departure_time)}
                   </span>
-                  <span className="flex items-center gap-2 mt-0.5">
+                  <span className="flex items-center gap-2 mt-1">
                     <StatusBadge status={s.status} />
                     <span className="font-mono text-xs" style={{ color: 'var(--text-dim)' }}>
                       {s.max_seats - s.available_seats} prenotati su {s.max_seats}
                     </span>
                   </span>
                 </span>
-                <span className="font-mono text-sm transition-transform group-hover:translate-x-0.5"
-                  style={{ color: 'var(--border)' }}>→</span>
+                <span className="font-mono text-base transition-transform group-hover:translate-x-1"
+                  style={{ color: 'var(--text-dim)' }}>→</span>
               </Link>
             ))}
           </div>

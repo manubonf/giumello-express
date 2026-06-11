@@ -1,4 +1,4 @@
-import Link from 'next/link'
+﻿import Link from 'next/link'
 import { PageLayout } from '@/components/ui/page-layout'
 import { PageHeader, MasterBadge } from '@/components/ui/page-header'
 import { SubmitButton } from '@/components/ui/submit-button'
@@ -23,7 +23,7 @@ export default async function NuovaNavettePage({
     <PageLayout>
       <PageHeader backHref="/master/navette" right={<MasterBadge />} />
 
-      <h1 className="text-xl font-semibold mb-8">Nuova navetta</h1>
+      <h1 className="mb-8 leading-none" style={{ fontFamily: "var(--font-display)", fontSize: "3rem", fontWeight: 400, color: "var(--text)" }}>Nuova navetta</h1>
 
       {error && <ErrorAlert message={ERROR_MSG[error] ?? 'Errore sconosciuto.'} />}
 
@@ -40,7 +40,7 @@ export default async function NuovaNavettePage({
             min={1}
             required
             placeholder="es. 10"
-            className="w-full rounded-sm border px-3 py-2.5 font-mono text-sm"
+            className="w-full rounded-xl border px-4 py-2.5.5 font-mono text-sm"
             style={{
               background: 'var(--bg-panel)',
               borderColor: 'var(--border-muted)',
@@ -58,7 +58,7 @@ export default async function NuovaNavettePage({
             name="min_seats"
             min={0}
             placeholder="Default Confermata"
-            className="w-full rounded-sm border px-3 py-2.5 font-mono text-sm"
+            className="w-full rounded-xl border px-4 py-2.5.5 font-mono text-sm"
             style={{
               background: 'var(--bg-panel)',
               borderColor: 'var(--border-muted)',
@@ -69,14 +69,14 @@ export default async function NuovaNavettePage({
 
         <div className="flex gap-3 mt-2">
           <SubmitButton
-            className="rounded-sm border px-5 py-2.5 font-mono text-xs uppercase tracking-wide transition-colors"
+            className="rounded-xl border px-5 py-2.5 font-mono text-xs uppercase tracking-wide transition-colors"
             style={{ background: '#22c55e', borderColor: '#22c55e', color: 'white' }}
           >
             Crea navetta
           </SubmitButton>
           <Link
             href="/master/navette"
-            className="rounded-sm border px-5 py-2.5 font-mono text-xs uppercase tracking-wide no-underline transition-colors hover:border-[--red] hover:text-[--red] active:scale-95"
+            className="rounded-xl border px-5 py-2.5 font-mono text-xs uppercase tracking-wide no-underline transition-colors hover:border-[--red] hover:text-[--red] active:scale-95"
             style={{ borderColor: 'var(--border-muted)', color: 'var(--text-dim)' }}
           >
             Annulla

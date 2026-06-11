@@ -1,4 +1,4 @@
-import { after } from 'next/server'
+﻿import { after } from 'next/server'
 import Link from 'next/link'
 import { PageLayout } from '@/components/ui/page-layout'
 import { PageHeader, MasterBadge } from '@/components/ui/page-header'
@@ -46,7 +46,7 @@ export default async function MasterPropostePage({
       <RealtimeRefresher tables={['proposals']} />
       <PageHeader backHref="/" right={<MasterBadge />} />
 
-      <h1 className="text-xl font-semibold mb-8">Proposte</h1>
+      <h1 className="mb-8 leading-none" style={{ fontFamily: "var(--font-display)", fontSize: "3rem", fontWeight: 400, color: "var(--text)" }}>Proposte</h1>
 
       {error && <ErrorAlert message={ERROR_MSG[error] ?? 'Errore sconosciuto.'} />}
 
@@ -63,7 +63,7 @@ export default async function MasterPropostePage({
                 <Link
                   key={p.id}
                   href={`/master/proposte/${p.id}`}
-                  className="flex items-center gap-4 rounded-sm border px-4 py-3 no-underline transition-colors active:scale-95 group"
+                  className="flex items-center gap-4 rounded-2xl border px-5 py-3 no-underline transition-colors active:scale-95 group"
                   style={{ background: 'var(--bg-panel)', borderColor: 'var(--border)', color: 'inherit' }}
                 >
                   <span className="flex-1 min-w-0">
@@ -91,7 +91,7 @@ export default async function MasterPropostePage({
             {others.map(p => {
               const proposerUsername = profileById[p.proposer_id]?.username ?? '—'
               return (
-                <div key={p.id} className="flex items-center gap-4 rounded-sm border px-4 py-3"
+                <div key={p.id} className="flex items-center gap-4 rounded-2xl border px-4 py-3"
                   style={{ background: 'var(--bg-panel)', borderColor: 'var(--border-subtle)', opacity: 0.7 }}>
                   <span className="flex-1 min-w-0">
                     <span className="block font-medium text-sm" style={{ color: 'var(--text)' }}>

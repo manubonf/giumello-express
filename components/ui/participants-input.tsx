@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 
@@ -183,7 +183,7 @@ export function ParticipantsInput({
 
         <div className="relative">
           <div
-            className="flex items-center gap-2 rounded-sm border px-3"
+            className="flex items-center gap-2 rounded-xl border px-3"
             style={{ borderColor: 'var(--border)', background: 'var(--bg-panel)' }}
           >
             <svg
@@ -223,7 +223,7 @@ export function ParticipantsInput({
               ref={dropdownRef}
               role="listbox"
               aria-label="Suggerimenti partecipanti"
-              className="absolute left-0 right-0 top-full mt-1 z-10 rounded-sm border shadow-lg py-1"
+              className="absolute left-0 right-0 top-full mt-1 z-10 rounded-xl border shadow-lg py-1"
               style={{ borderColor: 'var(--border)', background: 'var(--bg-panel)' }}
             >
               {visibleFavorites.length > 0 && (
@@ -293,7 +293,7 @@ export function ParticipantsInput({
           {chips.map(chip => (
             <span
               key={chipKey(chip)}
-              className="inline-flex items-center gap-1.5 rounded-sm border px-2 py-1 font-mono text-xs"
+              className="inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 font-mono text-xs"
               style={{ borderColor: 'var(--border)', background: 'var(--bg-panel)', color: 'var(--text)' }}
             >
               {chip.kind === 'guest' ? `${chip.name} (ospite)` : chip.username}
@@ -340,13 +340,13 @@ export function ParticipantsInput({
               placeholder="Mario Rossi"
               aria-label="Nome ospite manuale"
               autoFocus
-              className="flex-1 rounded-sm border px-3 py-2 font-mono text-sm"
+              className="flex-1 rounded-xl border px-4 py-2.5 font-mono text-sm"
               style={{ background: 'var(--bg-panel)', borderColor: 'var(--border-muted)', color: 'var(--text)' }}
             />
             <button
               type="button"
               onClick={addGuest}
-              className="rounded-sm border px-3 py-2 font-mono text-xs uppercase tracking-wide"
+              className="rounded-xl border px-4 py-2.5 font-mono text-xs uppercase tracking-wide"
               style={{ borderColor: 'var(--border)', background: 'var(--bg-panel)', color: 'var(--text)' }}
             >
               Aggiungi

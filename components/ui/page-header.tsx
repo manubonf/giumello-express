@@ -19,8 +19,8 @@ export function PageHeader({
         {backHref && (
           <Link
             href={backHref}
-            className="flex items-center rounded-sm border px-2 py-1 font-mono text-sm no-underline transition-colors hover:border-[--red] hover:text-[--red] active:scale-95"
-            style={{ borderColor: 'var(--border-muted)', color: 'var(--text-dim)' }}
+            className="flex items-center rounded-lg border px-3 py-1.5 font-mono text-sm no-underline transition-all hover:border-[--red] hover:text-[--red] active:scale-95"
+            style={{ borderColor: 'var(--border)', color: 'var(--text-muted)', background: 'var(--bg-panel)' }}
           >
             ←
           </Link>
@@ -37,8 +37,8 @@ export function PageHeader({
 export function MasterBadge() {
   return (
     <span
-      className="font-mono text-[10px] uppercase tracking-widest rounded-sm border px-1.5 py-0.5"
-      style={{ color: 'var(--red)', borderColor: 'var(--red-border)' }}
+      className="font-mono text-[10px] uppercase tracking-widest rounded-lg border px-2 py-1"
+      style={{ color: 'var(--red)', borderColor: 'var(--red-border)', background: 'var(--red-muted)' }}
     >
       Master
     </span>

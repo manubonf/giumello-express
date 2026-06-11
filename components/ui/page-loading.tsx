@@ -1,9 +1,9 @@
-import { PageLayout } from '@/components/ui/page-layout'
+﻿import { PageLayout } from '@/components/ui/page-layout'
 
 function Skel({ className = '' }: { className?: string }) {
   return (
     <div
-      className={`rounded-sm animate-pulse ${className}`}
+      className={`rounded-xl animate-pulse ${className}`}
       style={{ background: 'var(--border)' }}
     />
   )
@@ -29,7 +29,7 @@ export default function PageLoading() {
         {[1, 2, 3, 4].map(i => (
           <div
             key={i}
-            className="rounded-sm border px-4 py-3"
+            className="rounded-2xl border px-4 py-3"
             style={{ background: 'var(--bg-panel)', borderColor: 'var(--border)' }}
           >
             <Skel className="w-3/4 h-4 mb-2" />

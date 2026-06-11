@@ -1,23 +1,27 @@
-@import "tailwindcss";
+﻿@import "tailwindcss";
 
 :root {
-  --red: #e01110;
-  --red-dark: #c50f0e;
-  --red-muted: rgba(224, 17, 16, 0.06);
-  --red-border: rgba(224, 17, 16, 0.2);
+  /* FlyLibell palette — accent blu, testo navy, sfondo chiaro */
+  --red: #448fb8;
+  --red-dark: #061d26;
+  --red-muted: rgba(68, 143, 184, 0.07);
+  --red-border: rgba(68, 143, 184, 0.25);
 
+  /* Sfondo chiaro FlyLibell */
   --bg: #ffffff;
-  --bg-panel: #f4f4f4;
-  --bg-hover: #ebebeb;
+  --bg-panel: #f2f7fa;
+  --bg-hover: #e6f0f6;
 
-  --border: #c8c8c8;
-  --border-muted: #dcdcdc;
-  --border-subtle: #ebebeb;
+  /* Bordi su sfondo chiaro */
+  --border: #ccdce8;
+  --border-muted: #dde9f2;
+  --border-subtle: #eaf2f7;
 
-  --text: #111111;
-  --text-muted: #555555;
-  --text-dim: #888888;
-  --text-faint: #c8c8c8;
+  /* Testi navy FlyLibell */
+  --text: #061d26;
+  --text-muted: #3a6070;
+  --text-dim: #7a9eb0;
+  --text-faint: #b8cdd8;
 }
 
 body {
@@ -27,6 +31,17 @@ body {
   -webkit-font-smoothing: antialiased;
   -webkit-user-select: none;
   user-select: none;
+}
+
+/*
+ * FlyLibell usa Instrument Sans per tutto — niente monospace nell'UI.
+ * Ridirige font-mono su font-sans mantenendo uppercase/tracking nei componenti.
+ * Solo credential-box usa font-code (IBM Plex Mono) per leggibilità password.
+ */
+@layer utilities {
+  .font-mono {
+    font-family: var(--font-sans), sans-serif;
+  }
 }
 
 input, textarea, [contenteditable] {

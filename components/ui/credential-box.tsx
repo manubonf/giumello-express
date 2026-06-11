@@ -6,7 +6,7 @@ export function CredentialBox({ username, password }: { username: string; passwo
     ? `Sito: ${siteUrl}\nUsername: ${username}\nPassword: ${password}`
     : `Username: ${username}\nPassword: ${password}`
   return (
-    <div className="rounded-sm border px-4 py-4 mb-8"
+    <div className="rounded-2xl border px-5 py-5 mb-8"
       style={{ borderColor: 'var(--border)', background: 'var(--bg-panel)' }}>
       <div className="flex items-center justify-between mb-4">
         <p className="font-mono text-[10px] uppercase tracking-widest"
@@ -29,12 +29,12 @@ export function CredentialBox({ username, password }: { username: string; passwo
         )}
         <div className="flex items-center justify-between">
           <span className="font-mono text-xs" style={{ color: 'var(--text-dim)' }}>Username</span>
-          <span className="font-mono text-sm font-semibold selectable" style={{ color: 'var(--text)' }}>{username}</span>
+          <span className="font-mono text-sm font-semibold selectable" style={{ color: 'var(--text)', fontFamily: 'var(--font-code), monospace' }}>{username}</span>
         </div>
         <div style={{ borderTop: '1px solid var(--border-subtle)' }} />
         <div className="flex items-center justify-between">
           <span className="font-mono text-xs" style={{ color: 'var(--text-dim)' }}>Password</span>
-          <span className="font-mono text-sm font-semibold tracking-wide selectable" style={{ color: 'var(--text)' }}>{password}</span>
+          <span className="font-mono text-sm font-semibold tracking-widest selectable" style={{ color: 'var(--text)', fontFamily: 'var(--font-code), monospace' }}>{password}</span>
         </div>
       </div>
       <p className="font-mono text-[11px] mt-4" style={{ color: 'var(--text-dim)' }}>

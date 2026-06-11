@@ -1,4 +1,4 @@
-import Link from 'next/link'
+﻿import Link from 'next/link'
 import { PageLayout } from '@/components/ui/page-layout'
 import { PageHeader } from '@/components/ui/page-header'
 import { SubmitButton } from '@/components/ui/submit-button'
@@ -23,7 +23,7 @@ export default async function NuovaPropostaPage({
     <PageLayout>
       <PageHeader backHref="/base/proposte" />
 
-      <h1 className="text-xl font-semibold mb-8">Nuova proposta</h1>
+      <h1 className="mb-8 leading-none" style={{ fontFamily: "var(--font-display)", fontSize: "3rem", fontWeight: 400, color: "var(--text)" }}>Nuova proposta</h1>
 
       {error && <ErrorAlert message={ERROR_MSG[error] ?? 'Errore sconosciuto.'} />}
 
@@ -38,7 +38,7 @@ export default async function NuovaPropostaPage({
             name="notes"
             rows={3}
             placeholder="Eventuali note: Siamo in 4... Mi va bene anche più tardi/presto..."
-            className="w-full rounded-sm border px-3 py-2.5 font-mono text-sm resize-none"
+            className="w-full rounded-xl border px-4 py-2.5.5 font-mono text-sm resize-none"
             style={{
               background: 'var(--bg-panel)',
               borderColor: 'var(--border-muted)',
@@ -49,14 +49,14 @@ export default async function NuovaPropostaPage({
 
         <div className="flex gap-3 mt-2">
           <SubmitButton
-            className="rounded-sm border px-5 py-2.5 font-mono text-xs uppercase tracking-wide transition-colors"
+            className="rounded-xl border px-5 py-2.5 font-mono text-xs uppercase tracking-wide transition-colors"
             style={{ background: '#22c55e', borderColor: '#22c55e', color: 'white' }}
           >
             Invia proposta
           </SubmitButton>
           <Link
             href="/base/proposte"
-            className="rounded-sm border px-5 py-2.5 font-mono text-xs uppercase tracking-wide no-underline transition-colors hover:border-[--red] hover:text-[--red] active:scale-95"
+            className="rounded-xl border px-5 py-2.5 font-mono text-xs uppercase tracking-wide no-underline transition-colors hover:border-[--red] hover:text-[--red] active:scale-95"
             style={{ borderColor: 'var(--border-muted)', color: 'var(--text-dim)' }}
           >
             Annulla

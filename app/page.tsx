@@ -54,8 +54,16 @@ export default async function HomePage() {
         }
       />
 
-      <h1 className="text-2xl font-semibold mb-8">
-        {<>Ciao, <span style={{ color: 'var(--red)' }}>{username}</span></>}
+      <h1
+        className="mb-8 leading-none"
+        style={{
+          fontFamily: 'var(--font-display)',
+          fontSize: '3.25rem',
+          fontWeight: 400,
+          color: 'var(--text)',
+        }}
+      >
+        Ciao, <span style={{ color: 'var(--red)' }}>{username}</span>
       </h1>
 
       <nav className="flex flex-col gap-3">
@@ -63,15 +71,15 @@ export default async function HomePage() {
           <Link
             key={item.href}
             href={item.href}
-            className="flex items-center gap-4 rounded-sm border px-5 py-4 no-underline transition-colors active:scale-95 group"
+            className="flex items-center gap-4 rounded-2xl border px-5 py-4 no-underline transition-all active:scale-95 group"
             style={{ background: 'var(--bg-panel)', borderColor: 'var(--border)', color: 'inherit' }}
           >
             <span className="text-xl w-8 text-center flex-shrink-0">{item.icon}</span>
             <span className="flex-1">
               <span className="flex items-center gap-2">
-                <span className="font-medium text-sm" style={{ color: 'var(--text)' }}>{item.title}</span>
+                <span className="font-semibold text-sm" style={{ color: 'var(--text)' }}>{item.title}</span>
                 {!!item.badge && (
-                  <span className="rounded-full px-1.5 py-0.5 font-mono text-[10px] leading-none"
+                  <span className="rounded-full px-2 py-0.5 font-mono text-[10px] leading-none"
                     style={{ background: 'var(--red)', color: 'white' }}>
                     {item.badge > 99 ? '99+' : item.badge}
                   </span>
@@ -79,8 +87,8 @@ export default async function HomePage() {
               </span>
               <span className="block text-xs mt-0.5" style={{ color: 'var(--text-dim)' }}>{item.desc}</span>
             </span>
-            <span className="font-mono text-sm transition-transform group-hover:translate-x-0.5"
-              style={{ color: 'var(--border)' }}>→</span>
+            <span className="font-mono text-base transition-transform group-hover:translate-x-1"
+              style={{ color: 'var(--red)' }}>→</span>
           </Link>
         ))}
       </nav>

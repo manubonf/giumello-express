@@ -1,6 +1,6 @@
 export function ErrorAlert({ message }: { message: string }) {
   return (
-    <p className="rounded-sm border px-4 py-3 font-mono text-sm mb-6"
+    <p className="rounded-xl border px-4 py-3 font-mono text-sm mb-6"
       style={{ borderColor: 'var(--red-border)', color: 'var(--red)', background: 'var(--red-muted)' }}>
       {message}
     </p>
@@ -9,8 +9,8 @@ export function ErrorAlert({ message }: { message: string }) {
 
 export function SuccessAlert({ message }: { message: string }) {
   return (
-    <p className="rounded-sm border px-4 py-3 font-mono text-sm mb-6"
-      style={{ borderColor: '#22c55e40', color: '#22c55e', background: '#22c55e10' }}>
+    <p className="rounded-xl border px-4 py-3 font-mono text-sm mb-6"
+      style={{ borderColor: '#16a34a30', color: '#15803d', background: 'rgba(22,163,74,0.06)' }}>
       {message}
     </p>
   )

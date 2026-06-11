@@ -1,4 +1,4 @@
-import { notFound, redirect } from 'next/navigation'
+﻿import { notFound, redirect } from 'next/navigation'
 import { PageLayout } from '@/components/ui/page-layout'
 import { PageHeader } from '@/components/ui/page-header'
 import { SubmitButton } from '@/components/ui/submit-button'
@@ -51,13 +51,13 @@ export default async function PropostaDetailPage({
         }
       />
 
-      <h1 className="text-xl font-semibold mb-8">Proposta</h1>
+      <h1 className="mb-8 leading-none" style={{ fontFamily: "var(--font-display)", fontSize: "3rem", fontWeight: 400, color: "var(--text)" }}>Proposta</h1>
 
       {ok === '1' && <SuccessAlert message="Proposta aggiornata." />}
       {error && <ErrorAlert message={ERROR_MSG[error] ?? 'Errore sconosciuto.'} />}
 
       {!isPending && (
-        <div className="rounded-sm border px-4 py-3 mb-8 flex items-center justify-between gap-4"
+        <div className="rounded-2xl border px-4 py-3 mb-8 flex items-center justify-between gap-4"
           style={{ background: 'var(--bg-panel)', borderColor: 'var(--border)' }}>
           <div className="flex-1 min-w-0">
             <span className="block font-medium text-sm" style={{ color: 'var(--text)' }}>
@@ -92,7 +92,7 @@ export default async function PropostaDetailPage({
                 rows={3}
                 defaultValue={proposal.notes ?? ''}
                 placeholder="Eventuali note o motivazioni..."
-                className="w-full rounded-sm border px-3 py-2.5 font-mono text-sm resize-none"
+                className="w-full rounded-xl border px-4 py-2.5.5 font-mono text-sm resize-none"
                 style={{
                   background: 'var(--bg-panel)',
                   borderColor: 'var(--border-muted)',
@@ -103,7 +103,7 @@ export default async function PropostaDetailPage({
 
             <div className="mt-2">
               <SubmitButton
-                className="rounded-sm border px-5 py-2.5 font-mono text-xs uppercase tracking-wide transition-colors"
+                className="rounded-xl border px-5 py-2.5 font-mono text-xs uppercase tracking-wide transition-colors"
                 style={{ background: '#22c55e', borderColor: '#22c55e', color: 'white' }}
               >
                 Salva modifiche
@@ -119,7 +119,7 @@ export default async function PropostaDetailPage({
             <form action={deleteProposal}>
               <input type="hidden" name="proposal_id" value={proposal.id} />
               <SubmitButton
-                className="rounded-sm border px-4 py-2 font-mono text-xs uppercase tracking-wide transition-colors"
+                className="rounded-xl border px-4 py-2 font-mono text-xs uppercase tracking-wide transition-colors"
                 style={{ background: 'var(--red)', borderColor: 'var(--red)', color: 'white' }}
               >
                 Cancella

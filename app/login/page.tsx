@@ -1,4 +1,4 @@
-import { NavetteLogo } from '@/components/ui/navettelogo'
+import Image from 'next/image'
 import { SubmitButton } from '@/components/ui/submit-button'
 import { login } from './actions'
 
@@ -14,29 +14,43 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
     <div
       className="min-h-screen flex items-center justify-center p-4"
       style={{
-        backgroundImage: `
-          linear-gradient(var(--red-muted) 1px, transparent 1px),
-          linear-gradient(90deg, var(--red-muted) 1px, transparent 1px)
-        `,
-        backgroundSize: '32px 32px',
+        background: 'linear-gradient(160deg, #061d26 0%, #082d3e 55%, #0a3347 100%)',
       }}
     >
       <div
-        className="w-full max-w-sm rounded-sm border p-10"
-        style={{ background: 'var(--bg-panel)', borderColor: 'var(--border-muted)' }}
+        className="w-full max-w-sm rounded-2xl border p-10"
+        style={{
+          background: 'rgba(8, 45, 62, 0.9)',
+          borderColor: 'rgba(255,255,255,0.1)',
+          backdropFilter: 'blur(16px)',
+        }}
       >
-        <NavetteLogo height={36} />
+        <Image
+          src="/FlyLibell_Logotipo_White.svg"
+          alt="Flylibell Navette"
+          height={36}
+          width={0}
+          style={{ width: 'auto', height: '36px' }}
+          priority
+        />
 
-        <p className="font-mono text-[10px] uppercase tracking-widest mt-1 mb-10"
-          style={{ color: 'var(--text-muted)', paddingLeft: '2px' }}>
+        <p
+          className="uppercase mt-2 mb-10 tracking-widest"
+          style={{
+            color: 'rgba(240,236,232,0.55)',
+            fontSize: '0.65rem',
+            fontFamily: 'var(--font-mono)',
+            paddingLeft: '2px',
+          }}
+        >
           Accesso riservato
         </p>
 
         <form action={login} className="flex flex-col gap-5">
-          <div className="flex flex-col gap-1.5">
+          <div className="flex flex-col gap-2">
             <label htmlFor="username"
               className="font-mono text-[10px] uppercase tracking-wider"
-              style={{ color: 'var(--text-muted)' }}>
+              style={{ color: 'rgba(240,236,232,0.55)' }}>
               Username
             </label>
             <input
@@ -46,16 +60,20 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
               autoComplete="username"
               autoCapitalize="none"
               required
-              className="rounded-sm border px-3 py-2.5 font-mono text-sm outline-none transition-colors focus:border-[--red] w-full"
-              style={{ background: 'var(--bg)', borderColor: 'var(--border)', color: 'var(--text)' }}
+              className="rounded-xl border px-4 py-3 font-mono text-sm outline-none transition-all w-full"
+              style={{
+                background: 'rgba(6, 29, 38, 0.7)',
+                borderColor: 'rgba(255,255,255,0.12)',
+                color: '#f0ece8',
+              }}
               placeholder="il tuo nome utente"
             />
           </div>
 
-          <div className="flex flex-col gap-1.5">
+          <div className="flex flex-col gap-2">
             <label htmlFor="password"
               className="font-mono text-[10px] uppercase tracking-wider"
-              style={{ color: 'var(--text-muted)' }}>
+              style={{ color: 'rgba(240,236,232,0.55)' }}>
               Password
             </label>
             <input
@@ -64,22 +82,26 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
               type="password"
               autoComplete="current-password"
               required
-              className="rounded-sm border px-3 py-2.5 font-mono text-sm outline-none transition-colors focus:border-[--red] w-full"
-              style={{ background: 'var(--bg)', borderColor: 'var(--border)', color: 'var(--text)' }}
+              className="rounded-xl border px-4 py-3 font-mono text-sm outline-none transition-all w-full"
+              style={{
+                background: 'rgba(6, 29, 38, 0.7)',
+                borderColor: 'rgba(255,255,255,0.12)',
+                color: '#f0ece8',
+              }}
               placeholder="••••••••••"
             />
           </div>
 
           {hasError && (
-            <div role="alert" className="rounded-sm border px-3 py-2.5 font-mono text-xs"
-              style={{ color: 'var(--red)', background: 'var(--red-muted)', borderColor: 'var(--red-border)' }}>
+            <div role="alert" className="rounded-xl border px-4 py-3 font-mono text-xs"
+              style={{ color: '#7dc4e4', background: 'rgba(68,143,184,0.1)', borderColor: 'rgba(68,143,184,0.3)' }}>
               Username o password non corretti.
             </div>
           )}
 
           <SubmitButton
-            className="mt-1 rounded-sm py-3 font-mono text-xs font-medium uppercase tracking-widest text-white transition-colors hover:opacity-90"
-            style={{ background: 'var(--red)' }}
+            className="mt-1 rounded-xl py-3.5 font-mono text-xs font-semibold uppercase tracking-widest text-white transition-all hover:opacity-90 active:scale-95"
+            style={{ background: '#448fb8' }}
           >
             Accedi
           </SubmitButton>

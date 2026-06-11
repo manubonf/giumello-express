@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState } from 'react'
 
@@ -81,7 +81,7 @@ export function DateTimePicker({
         min={today}
         onChange={e => handleDateChange(e.target.value)}
         required={required}
-        className="flex-1 min-w-0 rounded-sm border px-3 py-2.5 font-mono text-sm"
+        className="flex-1 min-w-0 rounded-xl border px-4 py-2.5.5 font-mono text-sm"
         style={{ ...inputStyle, color: date ? 'var(--text)' : 'var(--text-dim)', colorScheme: 'light' }}
       />
       <input
@@ -91,7 +91,7 @@ export function DateTimePicker({
         onChange={e => setTime(e.target.value)}
         required={required}
         step={900}
-        className="w-[7.5rem] flex-shrink-0 rounded-sm border px-3 py-2.5 font-mono text-sm"
+        className="w-[7.5rem] flex-shrink-0 rounded-xl border px-4 py-2.5.5 font-mono text-sm"
         style={{ ...inputStyle, color: time ? 'var(--text)' : 'var(--text-dim)', colorScheme: 'light' }}
       />
       <input type="hidden" name={name} value={combined} />

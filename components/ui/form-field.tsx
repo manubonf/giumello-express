@@ -12,8 +12,8 @@ export function FormField({
   children: React.ReactNode
 }) {
   return (
-    <div className={`flex flex-col gap-1.5${className ? ` ${className}` : ''}`}>
-      <label className="font-mono text-xs uppercase tracking-wide" style={{ color: 'var(--text-muted)' }}>
+    <div className={`flex flex-col gap-2${className ? ` ${className}` : ''}`}>
+      <label className="font-mono text-[10px] uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
         {label}
         {optional && (
           <span className="ml-2 normal-case" style={{ color: 'var(--text-dim)' }}>(opzionale)</span>
