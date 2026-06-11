@@ -6,11 +6,7 @@ import { DateTimePicker } from '@/components/ui/datetime-picker'
 import { ErrorAlert } from '@/components/ui/alert'
 import { FormField } from '@/components/ui/form-field'
 import { createShuttle } from '@/app/master/navette/actions'
-
-const ERROR_MSG: Record<string, string> = {
-  'dati-non-validi':  'Controlla i dati inseriti.',
-  'errore-creazione': 'Errore durante la creazione. Riprova.',
-}
+import { errorMessage } from '@/lib/errors'
 
 export default async function NuovaNavettePage({
   searchParams,
@@ -25,7 +21,7 @@ export default async function NuovaNavettePage({
 
       <h1 className="mb-8 leading-none" style={{ fontFamily: "var(--font-display)", fontSize: "3rem", fontWeight: 400, color: "var(--text)" }}>Nuova navetta</h1>
 
-      {error && <ErrorAlert message={ERROR_MSG[error] ?? 'Errore sconosciuto.'} />}
+      {error && <ErrorAlert message={errorMessage(error)} />}
 
       <form action={createShuttle} className="flex flex-col gap-5">
 

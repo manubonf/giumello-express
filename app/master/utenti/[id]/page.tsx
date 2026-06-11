@@ -10,15 +10,7 @@ import { updateUsername, resetPassword, deleteUser, addAmmonizione, removeAmmoni
 import { SuccessAlert } from '@/components/ui/alert'
 import { FormField } from '@/components/ui/form-field'
 import { formatLongTime } from '@/lib/date'
-
-const ERROR_MSG: Record<string, string> = {
-  'errore-reset':        'Errore durante il reset della password. Riprova.',
-  'errore-salvataggio':  'Errore durante il salvataggio. Riprova.',
-  'errore-eliminazione': 'Errore durante l\'eliminazione. Riprova.',
-  'username-non-valido': 'Username non valido. Usa solo lettere minuscole, numeri e underscore (2–30 caratteri).',
-  'username-esistente':  'Username già in uso.',
-  'nota-vuota':          'La nota non può essere vuota.',
-}
+import { errorMessage } from '@/lib/errors'
 
 export default async function UtenteDetailPage({
   params,
@@ -69,7 +61,7 @@ export default async function UtenteDetailPage({
       )}
       {ok === 'username' && <SuccessAlert message="Username aggiornato." />}
 
-      {error && <ErrorAlert message={`${ERROR_MSG[error] ?? 'Errore sconosciuto.'}${detail ? ` — ${detail}` : ''}`} />}
+      {error && <ErrorAlert message={`${errorMessage(error)}${detail ? ` — ${detail}` : ''}`} />}
 
       <div className="rounded-xl border mb-8" style={{ borderColor: 'var(--border)' }}>
         <div className="px-4">

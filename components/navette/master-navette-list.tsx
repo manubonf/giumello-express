@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { createBrowserClient } from '@supabase/ssr'
+import { getSupabaseBrowserClient } from '@/lib/supabase-browser'
 import { StatusBadge, StatusDot, STATUS_LABEL } from '@/components/ui/status-badge'
 import { CollapsibleSection } from '@/components/ui/collapsible-section'
 import { formatShort, dayLabel } from '@/lib/date'
@@ -34,15 +34,17 @@ export function MasterNavetteList({
   const [active, setActive] = useState(initialActive)
   const [storico, setStorico] = useState(initialStorico)
 
-  // Sincronizza stato con dati server freschi (dopo router.refresh())
-  useEffect(() => { setActive(initialActive) }, [initialActive])
-  useEffect(() => { setStorico(initialStorico) }, [initialStorico])
+  // Sincronizza stato con dati server freschi (dopo router.refresh()) —
+  // adattamento dello stato durante il render, senza passare da un effect.
+  const [prevInitial, setPrevInitial] = useState({ initialActive, initialStorico })
+  if (prevInitial.initialActive !== initialActive || prevInitial.initialStorico !== initialStorico) {
+    setPrevInitial({ initialActive, initialStorico })
+    setActive(initialActive)
+    setStorico(initialStorico)
+  }
 
   useEffect(() => {
-    const supabase = createBrowserClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    )
+    const supabase = getSupabaseBrowserClient()
 
     let channel: ReturnType<typeof supabase.channel>
 

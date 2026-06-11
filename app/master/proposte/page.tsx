@@ -9,10 +9,7 @@ import { CollapsibleSection } from '@/components/ui/collapsible-section'
 import { supabaseAdmin } from '@/lib/supabase'
 import { markExpiredProposalsCancelled } from '@/lib/data'
 import { formatShort } from '@/lib/date'
-
-const ERROR_MSG: Record<string, string> = {
-  'proposta-non-trovata': 'Proposta non trovata o già gestita.',
-}
+import { errorMessage } from '@/lib/errors'
 
 export default async function MasterPropostePage({
   searchParams,
@@ -48,7 +45,7 @@ export default async function MasterPropostePage({
 
       <h1 className="mb-8 leading-none" style={{ fontFamily: "var(--font-display)", fontSize: "3rem", fontWeight: 400, color: "var(--text)" }}>Proposte</h1>
 
-      {error && <ErrorAlert message={ERROR_MSG[error] ?? 'Errore sconosciuto.'} />}
+      {error && <ErrorAlert message={errorMessage(error)} />}
 
       {pending.length > 0 && (
         <section className="mb-8">

@@ -10,26 +10,18 @@ import {
   sendAddedToShuttlePush,
   sendRemovedFromShuttlePush,
   shuttleBody,
+  stateChangeTitle,
 } from '@/lib/notif'
+import {
+  type ShuttleSnapshot,
+  getShuttleSnapshot,
+  getParticipantUserIds,
+  getBookedUserIds,
+  createSingleBooking,
+} from '@/lib/bookings'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { after } from 'next/server'
-
-type ShuttleSnapshot = {
-  status: string
-  departure_time: string
-  max_seats: number
-  available_seats: number
-}
-
-async function getShuttleSnapshot(shuttleId: string): Promise<ShuttleSnapshot | null> {
-  const { data } = await supabaseAdmin
-    .from('shuttles')
-    .select('status, departure_time, max_seats, available_seats')
-    .eq('id', shuttleId)
-    .single()
-  return data
-}
 
 async function sendBookingNotifications(
   shuttleId: string,
@@ -40,7 +32,7 @@ async function sendBookingNotifications(
   masterPref: 'notif_m2' | 'notif_m3' | 'notif_m4',
   additionalExcludes: string[] = [],
 ) {
-  const body = shuttleBody(before.departure_time, after.available_seats, before.max_seats)
+  const body = shuttleBody(before.departure_time, after.available_seats)
   const masterUrl = `/master/navette/${shuttleId}`
   const stateChanged = before.status !== after.status
   const excludeIds = [actorId, ...additionalExcludes]
@@ -70,109 +62,12 @@ async function sendBookingNotifications(
   }
 
   if (stateChanged) {
-    let stateTitle: string
-    if (after.status === 'confirmed') stateTitle = 'Navetta confermata'
-    else if (after.status === 'full') stateTitle = 'Navetta al completo'
-    else if (after.status === 'draft') stateTitle = 'Navetta tornata in bozza'
-    else stateTitle = 'Aggiornamento navetta'
-    tasks.push(sendStateChangePush(shuttleId, stateTitle, body, excludeIds))
+    tasks.push(sendStateChangePush(shuttleId, stateChangeTitle(after.status), body, excludeIds))
   } else {
     tasks.push(sendSeatUpdatePush(shuttleId, masterTitle, body, excludeIds))
   }
 
   await Promise.all(tasks)
-}
-
-/**
- * Restituisce gli user_id dei profili registrati che sono PARTECIPANTI su questa navetta.
- * Non include i booker che non compaiono anche come partecipanti.
- */
-async function getParticipantUserIds(shuttleId: string): Promise<Set<string>> {
-  const { data: bookings } = await supabaseAdmin
-    .from('bookings')
-    .select('id')
-    .eq('shuttle_id', shuttleId)
-
-  const bookingIds = (bookings ?? []).map(b => b.id)
-  if (!bookingIds.length) return new Set()
-
-  const { data: participants } = await supabaseAdmin
-    .from('booking_participants')
-    .select('user_id')
-    .in('booking_id', bookingIds)
-    .eq('is_guest', false)
-
-  return new Set((participants ?? []).filter(p => p.user_id).map(p => p.user_id as string))
-}
-
-/**
- * Restituisce gli user_id dei profili registrati che sono booker O partecipanti su questa navetta.
- * Usato per `bookOtherUser`: previene di prenotare qualcuno già "presente" nella navetta in qualunque ruolo.
- */
-async function getBookedUserIds(shuttleId: string): Promise<Set<string>> {
-  const { data: bookings } = await supabaseAdmin
-    .from('bookings')
-    .select('id, booker_id')
-    .eq('shuttle_id', shuttleId)
-
-  const ids = new Set<string>()
-  const bookingIds = (bookings ?? []).map(b => b.id)
-
-  for (const b of bookings ?? []) ids.add(b.booker_id)
-
-  if (bookingIds.length) {
-    const { data: participants } = await supabaseAdmin
-      .from('booking_participants')
-      .select('user_id')
-      .in('booking_id', bookingIds)
-      .eq('is_guest', false)
-    for (const p of participants ?? []) if (p.user_id) ids.add(p.user_id)
-  }
-
-  return ids
-}
-
-/**
- * Helper condiviso: crea un booking + un singolo partecipante dopo aver prenotato un posto.
- */
-async function createSingleBooking(
-  shuttleId: string,
-  bookerId: string,
-  participant: { user_id: string | null; is_guest: boolean; guest_label: string | null },
-): Promise<{ bookingId: string } | { error: string }> {
-  const { error: bookError } = await supabaseAdmin.rpc('book_seats', {
-    p_shuttle_id: shuttleId,
-    p_count: 1,
-  })
-
-  if (bookError) {
-    if (bookError.message.includes('non prenotabile')) return { error: 'navetta-non-prenotabile' }
-    if (bookError.message.includes('Posti insufficienti')) return { error: 'posti-insufficienti' }
-    return { error: 'errore-prenotazione' }
-  }
-
-  const { data: booking, error: insertError } = await supabaseAdmin
-    .from('bookings')
-    .insert({ shuttle_id: shuttleId, booker_id: bookerId })
-    .select('id')
-    .single()
-
-  if (insertError || !booking) {
-    await supabaseAdmin.rpc('release_seats', { p_shuttle_id: shuttleId, p_count: 1 })
-    return { error: 'errore-prenotazione' }
-  }
-
-  const { error: partError } = await supabaseAdmin
-    .from('booking_participants')
-    .insert({ booking_id: booking.id, ...participant })
-
-  if (partError) {
-    await supabaseAdmin.from('bookings').delete().eq('id', booking.id)
-    await supabaseAdmin.rpc('release_seats', { p_shuttle_id: shuttleId, p_count: 1 })
-    return { error: 'errore-prenotazione' }
-  }
-
-  return { bookingId: booking.id }
 }
 
 // ─── Azioni pubbliche ────────────────────────────────────────────────────────
@@ -259,7 +154,7 @@ export async function bookOtherUser(formData: FormData) {
     after(async () => {
       await sendBookingNotifications(sid, shuttleBefore, snapshot, user.id, 'Nuova prenotazione', 'notif_m2', [target])
       // U10: notifica il target che è stato prenotato da un altro utente
-      await sendAddedToShuttlePush(target, sid, snapshot.departure_time, snapshot.available_seats, snapshot.max_seats)
+      await sendAddedToShuttlePush(target, sid, snapshot.departure_time, snapshot.available_seats)
     })
   }
 
@@ -413,7 +308,7 @@ export async function cancelBooking(formData: FormData) {
       // U10: notifica gli utenti prenotati da questo booker che sono stati rimossi
       await Promise.all(
         removedOthers.map(uid =>
-          sendRemovedFromShuttlePush(uid, sid, snapshot.departure_time, snapshot.available_seats, snapshot.max_seats)
+          sendRemovedFromShuttlePush(uid, sid, snapshot.departure_time, snapshot.available_seats)
         )
       )
     })

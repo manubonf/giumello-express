@@ -1,4 +1,4 @@
-﻿import { notFound, redirect } from 'next/navigation'
+﻿import { redirect } from 'next/navigation'
 import { PageLayout } from '@/components/ui/page-layout'
 import { PageHeader } from '@/components/ui/page-header'
 import { SubmitButton } from '@/components/ui/submit-button'
@@ -9,14 +9,12 @@ import { FormField } from '@/components/ui/form-field'
 import { getSessionFromHeaders } from '@/lib/auth'
 import { supabaseAdmin } from '@/lib/supabase'
 import { formatFull } from '@/lib/date'
+import { errorMessage } from '@/lib/errors'
 import { updateProposal, deleteProposal } from './actions'
 
-
-const ERROR_MSG: Record<string, string> = {
-  'non-autorizzato':    'Non sei autorizzato a modificare questa proposta.',
-  'non-modificabile':   'Questa proposta non può più essere modificata.',
-  'dati-non-validi':    'Inserisci una data e orario validi.',
-  'errore-salvataggio': 'Errore durante il salvataggio. Riprova.',
+const ERROR_OVERRIDES: Record<string, string> = {
+  'non-autorizzato': 'Non sei autorizzato a modificare questa proposta.',
+  'dati-non-validi': 'Inserisci una data e orario validi.',
 }
 
 export default async function PropostaDetailPage({
@@ -54,7 +52,7 @@ export default async function PropostaDetailPage({
       <h1 className="mb-8 leading-none" style={{ fontFamily: "var(--font-display)", fontSize: "3rem", fontWeight: 400, color: "var(--text)" }}>Proposta</h1>
 
       {ok === '1' && <SuccessAlert message="Proposta aggiornata." />}
-      {error && <ErrorAlert message={ERROR_MSG[error] ?? 'Errore sconosciuto.'} />}
+      {error && <ErrorAlert message={errorMessage(error, ERROR_OVERRIDES)} />}
 
       {!isPending && (
         <div className="rounded-2xl border px-4 py-3 mb-8 flex items-center justify-between gap-4"

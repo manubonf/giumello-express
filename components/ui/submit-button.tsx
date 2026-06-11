@@ -1,13 +1,16 @@
 'use client'
 
 import { useFormStatus } from 'react-dom'
+import { type ButtonVariant, VARIANT_CLASS, VARIANT_STYLE } from './button'
 
 export function SubmitButton({
   children,
+  variant,
   className = '',
   style,
 }: {
   children: React.ReactNode
+  variant?: ButtonVariant
   className?: string
   style?: React.CSSProperties
 }) {
@@ -17,8 +20,8 @@ export function SubmitButton({
     <button
       type="submit"
       disabled={pending}
-      className={`${className} active:scale-95 disabled:opacity-60 disabled:cursor-wait`}
-      style={style}
+      className={`${variant ? `${VARIANT_CLASS[variant]} ` : ''}${className} active:scale-95 disabled:opacity-60 disabled:cursor-wait`}
+      style={variant ? { ...VARIANT_STYLE[variant], ...style } : style}
     >
       {pending ? (
         <span className="flex items-center gap-1.5">

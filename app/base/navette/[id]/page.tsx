@@ -1,5 +1,5 @@
 import { after } from 'next/server'
-import { notFound, redirect } from 'next/navigation'
+import { redirect } from 'next/navigation'
 import { PageLayout } from '@/components/ui/page-layout'
 import { PageHeader } from '@/components/ui/page-header'
 import { getSessionFromHeaders } from '@/lib/auth'
@@ -67,7 +67,6 @@ export default async function NavettaDetailPage({
       <NavettaDetail
         shuttle={shuttle}
         userId={userId}
-        username={username}
         initialBookings={initialBookings}
         error={error}
         ok={ok}

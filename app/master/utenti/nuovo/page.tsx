@@ -6,12 +6,7 @@ import { ErrorAlert } from '@/components/ui/alert'
 import { FormField } from '@/components/ui/form-field'
 import { CredentialBox } from '@/components/ui/credential-box'
 import { createUser } from '@/app/master/utenti/actions'
-
-const ERROR_MSG: Record<string, string> = {
-  'username-non-valido': 'Username non valido. Usa solo lettere minuscole, numeri e underscore (2–30 caratteri).',
-  'username-esistente':  'Username già in uso.',
-  'errore-creazione':    'Errore durante la creazione. Riprova.',
-}
+import { errorMessage } from '@/lib/errors'
 
 export default async function NuovoUtentePage({
   searchParams,
@@ -28,7 +23,7 @@ export default async function NuovoUtentePage({
 
       {ok === '1' && u && pw && <CredentialBox username={u} password={pw} />}
 
-      {error && <ErrorAlert message={ERROR_MSG[error] ?? 'Errore sconosciuto.'} />}
+      {error && <ErrorAlert message={errorMessage(error)} />}
 
       {ok !== '1' && (
         <form action={createUser} className="flex flex-col gap-5">

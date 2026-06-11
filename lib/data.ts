@@ -1,21 +1,13 @@
 import { supabaseAdmin } from '@/lib/supabase'
 
 export async function markExpiredShuttlesDone(shuttleId?: string) {
-  const now = new Date().toISOString()
-  if (shuttleId) {
-    await supabaseAdmin
-      .from('shuttles')
-      .update({ status: 'done' })
-      .in('status', ['confirmed', 'full'])
-      .lt('departure_time', now)
-      .eq('id', shuttleId)
-  } else {
-    await supabaseAdmin
-      .from('shuttles')
-      .update({ status: 'done' })
-      .in('status', ['confirmed', 'full'])
-      .lt('departure_time', now)
-  }
+  let query = supabaseAdmin
+    .from('shuttles')
+    .update({ status: 'done' })
+    .in('status', ['confirmed', 'full'])
+    .lt('departure_time', new Date().toISOString())
+  if (shuttleId) query = query.eq('id', shuttleId)
+  await query
 }
 
 export async function markExpiredProposalsCancelled() {
@@ -25,11 +17,6 @@ export async function markExpiredProposalsCancelled() {
     .update({ status: 'cancelled' })
     .eq('status', 'pending')
     .lt('departure_time', now)
-}
-
-export async function getProfileIdsByRole(role: 'master' | 'base'): Promise<string[]> {
-  const { data } = await supabaseAdmin.from('profiles').select('id').eq('role', role)
-  return (data ?? []).map(p => p.id)
 }
 
 export type BookingParticipant = {

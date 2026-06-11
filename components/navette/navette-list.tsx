@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { createBrowserClient } from '@supabase/ssr'
+import { getSupabaseBrowserClient } from '@/lib/supabase-browser'
 import { StatusBadge, StatusDot } from '@/components/ui/status-badge'
 import { CollapsibleSection } from '@/components/ui/collapsible-section'
 import { formatShort, dayLabel } from '@/lib/date'
@@ -30,10 +30,7 @@ export function NavetteList({
   const bookedSet = new Set(bookedIds)
 
   useEffect(() => {
-    const supabase = createBrowserClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    )
+    const supabase = getSupabaseBrowserClient()
 
     const channel = supabase
       .channel('navette-list')

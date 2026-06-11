@@ -1,4 +1,3 @@
-import type { SupabaseClient } from '@supabase/supabase-js'
 import { createSupabaseServerClient } from '@/lib/supabase-server'
 import { redirect } from 'next/navigation'
 import { headers } from 'next/headers'
@@ -14,15 +13,6 @@ export async function getSessionFromHeaders() {
   }
 }
 
-export async function fetchUserRole(supabase: SupabaseClient, userId: string): Promise<string | null> {
-  const { data } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', userId)
-    .single()
-  return data?.role ?? null
-}
-
 export async function getCurrentUser() {
   const supabase = await createSupabaseServerClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -36,16 +26,6 @@ export async function getCurrentUser() {
     .single()
 
   return { user, profile }
-}
-
-export async function requireMaster() {
-  const { profile } = await getCurrentUser()
-
-  if (profile?.role !== 'master') {
-    redirect('/')
-  }
-
-  return profile
 }
 
 export async function getMasterUser() {

@@ -47,7 +47,7 @@ export async function proxy(request: NextRequest) {
   }
 
   // Risposta con gli header aggiornati visibili ai Server Component
-  let response = NextResponse.next({ request: { headers: reqHeaders } })
+  const response = NextResponse.next({ request: { headers: reqHeaders } })
 
   // Applica i cookie di sessione rinnovati
   cookieUpdates.forEach(({ name, value, options }) =>

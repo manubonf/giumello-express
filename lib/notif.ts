@@ -5,8 +5,16 @@ import { formatShort } from './date'
 export type MasterPref = 'notif_m1' | 'notif_m2' | 'notif_m3' | 'notif_m4' | 'notif_m5' | 'notif_m6'
 export type BasePref = 'notif_u1' | 'notif_u2' | 'notif_u3' | 'notif_u4' | 'notif_u5' | 'notif_u6' | 'notif_u7' | 'notif_u8' | 'notif_u9' | 'notif_u10' | 'notif_u11' | 'notif_u12'
 
-export function shuttleBody(departure_time: string, available_seats: number, max_seats: number): string {
+export function shuttleBody(departure_time: string, available_seats: number): string {
   return `Navetta ${formatShort(departure_time)} — posti disponibili ${available_seats}`
+}
+
+/** Titolo della notifica per un cambio di stato della navetta. */
+export function stateChangeTitle(status: string): string {
+  if (status === 'confirmed') return 'Navetta confermata'
+  if (status === 'full') return 'Navetta al completo'
+  if (status === 'draft') return 'Navetta tornata in bozza'
+  return 'Aggiornamento navetta'
 }
 
 export async function masterIdsWithPref(pref: MasterPref): Promise<string[]> {
@@ -129,11 +137,10 @@ export async function sendAddedToShuttlePush(
   shuttleId: string,
   departure_time: string,
   available_seats: number,
-  max_seats: number,
 ) {
   const hasPref = await userHasPref(userId, 'notif_u10')
   if (!hasPref) return
-  const body = shuttleBody(departure_time, available_seats, max_seats)
+  const body = shuttleBody(departure_time, available_seats)
   await sendPush([userId], { title: 'Sei stato prenotato sulla navetta', body, url: `/base/navette/${shuttleId}` })
 }
 
@@ -143,11 +150,10 @@ export async function sendRemovedFromShuttlePush(
   shuttleId: string,
   departure_time: string,
   available_seats: number,
-  max_seats: number,
 ) {
   const hasPref = await userHasPref(userId, 'notif_u10')
   if (!hasPref) return
-  const body = shuttleBody(departure_time, available_seats, max_seats)
+  const body = shuttleBody(departure_time, available_seats)
   await sendPush([userId], { title: 'Sei stato rimosso dalla navetta', body, url: `/base/navette/${shuttleId}` })
 }
 

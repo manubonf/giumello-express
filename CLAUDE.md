@@ -64,11 +64,12 @@ Non usare `supabaseAdmin` in Client Components. Non usare il client browser in S
 // Ottiene utente corrente — redirect a /login se non autenticato
 const { user, profile } = await getCurrentUser()
 
-// Come sopra, ma redirect a / se non è master
-const profile = await requireMaster()
+// Versione master-only per Server Actions — redirect a / se non è master
+const user = await getMasterUser()
 
-// Versione leggera per Server Actions master-only (non restituisce profilo completo)
-await getMasterUser()
+// Zero query DB: legge id/role/username dagli header iniettati da proxy.ts.
+// Da preferire nei Server Component dove proxy.ts protegge già la route.
+const { userId, role, username } = await getSessionFromHeaders()
 ```
 
 Tutti e tre sono in `lib/auth.ts`. Usali sempre invece di chiamare `supabase.auth.getUser()` direttamente nelle route.

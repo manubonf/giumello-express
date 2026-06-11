@@ -6,9 +6,10 @@ import { DateTimePicker } from '@/components/ui/datetime-picker'
 import { ErrorAlert } from '@/components/ui/alert'
 import { FormField } from '@/components/ui/form-field'
 import { createProposal } from '@/app/base/proposte/actions'
+import { errorMessage } from '@/lib/errors'
 
-const ERROR_MSG: Record<string, string> = {
-  'dati-non-validi': 'Inserisci una data e orario validi.',
+const ERROR_OVERRIDES: Record<string, string> = {
+  'dati-non-validi':  'Inserisci una data e orario validi.',
   'errore-creazione': 'Errore durante l\'invio. Riprova.',
 }
 
@@ -25,7 +26,7 @@ export default async function NuovaPropostaPage({
 
       <h1 className="mb-8 leading-none" style={{ fontFamily: "var(--font-display)", fontSize: "3rem", fontWeight: 400, color: "var(--text)" }}>Nuova proposta</h1>
 
-      {error && <ErrorAlert message={ERROR_MSG[error] ?? 'Errore sconosciuto.'} />}
+      {error && <ErrorAlert message={errorMessage(error, ERROR_OVERRIDES)} />}
 
       <form action={createProposal} className="flex flex-col gap-5">
 

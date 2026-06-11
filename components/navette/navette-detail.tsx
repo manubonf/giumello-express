@@ -1,11 +1,13 @@
 ﻿'use client'
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { createBrowserClient } from '@supabase/ssr'
+import { useEffect, useMemo, useState } from 'react'
+import { getSupabaseBrowserClient } from '@/lib/supabase-browser'
+import { errorMessage } from '@/lib/errors'
 import { SubmitButton } from '@/components/ui/submit-button'
 import { Button } from '@/components/ui/button'
 import { StatusBadge, StatusDot } from '@/components/ui/status-badge'
 import { ErrorAlert, SuccessAlert } from '@/components/ui/alert'
+import { UserSearchInput, type Profile } from '@/components/ui/user-search'
 import {
   bookSelf,
   bookOtherUser,
@@ -14,16 +16,9 @@ import {
   cancelBooking,
 } from '@/app/base/navette/actions'
 import { formatFull, dayLabel } from '@/lib/date'
+import { type ParticipantEntry, mapRawParticipants } from '@/components/navette/participants'
 
 // ─── Tipi ────────────────────────────────────────────────────────────────────
-
-type ParticipantEntry = {
-  id: string
-  is_guest: boolean
-  guest_label: string | null
-  user_id: string | null
-  username: string | null
-}
 
 type BookingEntry = {
   id: string
@@ -41,21 +36,6 @@ type ShuttleInfo = {
   min_seats: number
 }
 
-type Profile = { id: string; username: string }
-
-// ─── Messaggi di errore ───────────────────────────────────────────────────────
-
-const ERROR_MSG: Record<string, string> = {
-  'posti-insufficienti':          'Posti insufficienti per questa prenotazione.',
-  'navetta-non-prenotabile':      'Questa navetta non è più prenotabile.',
-  'prenotazione-esistente':       'Sei già presente come passeggero su questa navetta.',
-  'partecipante-già-prenotato':   'Questo utente è già presente su questa navetta.',
-  'partecipante-non-valido':      'Non è possibile prenotare per questo utente.',
-  'nome-ospite-mancante':         'Inserisci il nome dell\'ospite.',
-  'errore-prenotazione':          'Errore durante la prenotazione. Riprova.',
-  'non-autorizzato':              'Operazione non autorizzata.',
-}
-
 // ─── Componente principale ────────────────────────────────────────────────────
 
 type ActivePanel = null | 'user' | 'guest'
@@ -63,7 +43,6 @@ type ActivePanel = null | 'user' | 'guest'
 export function NavettaDetail({
   shuttle: initialShuttle,
   userId,
-  username,
   initialBookings,
   error,
   ok,
@@ -71,7 +50,6 @@ export function NavettaDetail({
 }: {
   shuttle: ShuttleInfo
   userId: string
-  username: string
   initialBookings: BookingEntry[]
   error?: string
   ok?: string
@@ -99,14 +77,13 @@ export function NavettaDetail({
   )
 
   /** Sono partecipante in una prenotazione di qualcun altro? */
-  const myParticipantInOtherBooking = useMemo(() => {
-    for (const b of bookings) {
-      if (b.booker_id === userId) continue
-      const p = b.participants.find(p => !p.is_guest && p.user_id === userId)
-      if (p) return { ...p, bookerUsername: b.bookerUsername }
-    }
-    return null
-  }, [bookings, userId])
+  const otherBookingWithMe = bookings.find(
+    b => b.booker_id !== userId && b.participants.some(p => !p.is_guest && p.user_id === userId)
+  )
+  const myParticipant = otherBookingWithMe?.participants.find(p => !p.is_guest && p.user_id === userId)
+  const myParticipantInOtherBooking = otherBookingWithMe && myParticipant
+    ? { ...myParticipant, bookerUsername: otherBookingWithMe.bookerUsername }
+    : null
 
   /** Sono già presente come passeggero (in qualunque prenotazione)? */
   const isSelfParticipant = useMemo(
@@ -131,10 +108,7 @@ export function NavettaDetail({
   // ── Realtime ──────────────────────────────────────────────────────────────
 
   useEffect(() => {
-    const supabase = createBrowserClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    )
+    const supabase = getSupabaseBrowserClient()
 
     const channel = supabase
       .channel(`navetta-detail-${initialShuttle.id}`)
@@ -157,13 +131,7 @@ export function NavettaDetail({
             .from('booking_participants')
             .select('id, is_guest, guest_label, user_id, profiles(username)')
             .eq('booking_id', nb.id)
-          const participants: ParticipantEntry[] = (parts ?? []).map((p: any) => ({
-            id: p.id,
-            is_guest: p.is_guest,
-            guest_label: p.guest_label,
-            user_id: p.user_id ?? null,
-            username: p.is_guest ? null : (p.profiles?.username ?? null),
-          }))
+          const participants: ParticipantEntry[] = mapRawParticipants(parts)
           setBookings(prev => {
             // Evita duplicati: l'evento può arrivare dopo un redirect SSR che ha già incluso la prenotazione
             if (prev.some(b => b.id === nb.id)) return prev
@@ -223,7 +191,7 @@ export function NavettaDetail({
       )}
 
       {ok === '1' && <SuccessAlert message="Prenotazione confermata." />}
-      {error && <ErrorAlert message={ERROR_MSG[error] ?? 'Errore sconosciuto.'} />}
+      {error && <ErrorAlert message={errorMessage(error)} />}
 
       {/* Lista piatta passeggeri */}
       {flatParticipants.length > 0 && (
@@ -266,10 +234,7 @@ export function NavettaDetail({
           {!['done', 'cancelled'].includes(shuttleInfo.status) && (
             <form action={leaveBookingAsParticipant}>
               <input type="hidden" name="shuttle_id" value={shuttleInfo.id} />
-              <SubmitButton
-                className="rounded-xl border px-3 py-1.5 font-mono text-xs uppercase tracking-wide transition-colors"
-                style={{ background: 'var(--red)', borderColor: 'var(--red)', color: 'white' }}
-              >
+              <SubmitButton variant="danger" className="px-3 py-1.5">
                 Rimuovimi
               </SubmitButton>
             </form>
@@ -311,10 +276,7 @@ export function NavettaDetail({
                     <form action={cancelBooking}>
                       <input type="hidden" name="booking_id" value={b.id} />
                       <input type="hidden" name="shuttle_id" value={shuttleInfo.id} />
-                      <SubmitButton
-                        className="rounded-xl border px-2.5 py-1 font-mono text-xs uppercase tracking-wide transition-colors"
-                        style={{ background: 'var(--red)', borderColor: 'var(--red)', color: 'white' }}
-                      >
+                      <SubmitButton variant="danger" className="px-2.5 py-1">
                         Cancella
                       </SubmitButton>
                     </form>
@@ -349,26 +311,15 @@ export function NavettaDetail({
               {canBookSelf && (
                 <form action={bookSelf}>
                   <input type="hidden" name="shuttle_id" value={shuttleInfo.id} />
-                  <SubmitButton
-                    className="rounded-xl border px-4 py-2 font-mono text-xs uppercase tracking-wide transition-colors"
-                    style={{ background: '#22c55e', borderColor: '#22c55e', color: 'white' }}
-                  >
+                  <SubmitButton variant="primary" className="px-4 py-2">
                     Prenota per te
                   </SubmitButton>
                 </form>
               )}
-              <Button
-                onClick={() => setActivePanel('user')}
-                className="rounded-xl border px-4 py-2 font-mono text-xs uppercase tracking-wide transition-colors hover:opacity-80"
-                style={{ background: 'none', borderColor: 'var(--border)', color: 'var(--text)' }}
-              >
+              <Button variant="outline" className="px-4 py-2" onClick={() => setActivePanel('user')}>
                 Prenota un utente
               </Button>
-              <Button
-                onClick={() => setActivePanel('guest')}
-                className="rounded-xl border px-4 py-2 font-mono text-xs uppercase tracking-wide transition-colors hover:opacity-80"
-                style={{ background: 'none', borderColor: 'var(--border)', color: 'var(--text)' }}
-              >
+              <Button variant="outline" className="px-4 py-2" onClick={() => setActivePanel('guest')}>
                 Prenota un ospite
               </Button>
             </div>
@@ -391,19 +342,12 @@ export function NavettaDetail({
                   <form action={bookOtherUser}>
                     <input type="hidden" name="shuttle_id" value={shuttleInfo.id} />
                     <input type="hidden" name="user_id" value={selectedUser.id} />
-                    <SubmitButton
-                      className="rounded-xl border px-4 py-2 font-mono text-xs uppercase tracking-wide"
-                      style={{ background: '#22c55e', borderColor: '#22c55e', color: 'white' }}
-                    >
+                    <SubmitButton variant="primary" className="px-4 py-2">
                       Conferma prenotazione
                     </SubmitButton>
                   </form>
                 )}
-                <Button
-                  onClick={closePanel}
-                  className="rounded-xl border px-4 py-2 font-mono text-xs uppercase tracking-wide transition-colors hover:border-[--red] hover:text-[--red]"
-                  style={{ background: 'none', borderColor: 'var(--border-muted)', color: 'var(--text-dim)' }}
-                >
+                <Button variant="cancel" className="px-4 py-2" onClick={closePanel}>
                   Annulla
                 </Button>
               </div>
@@ -432,17 +376,10 @@ export function NavettaDetail({
                 />
               </div>
               <div className="flex gap-2">
-                <SubmitButton
-                  className="rounded-xl border px-4 py-2 font-mono text-xs uppercase tracking-wide"
-                  style={{ background: '#22c55e', borderColor: '#22c55e', color: 'white' }}
-                >
+                <SubmitButton variant="primary" className="px-4 py-2">
                   Prenota ospite
                 </SubmitButton>
-                <Button
-                  onClick={closePanel}
-                  className="rounded-xl border px-4 py-2 font-mono text-xs uppercase tracking-wide transition-colors hover:border-[--red] hover:text-[--red]"
-                  style={{ background: 'none', borderColor: 'var(--border-muted)', color: 'var(--text-dim)' }}
-                >
+                <Button variant="cancel" className="px-4 py-2" onClick={closePanel}>
                   Annulla
                 </Button>
               </div>
@@ -451,280 +388,5 @@ export function NavettaDetail({
         </div>
       )}
     </>
-  )
-}
-
-// ─── UserSearchInput ──────────────────────────────────────────────────────────
-// Ricerca utente singolo con debounce, preferiti sempre visibili e stelline toggle.
-
-const DEBOUNCE_MS = 250
-const MIN_QUERY = 2
-const MAX_FAVORITES_SHOWN = 5
-
-function UserSearchInput({
-  excludedUserIds,
-  currentUserId,
-  selectedUser,
-  onSelect,
-}: {
-  excludedUserIds: Set<string>
-  currentUserId: string
-  selectedUser: Profile | null
-  onSelect: (profile: Profile | null) => void
-}) {
-  const [query, setQuery] = useState('')
-  const [results, setResults] = useState<Profile[]>([])
-  const [favorites, setFavorites] = useState<Profile[]>([])
-  const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set())
-  const [dropdownOpen, setDropdownOpen] = useState(false)
-  const [showAllFavorites, setShowAllFavorites] = useState(false)
-  const inputRef = useRef<HTMLInputElement>(null)
-  const dropdownRef = useRef<HTMLDivElement>(null)
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-
-  // Carica preferiti
-  useEffect(() => {
-    fetch('/api/favorites')
-      .then(r => r.json())
-      .then((data: Profile[]) => {
-        if (Array.isArray(data)) {
-          setFavorites(data)
-          setFavoriteIds(new Set(data.map(f => f.id)))
-        }
-      })
-      .catch(() => {})
-  }, [])
-
-  // Ricerca con debounce
-  useEffect(() => {
-    if (debounceRef.current) clearTimeout(debounceRef.current)
-    if (query.length < MIN_QUERY) { setResults([]); return }
-    debounceRef.current = setTimeout(async () => {
-      try {
-        const res = await fetch(`/api/profiles?q=${encodeURIComponent(query)}&limit=10`)
-        if (res.ok) setResults(await res.json())
-      } catch {}
-    }, DEBOUNCE_MS)
-    return () => { if (debounceRef.current) clearTimeout(debounceRef.current) }
-  }, [query])
-
-  // Chiudi dropdown al click esterno
-  useEffect(() => {
-    function onMouseDown(e: MouseEvent) {
-      if (
-        !inputRef.current?.contains(e.target as Node) &&
-        !dropdownRef.current?.contains(e.target as Node)
-      ) {
-        setDropdownOpen(false)
-      }
-    }
-    document.addEventListener('mousedown', onMouseDown)
-    return () => document.removeEventListener('mousedown', onMouseDown)
-  }, [])
-
-  const selectUser = useCallback((profile: Profile) => {
-    onSelect(profile)
-    setQuery('')
-    setResults([])
-    setDropdownOpen(false)
-  }, [onSelect])
-
-  async function toggleFavorite(profile: Profile, e: React.MouseEvent) {
-    e.stopPropagation()
-    const isFav = favoriteIds.has(profile.id)
-    if (isFav) {
-      setFavoriteIds(prev => { const s = new Set(prev); s.delete(profile.id); return s })
-      setFavorites(prev => prev.filter(f => f.id !== profile.id))
-      await fetch('/api/favorites', {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ profile_id: profile.id }),
-      })
-    } else {
-      setFavoriteIds(prev => new Set([...prev, profile.id]))
-      setFavorites(prev => [...prev, profile])
-      await fetch('/api/favorites', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ profile_id: profile.id }),
-      })
-    }
-  }
-
-  const visibleFavorites = favorites.filter(
-    f => !excludedUserIds.has(f.id) && f.id !== currentUserId,
-  )
-  const visibleResults = results.filter(
-    p => !excludedUserIds.has(p.id) && p.id !== currentUserId,
-  )
-  // Dropdown solo per i risultati di ricerca; i preferiti sono fissi sopra la barra
-  const showDropdown = dropdownOpen && visibleResults.length > 0
-  const favoritesSlice = showAllFavorites
-    ? visibleFavorites
-    : visibleFavorites.slice(0, MAX_FAVORITES_SHOWN)
-
-  // Utente già selezionato → mostra chip con ×
-  if (selectedUser) {
-    return (
-      <div className="flex items-center gap-2">
-        <span
-          className="inline-flex items-center gap-1.5 rounded-xl border px-2.5 py-1.5 font-mono text-sm"
-          style={{ borderColor: 'var(--border)', background: 'var(--bg-panel)', color: 'var(--text)' }}
-        >
-          {selectedUser.username}
-          <button
-            type="button"
-            onClick={() => onSelect(null)}
-            className="leading-none transition-colors hover:text-[--red]"
-            style={{ color: 'var(--text-dim)' }}
-            aria-label="Rimuovi selezione"
-          >
-            ×
-          </button>
-        </span>
-      </div>
-    )
-  }
-
-  return (
-    <div>
-      {/* Preferiti fissi sopra la barra di ricerca */}
-      {visibleFavorites.length > 0 && (
-        <div className="mb-2">
-          <p
-            className="font-mono text-[10px] uppercase tracking-widest mb-1"
-            style={{ color: 'var(--text-muted)' }}
-          >
-            Preferiti
-          </p>
-          <div
-            className="rounded-xl border py-1"
-            style={{ borderColor: 'var(--border)', background: 'var(--bg-panel)' }}
-          >
-            {favoritesSlice.map(f => (
-              <div key={f.id} className="flex items-center gap-1 px-3 py-1.5">
-                <button
-                  type="button"
-                  onClick={() => selectUser(f)}
-                  className="flex-1 text-left font-mono text-sm transition-opacity hover:opacity-70"
-                  style={{ color: 'var(--text)' }}
-                >
-                  {f.username}
-                </button>
-                <button
-                  type="button"
-                  onClick={e => toggleFavorite(f, e)}
-                  className="text-base leading-none transition-opacity hover:opacity-70"
-                  style={{ color: 'var(--red)' }}
-                  aria-label={`Rimuovi ${f.username} dai preferiti`}
-                  title="Rimuovi dai preferiti"
-                >
-                  ★
-                </button>
-              </div>
-            ))}
-            {!showAllFavorites && visibleFavorites.length > MAX_FAVORITES_SHOWN && (
-              <button
-                type="button"
-                onClick={() => setShowAllFavorites(true)}
-                className="w-full text-left font-mono text-xs px-3 py-1.5 transition-opacity hover:opacity-70"
-                style={{ color: 'var(--text-dim)' }}
-              >
-                Mostra tutti ({visibleFavorites.length - MAX_FAVORITES_SHOWN} altri)
-              </button>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Barra di ricerca con dropdown solo per i risultati */}
-      <div className="relative">
-        <div
-          className="flex items-center gap-2 rounded-xl border px-3"
-          style={{ borderColor: 'var(--border)', background: 'var(--bg-panel)' }}
-        >
-          <svg
-            width="13" height="13" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" strokeWidth="2" aria-hidden="true"
-            style={{ color: 'var(--text-dim)', flexShrink: 0 }}
-          >
-            <circle cx="11" cy="11" r="8" />
-            <line x1="21" y1="21" x2="16.65" y2="16.65" />
-          </svg>
-          <input
-            ref={inputRef}
-            type="text"
-            value={query}
-            onChange={e => { setQuery(e.target.value); setDropdownOpen(true) }}
-            onFocus={() => setDropdownOpen(true)}
-            placeholder="Cerca utente…"
-            autoFocus
-            className="flex-1 py-2.5 bg-transparent outline-none font-mono text-sm"
-            style={{ color: 'var(--text)' }}
-          />
-        </div>
-
-        {showDropdown && (
-          <div
-            ref={dropdownRef}
-            className="absolute left-0 right-0 top-full mt-1 z-10 rounded-xl border shadow-lg py-1"
-            style={{ borderColor: 'var(--border)', background: 'var(--bg-panel)' }}
-          >
-            {visibleResults.map(p => (
-              <SearchDropdownRow
-                key={p.id}
-                profile={p}
-                isFavorite={favoriteIds.has(p.id)}
-                onSelect={() => selectUser(p)}
-                onToggleFavorite={e => toggleFavorite(p, e)}
-              />
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
-  )
-}
-
-// ─── SearchDropdownRow ─────────────────────────────────────────────────────────
-
-function SearchDropdownRow({
-  profile,
-  isFavorite,
-  onSelect,
-  onToggleFavorite,
-}: {
-  profile: Profile
-  isFavorite: boolean
-  onSelect: () => void
-  onToggleFavorite: (e: React.MouseEvent) => void
-}) {
-  return (
-    <div
-      className="flex items-center gap-1 px-3 py-1.5 cursor-pointer hover:opacity-80"
-      role="option"
-      aria-selected={false}
-    >
-      <button
-        type="button"
-        onClick={onSelect}
-        className="flex-1 text-left font-mono text-sm"
-        style={{ color: 'var(--text)' }}
-      >
-        {profile.username}
-      </button>
-      <button
-        type="button"
-        onClick={onToggleFavorite}
-        className="text-base leading-none transition-colors"
-        style={{ color: isFavorite ? 'var(--red)' : 'var(--text-dim)' }}
-        aria-label={isFavorite
-          ? `Rimuovi ${profile.username} dai preferiti`
-          : `Aggiungi ${profile.username} ai preferiti`}
-        title={isFavorite ? 'Rimuovi dai preferiti' : 'Aggiungi ai preferiti'}
-      >
-        {isFavorite ? '★' : '☆'}
-      </button>
-    </div>
   )
 }

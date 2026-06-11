@@ -21,15 +21,16 @@ export function PushSubscribe() {
   const [denied, setDenied] = useState(false)
 
   useEffect(() => {
-    if ('serviceWorker' in navigator && 'PushManager' in window) {
-      setSupported(true)
-      if (Notification.permission === 'denied') setDenied(true)
-      navigator.serviceWorker
-        .register('/sw.js', { scope: '/', updateViaCache: 'none' })
-        .then((reg) => reg.pushManager.getSubscription())
-        .then((sub) => setSubscription(sub))
-        .catch((err) => console.error('[PushSubscribe] SW registration failed:', err))
-    }
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) return
+    navigator.serviceWorker
+      .register('/sw.js', { scope: '/', updateViaCache: 'none' })
+      .then((reg) => reg.pushManager.getSubscription())
+      .then((sub) => setSubscription(sub))
+      .catch((err) => console.error('[PushSubscribe] SW registration failed:', err))
+      .finally(() => {
+        setSupported(true)
+        if (Notification.permission === 'denied') setDenied(true)
+      })
   }, [])
 
   if (!supported) return null

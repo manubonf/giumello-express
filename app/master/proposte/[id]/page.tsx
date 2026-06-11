@@ -10,10 +10,9 @@ import { FormField } from '@/components/ui/form-field'
 import { supabaseAdmin } from '@/lib/supabase'
 import { acceptProposal, rejectProposal } from '@/app/master/proposte/actions'
 import { formatFull, formatMediumTime } from '@/lib/date'
+import { errorMessage } from '@/lib/errors'
 
-
-const ERROR_MSG: Record<string, string> = {
-  'dati-non-validi':  'Controlla i dati inseriti.',
+const ERROR_OVERRIDES: Record<string, string> = {
   'errore-creazione': 'Errore durante la creazione della navetta. Riprova.',
 }
 
@@ -57,7 +56,7 @@ export default async function PropostaDetailPage({
 
       <h1 className="mb-8 leading-none" style={{ fontFamily: "var(--font-display)", fontSize: "3rem", fontWeight: 400, color: "var(--text)" }}>Proposta</h1>
 
-      {error && <ErrorAlert message={ERROR_MSG[error] ?? 'Errore sconosciuto.'} />}
+      {error && <ErrorAlert message={errorMessage(error, ERROR_OVERRIDES)} />}
 
       <div className="rounded-xl border mb-8" style={{ borderColor: 'var(--border)' }}>
         <div className="px-4">

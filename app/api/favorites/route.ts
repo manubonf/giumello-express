@@ -11,10 +11,14 @@ export async function GET() {
     .select('profiles!favorite_profile_id(id, username, role)')
     .eq('user_id', user.id)
 
+  type FavoriteProfile = { id: string; username: string; role: string }
   const favorites = (data ?? [])
-    .map((row: any) => row.profiles)
-    .filter((p: any) => p && p.role !== 'master')
-    .map((p: any) => ({ id: p.id, username: p.username }))
+    .flatMap(row => {
+      const p = row.profiles as FavoriteProfile | FavoriteProfile[] | null
+      return Array.isArray(p) ? p : p ? [p] : []
+    })
+    .filter(p => p.role !== 'master')
+    .map(p => ({ id: p.id, username: p.username }))
 
   return NextResponse.json(favorites)
 }

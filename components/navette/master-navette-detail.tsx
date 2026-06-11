@@ -1,7 +1,9 @@
 ﻿'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { createBrowserClient } from '@supabase/ssr'
+import { getSupabaseBrowserClient } from '@/lib/supabase-browser'
+import { errorMessage } from '@/lib/errors'
+import { type ParticipantEntry, mapRawParticipants } from '@/components/navette/participants'
 import { SubmitButton } from '@/components/ui/submit-button'
 import { StatusDot, STATUS_LABEL } from '@/components/ui/status-badge'
 import { DetailRow } from '@/components/ui/detail-row'
@@ -21,14 +23,6 @@ import type { BookingCancellation } from '@/lib/data'
 
 // ─── Tipi ────────────────────────────────────────────────────────────────────
 
-type ParticipantEntry = {
-  id: string
-  is_guest: boolean
-  guest_label: string | null
-  user_id: string | null
-  username: string | null
-}
-
 type BookingEntry = {
   id: string
   booker_id: string
@@ -47,20 +41,10 @@ type ShuttleInfo = {
   created_at: string
 }
 
-// ─── Messaggi di errore ───────────────────────────────────────────────────────
+// ─── Messaggi di errore (override contestuali rispetto a lib/errors) ─────────
 
-const MASTER_ERROR_MSG: Record<string, string> = {
-  'partecipante-non-valido':    'Non è possibile prenotare per un utente master.',
-  'partecipante-già-prenotato': 'Questo utente è già presente su questa navetta.',
-  'posti-insufficienti':        'Posti insufficienti.',
-  'nome-ospite-mancante':       'Inserisci il nome dell\'ospite.',
-  'errore-prenotazione':        'Errore durante la prenotazione. Riprova.',
-  'utente-mancante':            'Seleziona un utente.',
-  'non-trovato':                'Prenotazione non trovata.',
-  'posti-occupati':             'I posti massimi non possono essere inferiori ai posti già occupati.',
-  'navetta-non-modificabile':   'Questa navetta non può essere modificata.',
-  'dati-non-validi':            'Dati non validi.',
-  'orario-non-valido':          'Data e ora non valide.',
+const MASTER_ERROR_OVERRIDES: Record<string, string> = {
+  'partecipante-non-valido': 'Non è possibile prenotare per un utente master.',
 }
 
 // ─── Componente principale ────────────────────────────────────────────────────
@@ -90,10 +74,7 @@ export function MasterNavettaDetail({
   // ── Realtime ──────────────────────────────────────────────────────────────
 
   useEffect(() => {
-    const supabase = createBrowserClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    )
+    const supabase = getSupabaseBrowserClient()
 
     const channel = supabase
       .channel(`master-navetta-${initialShuttle.id}`)
@@ -125,13 +106,7 @@ export function MasterNavettaDetail({
             .from('booking_participants')
             .select('id, is_guest, guest_label, user_id, profiles(username)')
             .eq('booking_id', nb.id)
-          const participants: ParticipantEntry[] = (parts ?? []).map((p: any) => ({
-            id: p.id,
-            is_guest: p.is_guest,
-            guest_label: p.guest_label,
-            user_id: p.user_id ?? null,
-            username: p.is_guest ? null : (p.profiles?.username ?? null),
-          }))
+          const participants: ParticipantEntry[] = mapRawParticipants(parts)
           setBookings(prev => {
             if (prev.some(b => b.id === nb.id)) return prev
             return [
@@ -370,7 +345,7 @@ export function MasterNavettaDetail({
       {ok === 'prenotazione' && <SuccessAlert message="Prenotazione aggiunta." />}
       {ok === 'capacita-aggiornata' && <SuccessAlert message="Capacità navetta aggiornata." />}
       {ok === 'orario-aggiornato' && <SuccessAlert message="Orario navetta aggiornato." />}
-      {error && <ErrorAlert message={MASTER_ERROR_MSG[error] ?? 'Errore sconosciuto.'} />}
+      {error && <ErrorAlert message={errorMessage(error, MASTER_ERROR_OVERRIDES)} />}
 
       {/* Lista prenotazioni con struttura booker → partecipanti */}
       <div className="mb-8">
