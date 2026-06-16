@@ -9,6 +9,8 @@ import { MasterNavetteList } from '@/components/navette/master-navette-list'
 const ACTIVE_STATUSES = ['draft', 'confirmed', 'full']
 const HISTORY_STATUSES = ['done', 'cancelled']
 
+export const dynamic = 'force-dynamic'
+
 export default async function MasterNavettePage() {
   after(() => markExpiredShuttlesDone())
 
