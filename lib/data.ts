@@ -8,6 +8,13 @@ export async function markExpiredShuttlesDone(shuttleId?: string) {
     .lt('departure_time', new Date().toISOString())
   if (shuttleId) query = query.eq('id', shuttleId)
   await query
+
+  query = supabaseAdmin
+    .from('shuttles')
+    .update({ status: 'cancelled' })
+    .eq('status', 'draft')
+    .lt('departure_time', new Date().toISOString())
+  await query
 }
 
 export async function markExpiredProposalsCancelled() {
@@ -51,9 +58,9 @@ export async function getBookingsWithParticipants(shuttleId: string): Promise<Bo
       : Promise.resolve({ data: [] as { id: string; username: string }[] }),
     bookingIds.length
       ? supabaseAdmin
-          .from('booking_participants')
-          .select('id, booking_id, is_guest, guest_label, user_id, profiles(username)')
-          .in('booking_id', bookingIds)
+        .from('booking_participants')
+        .select('id, booking_id, is_guest, guest_label, user_id, profiles(username)')
+        .in('booking_id', bookingIds)
       : Promise.resolve({ data: [] as BookingParticipant[] }),
   ])
 
