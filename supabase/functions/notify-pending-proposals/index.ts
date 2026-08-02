@@ -37,12 +37,21 @@ Deno.serve(async (req) => {
   }
 
   // Recupera le subscription del master
-  const { data: subs, error: subsError } = await supabaseAdmin
-    .from('push_subscriptions')
-    .select('endpoint, p256dh, auth_key, profiles!inner(role)')
-    .eq('profiles.role', 'master')
+const { data: master, error: masterError } = await supabaseAdmin
+  .from('profiles')
+  .select('id')
+  .eq('role', 'master')
+  .single()
 
-  if (subsError) throw subsError
+if (masterError) throw masterError
+
+// 3b. Recupera le subscription push di quell'utente
+const { data: subs, error: subsError } = await supabaseAdmin
+  .from('push_subscriptions')
+  .select('endpoint, p256dh, auth_key')
+  .eq('user_id', master.id)
+
+if (subsError) throw subsError
 
   webpush.setVapidDetails(
     Deno.env.get('VAPID_SUBJECT'),
