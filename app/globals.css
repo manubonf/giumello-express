@@ -57,3 +57,44 @@ input, textarea, [contenteditable] {
 a:active {
   opacity: 0.65;
 }
+
+@theme {
+  --text-xs: 0.875rem;       /* era text-sm */
+  --text-xs--line-height: 1.25rem;
+
+  --text-sm: 1rem;           /* era text-base */
+  --text-sm--line-height: 1.5rem;
+
+  --text-base: 1.125rem;     /* era text-lg */
+  --text-base--line-height: 1.75rem;
+
+  --text-lg: 1.25rem;        /* era text-xl */
+  --text-lg--line-height: 1.75rem;
+
+  --text-xl: 1.5rem;         /* era text-2xl */
+  --text-xl--line-height: 2rem;
+
+  --text-2xl: 1.875rem;      /* era text-3xl */
+  --text-2xl--line-height: 1;
+
+  --text-3xl: 2.25rem;       /* era text-4xl */
+  --text-3xl--line-height: 1;
+
+  --text-4xl: 3rem;          /* era text-5xl */
+  --text-4xl--line-height: 1;
+
+  --text-5xl: 3.75rem;       /* era text-6xl */
+  --text-5xl--line-height: 1;
+
+  --text-6xl: 4.5rem;        /* era text-7xl */
+  --text-6xl--line-height: 1;
+
+  --text-7xl: 6rem;          /* era text-8xl */
+  --text-7xl--line-height: 1;
+
+  --text-8xl: 8rem;          /* era text-9xl */
+  --text-8xl--line-height: 1;
+
+  --text-9xl: 10.667rem;     /* estrapolato, stesso rapporto 8xl→9xl originale */
+  --text-9xl--line-height: 1;
+}
