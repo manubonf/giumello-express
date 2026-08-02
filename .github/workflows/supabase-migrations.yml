@@ -26,6 +26,13 @@ jobs:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
           SUPABASE_DB_PASSWORD:  ${{ secrets.SUPABASE_DB_PASSWORD_DEV }}
 
+      - name: Deploy Edge Functions → DEV
+        if: github.ref == 'refs/heads/develop'
+        run: |
+          supabase functions deploy notify-pending-proposals --no-verify-jwt
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+
       - name: Apply migrations → PROD
         if: github.ref == 'refs/heads/main'
         run: |
@@ -34,3 +41,10 @@ jobs:
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
           SUPABASE_DB_PASSWORD:  ${{ secrets.SUPABASE_DB_PASSWORD_PROD }}
+
+      - name: Deploy Edge Functions → PROD
+        if: github.ref == 'refs/heads/main'
+        run: |
+          supabase functions deploy notify-pending-proposals --no-verify-jwt
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
