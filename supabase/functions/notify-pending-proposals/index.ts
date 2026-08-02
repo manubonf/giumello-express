@@ -55,7 +55,7 @@ if (subsError) throw subsError
 
   webpush.setVapidDetails(
     Deno.env.get('VAPID_SUBJECT'),
-    Deno.env.get('VAPID_PUBLIC_KEY')!,
+    Deno.env.get('NEXT_PUBLIC_VAPID_PUBLIC_KEY')!,
     Deno.env.get('VAPID_PRIVATE_KEY')!
   )
 
