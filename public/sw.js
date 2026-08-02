@@ -1,14 +1,3 @@
-// self.addEventListener('push', (event) => {
-//   const data = event.data?.json() ?? {}
-//   const title = data.title ?? 'Navette'
-//   const options = {
-//     body: data.body ?? '',
-//     icon: '/FlyLibell_Logotipo_Red.svg',
-//     data: { url: data.url ?? '/' },
-//   }
-//   event.waitUntil(self.registration.showNotification(title, options))
-// })
-
 self.addEventListener('push', (event) => {
   const data = event.data?.json() ?? {}
   const title = data.title ?? 'Navette'
@@ -17,14 +6,7 @@ self.addEventListener('push', (event) => {
     icon: '/FlyLibell_Logotipo_Red.svg',
     data: { url: data.url ?? '/' },
   }
-  event.waitUntil(
-    Promise.all([
-      self.registration.showNotification(title, options),
-      title === 'Nuova proposta' && 'setAppBadge' in self.navigator
-        ? self.navigator.setAppBadge()
-        : Promise.resolve(),
-    ])
-  )
+  event.waitUntil(self.registration.showNotification(title, options))
 })
 
 self.addEventListener('notificationclick', (event) => {
