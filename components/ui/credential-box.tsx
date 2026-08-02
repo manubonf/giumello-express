@@ -9,7 +9,7 @@ export function CredentialBox({ username, password }: { username: string; passwo
     <div className="rounded-2xl border px-5 py-5 mb-8"
       style={{ borderColor: 'var(--border)', background: 'var(--bg-panel)' }}>
       <div className="flex items-center justify-between mb-4">
-        <p className="font-mono text-[10px] uppercase tracking-widest"
+        <p className="font-mono text-xs uppercase tracking-widest"
           style={{ color: 'var(--text-muted)' }}>
           Credenziali — salva ora
         </p>
@@ -37,7 +37,7 @@ export function CredentialBox({ username, password }: { username: string; passwo
           <span className="font-mono text-sm font-semibold tracking-widest selectable" style={{ color: 'var(--text)', fontFamily: 'var(--font-code), monospace' }}>{password}</span>
         </div>
       </div>
-      <p className="font-mono text-[11px] mt-4" style={{ color: 'var(--text-dim)' }}>
+      <p className="font-mono text-xs mt-4" style={{ color: 'var(--text-dim)' }}>
         La password non verrà mostrata di nuovo. Comunicala all&apos;utente e poi chiudi questa pagina.
       </p>
     </div>

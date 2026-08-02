@@ -83,7 +83,7 @@ export default async function PropostaDetailPage({
         <div className="flex flex-col gap-8">
 
           <div>
-            <p className="font-mono text-[10px] uppercase tracking-widest mb-4"
+            <p className="font-mono text-xs uppercase tracking-widest mb-4"
               style={{ color: 'var(--text-muted)' }}>
               Accetta — crea navetta
             </p>
@@ -142,7 +142,7 @@ export default async function PropostaDetailPage({
           </div>
 
           <div>
-            <p className="font-mono text-[10px] uppercase tracking-widest mb-4"
+            <p className="font-mono text-xs uppercase tracking-widest mb-4"
               style={{ color: 'var(--text-muted)' }}>
               Rifiuta proposta
             </p>

@@ -37,7 +37,7 @@ export function PageHeader({
 export function MasterBadge() {
   return (
     <span
-      className="font-mono text-[10px] uppercase tracking-widest rounded-lg border px-2 py-1"
+      className="font-mono text-xs uppercase tracking-widest rounded-lg border px-2 py-1"
       style={{ color: 'var(--red)', borderColor: 'var(--red-border)', background: 'var(--red-muted)' }}
     >
       Master

@@ -38,7 +38,7 @@ export function PushSubscribe() {
   if (denied) {
     return (
       <span
-        className="rounded-lg border px-2.5 py-1 font-mono text-[10px] uppercase tracking-wide"
+        className="rounded-lg border px-2.5 py-1 font-mono text-xs uppercase tracking-wide"
         style={{ borderColor: 'var(--border-muted)', color: 'var(--text-dim)' }}
         title="Notifiche bloccate dal browser — abilitale nelle impostazioni del sito"
       >
@@ -96,7 +96,7 @@ export function PushSubscribe() {
       onClick={subscription ? unsubscribe : subscribe}
       disabled={loading}
       title={subscription ? 'Disattiva notifiche' : 'Attiva notifiche'}
-      className="rounded-lg border px-2.5 py-1 font-mono text-[10px] uppercase tracking-wide transition-colors"
+      className="rounded-lg border px-2.5 py-1 font-mono text-xs uppercase tracking-wide transition-colors"
       style={{
         background: 'none',
         borderColor: subscription ? 'var(--red-border)' : 'var(--border-muted)',

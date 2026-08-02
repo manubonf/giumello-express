@@ -49,7 +49,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
         <form action={login} className="flex flex-col gap-5">
           <div className="flex flex-col gap-2">
             <label htmlFor="username"
-              className="font-mono text-[10px] uppercase tracking-wider"
+              className="font-mono text-xs uppercase tracking-wider"
               style={{ color: 'rgba(240,236,232,0.55)' }}>
               Username
             </label>
@@ -72,7 +72,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
 
           <div className="flex flex-col gap-2">
             <label htmlFor="password"
-              className="font-mono text-[10px] uppercase tracking-wider"
+              className="font-mono text-xs uppercase tracking-wider"
               style={{ color: 'rgba(240,236,232,0.55)' }}>
               Password
             </label>

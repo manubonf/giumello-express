@@ -49,7 +49,7 @@ export default async function MasterPropostePage({
 
       {pending.length > 0 && (
         <section className="mb-8">
-          <p className="font-mono text-[10px] uppercase tracking-widest mb-3"
+          <p className="font-mono text-xs uppercase tracking-widest mb-3"
             style={{ color: 'var(--text-muted)' }}>
             Da valutare ({pending.length})
           </p>

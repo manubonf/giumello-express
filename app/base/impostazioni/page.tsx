@@ -30,7 +30,7 @@ export default async function ImpostazioniPage() {
 
       <h1 className="mb-8 leading-none" style={{ fontFamily: "var(--font-display)", fontSize: "3rem", fontWeight: 400, color: "var(--text)" }}>Impostazioni</h1>
 
-      <p className="font-mono text-[10px] uppercase tracking-widest mb-3" style={{ color: 'var(--text-muted)' }}>
+      <p className="font-mono text-xs uppercase tracking-widest mb-3" style={{ color: 'var(--text-muted)' }}>
         Questo dispositivo
       </p>
 
@@ -39,7 +39,7 @@ export default async function ImpostazioniPage() {
         <PushSubscribe />
       </div>
 
-      <p className="font-mono text-[10px] uppercase tracking-widest mb-3" style={{ color: 'var(--text-muted)' }}>
+      <p className="font-mono text-xs uppercase tracking-widest mb-3" style={{ color: 'var(--text-muted)' }}>
         Notifiche push
       </p>
 
@@ -145,7 +145,7 @@ export default async function ImpostazioniPage() {
         </div>
       </div>
 
-      <p className="font-mono text-[10px] uppercase tracking-widest mb-3 mt-8" style={{ color: 'var(--text-muted)' }}>
+      <p className="font-mono text-xs uppercase tracking-widest mb-3 mt-8" style={{ color: 'var(--text-muted)' }}>
         Account
       </p>
 

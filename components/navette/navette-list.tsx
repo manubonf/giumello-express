@@ -77,7 +77,7 @@ export function NavetteList({
               <StatusDot status={s.status} />
               <span className="flex-1 min-w-0">
                 {label && (
-                  <span className="block font-mono text-[10px] uppercase tracking-widest mb-0.5"
+                  <span className="block font-mono text-xs uppercase tracking-widest mb-0.5"
                     style={{ color: label === 'oggi' ? 'var(--red)' : 'var(--text-muted)' }}>
                     {label}
                   </span>
@@ -97,14 +97,14 @@ export function NavetteList({
                     </span>
                   )}
                   {bookedSet.has(s.id) && (
-                    <span className="rounded-lg border px-1.5 py-0.5 font-mono text-[10px] leading-none"
+                    <span className="rounded-lg border px-1.5 py-0.5 font-mono text-xs leading-none"
                       style={{ borderColor: '#16a34a38', color: '#15803d', background: 'rgba(22,163,74,0.08)' }}>
                       Prenotato
                     </span>
                   )}
                 </span>
                 {s.status === 'draft' && (
-                  <p className="font-mono text-[11px] mt-1.5" style={{ color: 'var(--text-dim)' }}>
+                  <p className="font-mono text-xs mt-1.5" style={{ color: 'var(--text-dim)' }}>
                     Navetta in bozza — non ancora garantita
                   </p>
                 )}
@@ -136,7 +136,7 @@ export function NavetteList({
                   <span className="flex items-center gap-2 mt-1">
                     <StatusBadge status={s.status} />
                     {bookedSet.has(s.id) && (
-                      <span className="rounded-lg border px-1.5 py-0.5 font-mono text-[10px] leading-none"
+                      <span className="rounded-lg border px-1.5 py-0.5 font-mono text-xs leading-none"
                         style={{ borderColor: '#16a34a38', color: '#15803d', background: 'rgba(22,163,74,0.08)' }}>
                         Prenotato
                       </span>

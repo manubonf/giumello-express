@@ -85,7 +85,7 @@ export function UtentiList({ utenti }: { utenti: Utente[] }) {
               </span>
               {u.ammonizioni > 0 && (
                 <span
-                  className="font-mono text-[11px] font-semibold rounded-full px-1.5 py-0.5 min-w-[20px] text-center"
+                  className="font-mono text-xs font-semibold rounded-full px-1.5 py-0.5 min-w-[20px] text-center"
                   style={{ background: 'var(--red)', color: 'white' }}
                 >
                   {u.ammonizioni}

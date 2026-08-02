@@ -139,7 +139,7 @@ export function UserSearchInput({
       {visibleFavorites.length > 0 && (
         <div className="mb-2">
           <p
-            className="font-mono text-[10px] uppercase tracking-widest mb-1"
+            className="font-mono text-xs uppercase tracking-widest mb-1"
             style={{ color: 'var(--text-muted)' }}
           >
             Preferiti

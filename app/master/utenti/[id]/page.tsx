@@ -46,7 +46,7 @@ export default async function UtenteDetailPage({
       <div className="flex items-center gap-3 mb-8">
         <h1 className="leading-none" style={{ fontFamily: "var(--font-display)", fontSize: "3rem", fontWeight: 400, color: "var(--text)" }}>{profile.username}</h1>
         <span
-          className="font-mono text-[10px] uppercase tracking-widest rounded-xl border px-1.5 py-0.5"
+          className="font-mono text-xs uppercase tracking-widest rounded-xl border px-1.5 py-0.5"
           style={{
             color: isMaster ? 'var(--red)' : 'var(--text-muted)',
             borderColor: isMaster ? 'var(--red-border)' : 'var(--border-muted)',
@@ -73,7 +73,7 @@ export default async function UtenteDetailPage({
 
       {!isMaster && (
         <>
-          <p className="font-mono text-[10px] uppercase tracking-widest mb-3"
+          <p className="font-mono text-xs uppercase tracking-widest mb-3"
             style={{ color: 'var(--text-muted)' }}>
             Modifica username
           </p>
@@ -128,7 +128,7 @@ export default async function UtenteDetailPage({
             </form>
           </div>
 
-          <p className="font-mono text-[10px] uppercase tracking-widest mb-3"
+          <p className="font-mono text-xs uppercase tracking-widest mb-3"
             style={{ color: 'var(--text-muted)' }}>
             Ammonizioni
           </p>
@@ -150,7 +150,7 @@ export default async function UtenteDetailPage({
                   >
                     <div className="flex flex-col gap-0.5 min-w-0">
                       <span className="text-sm break-words" style={{ color: 'var(--text)' }}>{a.nota}</span>
-                      <span className="font-mono text-[11px]" style={{ color: 'var(--text-muted)' }}>
+                      <span className="font-mono text-xs" style={{ color: 'var(--text-muted)' }}>
                         {formatLongTime(a.created_at)}
                       </span>
                     </div>
@@ -158,7 +158,7 @@ export default async function UtenteDetailPage({
                       <input type="hidden" name="id" value={a.id} />
                       <input type="hidden" name="user_id" value={profile.id} />
                       <SubmitButton
-                        className="rounded-xl border px-2.5 py-1 font-mono text-[11px] uppercase tracking-wide transition-colors"
+                        className="rounded-xl border px-2.5 py-1 font-mono text-xs uppercase tracking-wide transition-colors"
                         style={{ background: 'none', borderColor: 'var(--red-border)', color: 'var(--red)' }}
                       >
                         Rimuovi

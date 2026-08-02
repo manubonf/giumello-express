@@ -220,7 +220,7 @@ export function MasterNavettaDetail({
               label="Partenza"
               value={departureDayLabel ? (
                 <span className="flex items-center gap-2">
-                  <span className="font-mono text-[10px] uppercase tracking-widest"
+                  <span className="font-mono text-xs uppercase tracking-widest"
                     style={{ color: departureDayLabel === 'oggi' ? 'var(--red)' : 'var(--text-muted)' }}>
                     {departureDayLabel}
                   </span>
@@ -283,7 +283,7 @@ export function MasterNavettaDetail({
               </div>
 
               {booked > 0 && (
-                <p className="font-mono text-[10px] pt-2 pb-1" style={{ color: 'var(--text-dim)' }}>
+                <p className="font-mono text-xs pt-2 pb-1" style={{ color: 'var(--text-dim)' }}>
                   Posti già occupati: {booked} — i posti massimi non possono essere inferiori a questo valore.
                 </p>
               )}
@@ -350,7 +350,7 @@ export function MasterNavettaDetail({
       {/* Lista prenotazioni con struttura booker → partecipanti */}
       <div className="mb-8">
         <p
-          className="font-mono text-[10px] uppercase tracking-widest mb-3"
+          className="font-mono text-xs uppercase tracking-widest mb-3"
           style={{ color: 'var(--text-muted)' }}
         >
           Prenotazioni ({booked} prenotati su {shuttleInfo.max_seats})
@@ -371,7 +371,7 @@ export function MasterNavettaDetail({
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2.5">
                     <span
-                      className="font-mono text-[10px] font-bold rounded-xl px-1.5 py-0.5 flex-shrink-0 tabular-nums"
+                      className="font-mono text-xs font-bold rounded-xl px-1.5 py-0.5 flex-shrink-0 tabular-nums"
                       style={{ background: 'var(--border)', color: 'var(--text-muted)' }}
                     >
                       #{i + 1}
@@ -381,7 +381,7 @@ export function MasterNavettaDetail({
                       <span style={{ color: 'var(--text)' }}>{b.bookerUsername}</span>
                     </span>
                     <span
-                      className="font-mono text-[10px] tabular-nums"
+                      className="font-mono text-xs tabular-nums"
                       style={{ color: 'var(--text-dim)' }}
                     >
                       {formatTime(b.created_at)}
@@ -392,7 +392,7 @@ export function MasterNavettaDetail({
                       <input type="hidden" name="booking_id" value={b.id} />
                       <input type="hidden" name="shuttle_id" value={shuttleInfo.id} />
                       <SubmitButton
-                        className="rounded-xl border px-2.5 py-1 font-mono text-[10px] uppercase tracking-wide transition-colors"
+                        className="rounded-xl border px-2.5 py-1 font-mono text-xs uppercase tracking-wide transition-colors"
                         style={{ background: 'var(--red)', borderColor: 'var(--red)', color: 'white' }}
                       >
                         Elimina
@@ -426,7 +426,7 @@ export function MasterNavettaDetail({
             <button
               type="button"
               onClick={() => setShowCancellations(v => !v)}
-              className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-widest transition-opacity hover:opacity-70"
+              className="flex items-center gap-1.5 font-mono text-xs uppercase tracking-widest transition-opacity hover:opacity-70"
               style={{ color: 'var(--text-dim)', background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
             >
               <span style={{ display: 'inline-block', transform: showCancellations ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 150ms' }}>▶</span>
@@ -461,10 +461,10 @@ export function MasterNavettaDetail({
                         )}
                       </div>
                       <div className="flex flex-col items-end gap-0.5 flex-shrink-0">
-                        <span className="font-mono text-[10px] tabular-nums" style={{ color: 'var(--text-dim)' }}>
+                        <span className="font-mono text-xs tabular-nums" style={{ color: 'var(--text-dim)' }}>
                           prenotato {formatTime(c.booked_at)}
                         </span>
-                        <span className="font-mono text-[10px] tabular-nums" style={{ color: 'var(--red)', opacity: 0.8 }}>
+                        <span className="font-mono text-xs tabular-nums" style={{ color: 'var(--red)', opacity: 0.8 }}>
                           rimosso {formatMediumTime(c.cancelled_at)}
                         </span>
                       </div>

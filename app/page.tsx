@@ -79,7 +79,7 @@ export default async function HomePage() {
               <span className="flex items-center gap-2">
                 <span className="font-semibold text-sm" style={{ color: 'var(--text)' }}>{item.title}</span>
                 {!!item.badge && (
-                  <span className="rounded-full px-2 py-0.5 font-mono text-[10px] leading-none"
+                  <span className="rounded-full px-2 py-0.5 font-mono text-xs leading-none"
                     style={{ background: 'var(--red)', color: 'white' }}>
                     {item.badge > 99 ? '99+' : item.badge}
                   </span>

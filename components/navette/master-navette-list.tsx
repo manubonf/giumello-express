@@ -135,7 +135,7 @@ export function MasterNavetteList({
               <StatusDot status={s.status} />
               <span className="flex-1 min-w-0">
                 {label && (
-                  <span className="block font-mono text-[10px] uppercase tracking-widest mb-0.5"
+                  <span className="block font-mono text-xs uppercase tracking-widest mb-0.5"
                     style={{ color: label === 'oggi' ? 'var(--red)' : 'var(--text-muted)' }}>
                     {label}
                   </span>

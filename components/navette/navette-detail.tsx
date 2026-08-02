@@ -170,7 +170,7 @@ export function NavettaDetail({
         <StatusBadge status={shuttleInfo.status} />
       </div>
       {(() => { const lbl = dayLabel(shuttleInfo.departure_time); return lbl ? (
-        <span className="block font-mono text-[10px] uppercase tracking-widest mb-0.5"
+        <span className="block font-mono text-xs uppercase tracking-widest mb-0.5"
           style={{ color: lbl === 'oggi' ? 'var(--red)' : 'var(--text-muted)' }}>{lbl}</span>
       ) : null })()}
       <h1 className="text-xl font-semibold mb-1">{formatFull(shuttleInfo.departure_time)}</h1>
@@ -197,7 +197,7 @@ export function NavettaDetail({
       {flatParticipants.length > 0 && (
         <div className="mb-8">
           <p
-            className="font-mono text-[10px] uppercase tracking-widest mb-3"
+            className="font-mono text-xs uppercase tracking-widest mb-3"
             style={{ color: 'var(--text-muted)' }}
           >
             Chi c&apos;è sulla navetta ({booked})
@@ -246,7 +246,7 @@ export function NavettaDetail({
       {myBookingsAsBooker.length > 0 && (
         <div className="mb-8">
           <p
-            className="font-mono text-[10px] uppercase tracking-widest mb-3"
+            className="font-mono text-xs uppercase tracking-widest mb-3"
             style={{ color: 'var(--text-muted)' }}
           >
             Le tue prenotazioni
@@ -292,7 +292,7 @@ export function NavettaDetail({
       {canBook && (
         <div className="mb-8">
           <p
-            className="font-mono text-[10px] uppercase tracking-widest mb-1"
+            className="font-mono text-xs uppercase tracking-widest mb-1"
             style={{ color: 'var(--text-muted)' }}
           >
             Nuova prenotazione
