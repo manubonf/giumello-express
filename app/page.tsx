@@ -58,7 +58,7 @@ export default async function HomePage() {
         className="mb-8 leading-none"
         style={{
           fontFamily: 'var(--font-display)',
-          fontSize: '3.25rem',
+          fontSize: '2.50rem',
           fontWeight: 400,
           color: 'var(--text)',
         }}
